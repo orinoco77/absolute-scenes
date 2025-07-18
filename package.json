@@ -1,5 +1,5 @@
 {
-  "name": "book-writer",
+  "name": "absolute-scenes",
   "version": "1.3.0",
   "description": "A scene-based book writing application",
   "main": "public/electron.js",
@@ -28,8 +28,8 @@
     "cross-env": "^7.0.3"
   },
   "build": {
-    "appId": "com.bookwriter.app",
-    "productName": "Book Writer",
+    "appId": "com.absolutescenes.app",
+    "productName": "Absolute Scenes",
     "directories": {
       "output": "dist"
     },
