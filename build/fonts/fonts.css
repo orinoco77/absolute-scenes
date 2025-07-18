@@ -1,0 +1,150 @@
+/* Local Font Definitions for AbsoluteScenes */
+/* Using the actual TTF files downloaded from Google Fonts */
+
+/* EB Garamond - Variable Font */
+@font-face {
+  font-family: 'EB Garamond';
+  src: url('./EBGaramond-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'EB Garamond';
+  src: url('./EBGaramond-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Libre Baskerville - Individual TTF files */
+@font-face {
+  font-family: 'Libre Baskerville';
+  src: url('./LibreBaskerville-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Libre Baskerville';
+  src: url('./LibreBaskerville-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Libre Baskerville';
+  src: url('./LibreBaskerville-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Crimson Text - Individual TTF files */
+@font-face {
+  font-family: 'Crimson Text';
+  src: url('./CrimsonText-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Crimson Text';
+  src: url('./CrimsonText-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Crimson Text';
+  src: url('./CrimsonText-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Crimson Text';
+  src: url('./CrimsonText-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Crimson Text';
+  src: url('./CrimsonText-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Crimson Text';
+  src: url('./CrimsonText-SemiBoldItalic.ttf') format('truetype');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Source Serif 4 - Variable Font */
+@font-face {
+  font-family: 'Source Serif Pro';
+  src: url('./SourceSerif4-VariableFont_opsz,wght.ttf') format('truetype-variations');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+  font-optical-sizing: auto;
+}
+
+@font-face {
+  font-family: 'Source Serif Pro';
+  src: url('./SourceSerif4-Italic-VariableFont_opsz,wght.ttf') format('truetype-variations');
+  font-weight: 200 900;
+  font-style: italic;
+  font-display: swap;
+  font-optical-sizing: auto;
+}
+
+/* Cormorant Garamond - Variable Font (Bonus!) */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('./CormorantGaramond-VariableFont_wght.ttf') format('truetype-variations');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('./CormorantGaramond-Italic-VariableFont_wght.ttf') format('truetype-variations');
+  font-weight: 300 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Utility classes for easy font application */
+.font-garamond {
+  font-family: 'EB Garamond', Garamond, 'Times New Roman', serif;
+}
+
+.font-baskerville {
+  font-family: 'Libre Baskerville', Baskerville, 'Times New Roman', serif;
+}
+
+.font-crimson {
+  font-family: 'Crimson Text', 'Times New Roman', serif;
+}
+
+.font-source-serif {
+  font-family: 'Source Serif Pro', 'Times New Roman', serif;
+}
+
+.font-cormorant {
+  font-family: 'Cormorant Garamond', Garamond, 'Times New Roman', serif;
+}
