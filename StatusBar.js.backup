@@ -1,0 +1,112 @@
+import React from 'react';
+
+function StatusBar({ 
+  currentMessage, 
+  hasUnsavedChanges, 
+  currentFilePath, 
+  lastSaveTime, 
+  lastSyncTime, 
+  isConnectedToGitHub 
+}) {
+  const getFileStatus = () => {
+    if (hasUnsavedChanges) {
+      return {
+        icon: '⚠️',
+        text: 'Unsaved changes',
+        color: '#f57c00',
+        bgColor: '#fff3e0'
+      };
+    }
+    
+    if (isConnectedToGitHub && lastSyncTime) {
+      // Check if sync is more recent than save
+      const syncTime = new Date(lastSyncTime);
+      const saveTime = lastSaveTime ? new Date(lastSaveTime) : new Date(0);
+      
+      if (syncTime >= saveTime) {
+        return {
+          icon: '☁️',
+          text: 'Synced to GitHub',
+          color: '#2ea043',
+          bgColor: '#e8f5e8'
+        };
+      }
+    }
+    
+    if (lastSaveTime || currentFilePath) {
+      return {
+        icon: '💾',
+        text: 'Saved to disk',
+        color: '#1976d2',
+        bgColor: '#e3f2fd'
+      };
+    }
+    
+    return {
+      icon: '📄',
+      text: 'New document',
+      color: '#666',
+      bgColor: '#f5f5f5'
+    };
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+    const time = new Date(timeString);
+    return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getFileName = () => {
+    if (currentFilePath) {
+      return currentFilePath.split(/[\\/]/).pop().replace(/\.(book|json)$/, '');
+    }
+    return 'Untitled';
+  };
+
+  const status = getFileStatus();
+
+  return (
+    <div className="status-bar">
+      <div className="status-left">
+        <span className={`status-message ${(currentMessage && (currentMessage.includes('Saving') || currentMessage.includes('Syncing') || currentMessage.includes('Loading') || currentMessage.includes('Downloading'))) ? 'loading' : ''}`}>
+          {currentMessage || 'Ready'}
+        </span>
+        {currentFilePath && (
+          <span className="file-name">
+            📁 {getFileName()}
+          </span>
+        )}
+      </div>
+      
+      <div className="status-right">
+        <div className="status-details">
+          {lastSaveTime && (
+            <span className="status-time">
+              Saved: {formatTime(lastSaveTime)}
+            </span>
+          )}
+          {isConnectedToGitHub && lastSyncTime && (
+            <span className="status-time">
+              Synced: {formatTime(lastSyncTime)}
+            </span>
+          )}
+        </div>
+        
+        <div 
+          className="status-indicator"
+          style={{
+            color: status.color,
+            backgroundColor: status.bgColor,
+            border: `1px solid ${status.color}40`
+          }}
+          title={status.text}
+        >
+          <span className="status-icon">{status.icon}</span>
+          <span className="status-text">{status.text}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default StatusBar;

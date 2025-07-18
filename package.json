@@ -1,0 +1,53 @@
+{
+  "name": "book-writer",
+  "version": "1.0.0",
+  "description": "A scene-based book writing application",
+  "main": "public/electron.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "electron": "electron .",
+    "electron-dev": "cross-env ELECTRON_IS_DEV=true electron .",
+    "electron-dev-cmd": "set ELECTRON_IS_DEV=true && electron .",
+    "electron-dev-powershell": "$env:ELECTRON_IS_DEV=\"true\"; electron .",
+    "dist": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "jspdf": "^2.5.1",
+    "html2canvas": "^1.4.1",
+    "simple-git": "^3.19.1",
+    "octokit": "^2.1.0"
+  },
+  "devDependencies": {
+    "electron": "^25.0.0",
+    "electron-builder": "^24.0.0",
+    "cross-env": "^7.0.3"
+  },
+  "build": {
+    "appId": "com.bookwriter.app",
+    "productName": "Book Writer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "build/**/*",
+      "node_modules/**/*"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
