@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import { getPdfFont, getCssFontFamily } from './fontManager';
 import { ensureFontLoaded, preloadBookFonts } from './customFontLoader';
 
-// Page size definitions (width x height in inches)
+// Page size definitions in inches (width x height)
 const PAGE_SIZES = {
   'letter': { width: 8.5, height: 11, name: 'US Letter' },
   'a4': { width: 8.27, height: 11.69, name: 'A4' },
@@ -18,28 +18,106 @@ function mapFontForPDF(fontFamily) {
   return getPdfFont(fontFamily);
 }
 
-// Get page dimensions for the selected page size
+// Utility function to check if a file might be locked (browser environment)
+function checkFileAccess(filename) {
+  // In browser environment, we can't directly check file locks
+  // But we can warn users about common issues
+  console.log(`Preparing to save: ${filename}`);
+  
+  // Return a warning if the filename suggests it might conflict
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const lastExportTime = localStorage.getItem('lastExportTime');
+    const now = Date.now();
+    
+    // If last export was very recent (< 2 seconds), warn about potential file lock
+    if (lastExportTime && (now - parseInt(lastExportTime)) < 2000) {
+      console.warn('Recent export detected - file may still be locked');
+      return {
+        warning: true,
+        message: 'Previous export was very recent. If the export fails, please close any open PDF viewers and try again.'
+      };
+    }
+    
+    // Store current export time
+    localStorage.setItem('lastExportTime', now.toString());
+  }
+  
+  return { warning: false };
+}
+
+// Get page dimensions in inches and points
 function getPageDimensions(pageSize) {
   const size = PAGE_SIZES[pageSize] || PAGE_SIZES['letter'];
   return {
-    width: size.width * 72, // Convert to points (72 points per inch)
-    height: size.height * 72,
+    width: size.width * 72, // Convert to points
+    height: size.height * 72, // Convert to points
     widthInches: size.width,
     heightInches: size.height,
     name: size.name
   };
 }
 
-// Get margins for a specific page (odd/even)
+// Create PDF with consistent format handling across platforms
+function createPDFWithConsistentFormat(pageSize) {
+  const standardFormats = ['letter', 'a4'];
+  
+  if (standardFormats.includes(pageSize)) {
+    // Use built-in format for standard sizes with points
+    return new jsPDF({
+      orientation: 'portrait',
+      unit: 'pt',
+      format: pageSize
+    });
+  } else {
+    // For custom formats, use points and convert dimensions
+    const dimensions = getPageDimensions(pageSize);
+    const widthPt = dimensions.widthInches * 72;
+    const heightPt = dimensions.heightInches * 72;
+    
+    console.log(`Creating custom PDF format: ${pageSize} = ${widthPt} x ${heightPt} points`);
+    
+    try {
+      return new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: [widthPt, heightPt]
+      });
+    } catch (error) {
+      console.warn(`Failed to create custom format ${pageSize}, falling back to letter`, error);
+      // Fallback to letter format if custom format fails
+      return new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'letter'
+      });
+    }
+  }
+}
+
+// Get margins for a specific page (odd/even) - returns values in points for compatibility
 function getPageMargins(template, pageNumber) {
   const margins = template.pageMargins;
-  const topMargin = margins.top * 72;
-  const bottomMargin = margins.bottom * 72;
+  
+  // Ensure margins exist and have valid values
+  if (!margins) {
+    console.warn('No margins found in template, using defaults');
+    return {
+      top: 72,      // 1 inch
+      bottom: 72,   // 1 inch  
+      left: 90,     // 1.25 inches
+      right: 72     // 1 inch
+    };
+  }
+  
+  // Convert inches to points (72 points per inch)
+  const pointsPerInch = 72;
+  const topMargin = (margins.top || 1) * pointsPerInch;
+  const bottomMargin = (margins.bottom || 1) * pointsPerInch;
   
   if (template.mirrorMargins) {
     // Use inside/outside margins for book binding
-    const insideMargin = (margins.inside || 1.25) * 72;
-    const outsideMargin = (margins.outside || 1) * 72;
+    const insideMargin = (margins.inside || 1.25) * pointsPerInch;
+    const outsideMargin = (margins.outside || 1) * pointsPerInch;
     
     if (pageNumber % 2 === 1) {
       // Odd page (right-hand): inside margin on left
@@ -60,8 +138,8 @@ function getPageMargins(template, pageNumber) {
     }
   } else {
     // Use regular left/right margins or inside/outside as uniform margins
-    const leftMargin = (margins.left || margins.inside || 1.25) * 72;
-    const rightMargin = (margins.right || margins.outside || 1) * 72;
+    const leftMargin = (margins.left || margins.inside || 1.25) * pointsPerInch;
+    const rightMargin = (margins.right || margins.outside || 1) * pointsPerInch;
     
     return {
       top: topMargin,
@@ -85,7 +163,7 @@ function parseMarkdownToHTML(text) {
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     // Handle italic (only single asterisks not part of bold)
     .replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>')
-    // Handle remaining single line breaks as <br> (since we're treating each line as a paragraph, we might not need this)
+    // Handle remaining single line breaks as <br>
     .replace(/\n/g, '<br>');
 }
 
@@ -258,14 +336,10 @@ function renderFormattedTextToPDF(pdf, segments, x, y, maxWidth, fontSize, lineH
     const lines = segment.text.split('\n');
     
     lines.forEach((line, lineIndex) => {
-      // Since we're now treating each input line as a paragraph, we don't need to add line breaks here
-      // Just process the line as a continuous text segment
       if (lineIndex > 0) {
-        // This shouldn't happen much since we're splitting paragraphs on newlines before calling this function
-        // But if it does, treat it as a line break within the same paragraph
         currentY += lineHeight;
         currentX = x;
-        isFirstLineOfParagraph = false; // Not first line anymore
+        isFirstLineOfParagraph = false;
         
         // Check if we need a new page
         if (currentY + lineHeight > pageHeight - bottomMargin) {
@@ -302,7 +376,6 @@ function renderFormattedTextToPDF(pdf, segments, x, y, maxWidth, fontSize, lineH
         
         // Apply indentation only to the first line of the paragraph
         if (isFirstLineOfParagraph && shouldIndentFirstLine) {
-          // Make indent proportional to page width (3% of content width for smaller pages, min 24pt, max 48pt)
           const indentAmount = Math.max(24, Math.min(48, currentMaxWidth * 0.03));
           availableWidth -= indentAmount;
           lineStartX += indentAmount;
@@ -319,7 +392,7 @@ function renderFormattedTextToPDF(pdf, segments, x, y, maxWidth, fontSize, lineH
           // Move to next line
           currentY += lineHeight;
           currentX = x;
-          isFirstLineOfParagraph = false; // No longer first line
+          isFirstLineOfParagraph = false;
           
           // Check if we need a new page
           if (currentY + lineHeight > pageHeight - bottomMargin) {
@@ -347,21 +420,18 @@ function renderFormattedTextToPDF(pdf, segments, x, y, maxWidth, fontSize, lineH
       
       // Render any remaining words in the line (last line, no justification)
       if (currentLineWords.length > 0) {
-        // Determine starting position for this line
         let lineStartX = x;
         let availableWidth = currentMaxWidth;
         
-        // Apply indentation only to the first line of the paragraph
         if (isFirstLineOfParagraph && shouldIndentFirstLine) {
-          // Make indent proportional to page width (3% of content width for smaller pages, min 24pt, max 48pt)
           const indentAmount = Math.max(24, Math.min(48, availableWidth * 0.03));
           lineStartX += indentAmount;
           availableWidth -= indentAmount;
         }
         
-        renderJustifiedLine(pdf, currentLineWords, lineStartX, currentY, availableWidth, 'left', true); // Last line is always left-aligned
+        renderJustifiedLine(pdf, currentLineWords, lineStartX, currentY, availableWidth, 'left', true);
         currentX = lineStartX + currentLineWidth;
-        isFirstLineOfParagraph = false; // No longer first line
+        isFirstLineOfParagraph = false;
       }
     });
     
@@ -374,9 +444,29 @@ function renderFormattedTextToPDF(pdf, segments, x, y, maxWidth, fontSize, lineH
   return currentY;
 }
 
+// Helper function to safely render text and catch coordinate errors
+function safeText(pdf, text, x, y) {
+  // Validate coordinates
+  if (isNaN(x) || isNaN(y) || x < 0 || y < 0 || !text) {
+    console.error('Invalid text coordinates or text:', { text, x, y });
+    return false;
+  }
+  
+  try {
+    pdf.text(text, x, y);
+    return true;
+  } catch (error) {
+    console.error('PDF text error:', error, { text, x, y });
+    return false;
+  }
+}
+
 // Helper function to render a justified line of text
 function renderJustifiedLine(pdf, words, x, y, maxWidth, textAlign, isLastLine) {
-  if (words.length === 0) return;
+  if (words.length === 0 || isNaN(x) || isNaN(y) || isNaN(maxWidth)) {
+    console.error('Invalid line parameters:', { words: words.length, x, y, maxWidth });
+    return;
+  }
   
   // Calculate total width of words without spaces
   const totalWordWidth = words.reduce((total, word) => total + pdf.getTextWidth(word), 0);
@@ -390,20 +480,22 @@ function renderJustifiedLine(pdf, words, x, y, maxWidth, textAlign, isLastLine) 
     
     let currentX = x;
     words.forEach((word, index) => {
-      pdf.text(word, currentX, y);
-      currentX += pdf.getTextWidth(word);
-      if (index < words.length - 1) {
-        currentX += spaceWidth;
+      if (safeText(pdf, word, currentX, y)) {
+        currentX += pdf.getTextWidth(word);
+        if (index < words.length - 1) {
+          currentX += spaceWidth;
+        }
       }
     });
   } else {
     // Left-aligned text: use standard spacing
     let currentX = x;
     words.forEach((word, index) => {
-      pdf.text(word, currentX, y);
-      currentX += pdf.getTextWidth(word);
-      if (index < words.length - 1) {
-        currentX += standardSpaceWidth;
+      if (safeText(pdf, word, currentX, y)) {
+        currentX += pdf.getTextWidth(word);
+        if (index < words.length - 1) {
+          currentX += standardSpaceWidth;
+        }
       }
     });
   }
@@ -412,25 +504,61 @@ function renderJustifiedLine(pdf, words, x, y, maxWidth, textAlign, isLastLine) 
 export async function exportToPDF(book, options = {}) {
   const { template } = options;
   
-  // Get page dimensions for the selected page size
-  const pageDimensions = getPageDimensions(template.pageSize || 'letter');
-  const pageWidth = pageDimensions.width;
-  const pageHeight = pageDimensions.height;
+  try {
   
-  // Create PDF with custom page size
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'pt',
-    format: [pageWidth, pageHeight]
-  });
+  // Create PDF with consistent format handling
+  const pdf = createPDFWithConsistentFormat(template.pageSize || 'letter');
   
-  // Get initial margins for page 1
+  // Get the actual page dimensions in points
+  const actualPageSize = pdf.internal.pageSize;
+  const pageWidth = actualPageSize.width;
+  const pageHeight = actualPageSize.height;
+  
+  console.log(`PDF created: ${pageWidth} x ${pageHeight} points (${(pageWidth/72).toFixed(2)}" × ${(pageHeight/72).toFixed(2)}")`);
+  console.log(`Platform: ${navigator.platform}`);
+  
+  // Verify page size matches expectation
+  const expectedDimensions = getPageDimensions(template.pageSize || 'letter');
+  const expectedWidth = expectedDimensions.width;
+  const expectedHeight = expectedDimensions.height;
+  
+  if (expectedWidth && expectedHeight) {
+    const widthDiff = Math.abs(pageWidth - expectedWidth);
+    const heightDiff = Math.abs(pageHeight - expectedHeight);
+    
+    if (widthDiff > 5 || heightDiff > 5) { // Allow 5pt tolerance
+      console.error(`Significant page size discrepancy detected:`, {
+        pageSize: template.pageSize,
+        expected: { width: expectedWidth, height: expectedHeight },
+        actual: { width: pageWidth, height: pageHeight },
+        difference: { width: widthDiff, height: heightDiff }
+      });
+    } else {
+      console.log(`✓ Page size verification passed (±${Math.max(widthDiff, heightDiff).toFixed(1)}pt)`);
+    }
+  }
+  
+  // Get initial margins for page 1 (now returns values in points directly)
   let currentPageMargins = getPageMargins(template, 1);
   let leftMargin = currentPageMargins.left;
   let rightMargin = currentPageMargins.right;
   let topMargin = currentPageMargins.top;
   let bottomMargin = currentPageMargins.bottom;
   let contentWidth = pageWidth - leftMargin - rightMargin;
+  
+  // Validate margins
+  if (isNaN(leftMargin) || isNaN(rightMargin) || isNaN(topMargin) || isNaN(bottomMargin)) {
+    console.error('Invalid margin calculations:', currentPageMargins);
+    throw new Error('Invalid margin values calculated');
+  }
+  
+  console.log('Margin validation:', {
+    left: leftMargin,
+    right: rightMargin, 
+    top: topMargin,
+    bottom: bottomMargin,
+    contentWidth
+  });
   
   // Set font using enhanced font mapping
   const pdfFont = mapFontForPDF(template.fontFamily);
@@ -473,6 +601,12 @@ export async function exportToPDF(book, options = {}) {
     bottomMargin = currentPageMargins.bottom;
     contentWidth = pageWidth - leftMargin - rightMargin;
     
+    // Validate margins
+    if (isNaN(leftMargin) || isNaN(rightMargin) || isNaN(topMargin) || isNaN(bottomMargin)) {
+      console.error('Invalid margin calculations on page', pageNumber, ':', currentPageMargins);
+      return null;
+    }
+    
     console.log(`Page ${pageNumber}: Left margin = ${leftMargin/72}in, Right margin = ${rightMargin/72}in`);
     
     // Return updated margin info for text rendering
@@ -496,7 +630,7 @@ export async function exportToPDF(book, options = {}) {
       // Center the title
       const titleWidth = pdf.getTextWidth(book.title);
       const titleX = (pageWidth - titleWidth) / 2;
-      pdf.text(book.title, titleX, currentY);
+      safeText(pdf, book.title, titleX, currentY);
       currentY += 48; // 2 line spaces
     }
     
@@ -507,7 +641,7 @@ export async function exportToPDF(book, options = {}) {
       const authorText = `by ${book.author}`;
       const authorWidth = pdf.getTextWidth(authorText);
       const authorX = (pageWidth - authorWidth) / 2;
-      pdf.text(authorText, authorX, currentY);
+      safeText(pdf, authorText, authorX, currentY);
     }
     
     // Start new page for content
@@ -629,7 +763,7 @@ export async function exportToPDF(book, options = {}) {
           headerX = leftMargin + contentWidth - lineWidth;
         }
         
-        pdf.text(line, headerX, currentY);
+        safeText(pdf, line, headerX, currentY);
         currentY += template.chapterHeader.fontSize * 1.2; // Line spacing for chapter headers
       });
       
@@ -657,7 +791,7 @@ export async function exportToPDF(book, options = {}) {
         
         const sceneTitleLines = pdf.splitTextToSize(scene.title, contentWidth);
         sceneTitleLines.forEach(line => {
-          pdf.text(line, leftMargin, currentY);
+          safeText(pdf, line, leftMargin, currentY);
           currentY += lineHeight * 1.2;
         });
         
@@ -728,7 +862,7 @@ export async function exportToPDF(book, options = {}) {
         const sceneBreak = '* * *';
         const breakWidth = pdf.getTextWidth(sceneBreak);
         const breakX = (pageWidth - breakWidth) / 2;
-        pdf.text(sceneBreak, breakX, currentY);
+        safeText(pdf, sceneBreak, breakX, currentY);
         currentY += lineHeight * 1.5;
       }
     });
@@ -783,7 +917,7 @@ export async function exportToPDF(book, options = {}) {
         
         // Position in top margin area
         const headerY = pageMargins.top / 2;
-        pdf.text(headerText, headerX, headerY);
+        safeText(pdf, headerText, headerX, headerY);
       }
     }
     
@@ -804,25 +938,116 @@ export async function exportToPDF(book, options = {}) {
       const pageNumberX = pageMargins.left + (pageContentWidth - pageNumberWidth) / 2;
       const pageNumberY = pageHeight - pageMargins.bottom + 18; // Position within bottom margin area
       
-      pdf.text(pageNumberText, pageNumberX, pageNumberY);
+      safeText(pdf, pageNumberText, pageNumberX, pageNumberY);
     }
   }
   
-  // Save the PDF
-  pdf.save(`${book.title || 'Book'}.pdf`);
+    // Save the PDF with proper error handling
+    const filename = `${book.title || 'Book'}.pdf`;
+    
+    // Check for potential file access issues
+    const accessCheck = checkFileAccess(filename);
+    if (accessCheck.warning) {
+      console.warn(accessCheck.message);
+      // Could show a warning dialog here if desired
+    }
+    
+    console.log(`Attempting to save PDF: ${filename}`);
+    
+    pdf.save(filename);
+    
+    // Show success message
+    console.log(`✓ PDF exported successfully: ${filename}`);
+    
+    // Optional: Show user notification of success
+    if (typeof window !== 'undefined' && window.electron) {
+      // In Electron, we could show a native notification
+      try {
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.send('show-notification', {
+          title: 'Export Complete',
+          body: `PDF saved as ${filename}`
+        });
+      } catch (e) {
+        // Fallback to console if electron APIs not available
+        console.log('PDF export completed successfully');
+      }
+    }
+    
+  } catch (error) {
+    console.error('PDF export failed:', error);
+    
+    // Determine the likely cause and show user-friendly message
+    let userMessage = 'Failed to export PDF.';
+    
+    if (error.message && (error.message.includes('permission') || error.message.includes('save'))) {
+      userMessage = `Cannot save PDF - the file may be open in another application.\n\nPlease close any PDF viewers showing "${book.title || 'Book'}.pdf" and try again.`;
+    } else if (error.message && error.message.includes('access')) {
+      userMessage = `Cannot save PDF - file access denied.\n\nThe file "${book.title || 'Book'}.pdf" may be open in another application or you may not have write permission to the Downloads folder.`;
+    } else if (error.name === 'NotAllowedError') {
+      userMessage = 'Cannot save PDF - file access was denied by the browser or system.';
+    } else if (error.message.includes('Invalid')) {
+      userMessage = 'PDF generation failed due to invalid content or settings. Please check your book content and template settings.';
+    } else {
+      userMessage = `PDF export failed: ${error.message || 'Unknown error'}`;
+    }
+    
+    // Show error to user
+    alert(`Export Failed\n\n${userMessage}\n\n💡 Tip: Close any PDF viewers and try again.`);
+    
+    // Re-throw the error so the calling code knows the export failed
+    throw new Error(userMessage);
+  }
 }
 
 export async function exportToHTML(book, options = {}) {
-  const htmlContent = generateHTML(book, options);
-  const blob = new Blob([htmlContent], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${book.title || 'Book'}.html`;
-  a.click();
-  
-  URL.revokeObjectURL(url);
+  try {
+    const htmlContent = generateHTML(book, options);
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    
+    const filename = `${book.title || 'Book'}.html`;
+    console.log(`Attempting to save HTML: ${filename}`);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    
+    // Add error handling for the download
+    a.addEventListener('error', (event) => {
+      console.error('HTML download failed:', event);
+      URL.revokeObjectURL(url);
+      
+      const userMessage = `Cannot save HTML file - the file "${filename}" may be open in another application. Please close any browsers or editors showing this file and try again.`;
+      alert(`Export Failed\n\n${userMessage}`);
+    });
+    
+    // Trigger download
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // Clean up the URL after a delay to allow download to start
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+    
+    console.log(`✓ HTML export initiated: ${filename}`);
+    
+  } catch (error) {
+    console.error('HTML generation failed:', error);
+    
+    let userMessage = 'Failed to generate HTML file.';
+    
+    if (error.message.includes('Blob') || error.message.includes('URL')) {
+      userMessage = 'HTML generation failed due to browser limitations or insufficient memory.';
+    } else {
+      userMessage = `HTML generation failed: ${error.message || 'Unknown error'}`;
+    }
+    
+    alert(`Export Failed\n\n${userMessage}`);
+    throw error;
+  }
 }
 
 function generateHTML(book, options = {}) {
@@ -971,4 +1196,25 @@ function generateHTML(book, options = {}) {
   
   content += '</body></html>';
   return content;
+}
+
+// Debug function to test all page sizes
+export function debugPageSizes() {
+  console.log('Testing page size consistency across formats:');
+  
+  Object.keys(PAGE_SIZES).forEach(pageSize => {
+    try {
+      const pdf = createPDFWithConsistentFormat(pageSize);
+      const actual = pdf.internal.pageSize;
+      const expected = getPageDimensions(pageSize);
+      
+      console.log(`${pageSize}:`, {
+        expected: `${expected.widthInches}×${expected.heightInches}in (${expected.width}×${expected.height}pt)`,
+        actual: `${(actual.width/72).toFixed(2)}×${(actual.height/72).toFixed(2)}in (${actual.width.toFixed(1)}×${actual.height.toFixed(1)}pt)`,
+        accurate: Math.abs(actual.width - expected.width) < 5 && Math.abs(actual.height - expected.height) < 5
+      });
+    } catch (error) {
+      console.error(`Failed to create ${pageSize}:`, error.message);
+    }
+  });
 }
