@@ -1189,12 +1189,8 @@ function App() {
           book={book}
           onClose={() => setShowExportDialog(false)}
           onExport={(format) => {
-            // Export logic would trigger GitHub commit prompt if repo exists
-            if (book.github?.repository) {
-              const shouldCommit = window.confirm('Commit export to GitHub?');
-              // Handle commit logic
-            }
-          }}
+            
+		  }}
         />
       )}
 
