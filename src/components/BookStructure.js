@@ -1,6 +1,55 @@
 import React from 'react';
 import SceneList from './SceneList';
 import CharacterList from './CharacterList';
+import CharacterThreadVisualization from './CharacterThreadVisualization';
+
+// Threads control component for the sidebar
+function ThreadsControls({ chapters, characters, characterDetectionBlacklist, onUpdateCharacterDetectionBlacklist }) {
+  // Get character count for display
+  const allCharacters = new Set();
+  characters.forEach(char => allCharacters.add(char.name));
+  
+  // Count scenes
+  const totalScenes = chapters.reduce((total, ch) => total + ch.scenes.length, 0);
+  
+  return (
+    <div className="threads-controls" style={{ 
+      padding: '1rem',
+      height: '100%',
+      overflow: 'auto'
+    }}>
+      <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1em' }}>Thread View</h3>
+      
+      <div style={{ marginBottom: '1rem' }}>
+        <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '0.5rem' }}>
+          Analyzing {totalScenes} scenes across {chapters.length} chapters
+        </div>
+        <div style={{ fontSize: '0.9em', color: '#666' }}>
+          {characters.length} formal characters
+        </div>
+        {characterDetectionBlacklist && characterDetectionBlacklist.length > 0 && (
+          <div style={{ fontSize: '0.9em', color: '#dc2626' }}>
+            {characterDetectionBlacklist.length} blacklisted names
+          </div>
+        )}
+      </div>
+      
+      <div style={{ marginTop: '1.5rem', fontSize: '0.85em', color: '#6b7280', lineHeight: 1.4 }}>
+        <p><strong>How to use:</strong></p>
+        <ul style={{ margin: '0.5rem 0', paddingLeft: '1.2rem' }}>
+          <li>Click character names to highlight their threads</li>
+          <li>Use ✕ next to names to blacklist false positives</li>
+          <li>✓ marks characters from your character list</li>
+          <li>Connecting lines show character continuity between scenes</li>
+        </ul>
+      </div>
+      
+      <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: '#f8f9fa', borderRadius: '0.5rem', fontSize: '0.8em', color: '#666' }}>
+        <strong>Coming soon:</strong> Filter controls, character grouping, and export options will be added here.
+      </div>
+    </div>
+  );
+}
 
 function BookStructure({ 
   // Scene/Chapter props
@@ -34,6 +83,10 @@ function BookStructure({
   characterRecycleBin,
   onRestoreCharacterFromRecycleBin,
   onPermanentlyDeleteCharacter,
+  
+  // Character detection props
+  characterDetectionBlacklist,
+  onUpdateCharacterDetectionBlacklist,
   
   // Tab props
   activeTab,
@@ -99,6 +152,19 @@ function BookStructure({
           characterRecycleBin={characterRecycleBin}
           onRestoreFromRecycleBin={onRestoreCharacterFromRecycleBin}
           onPermanentlyDelete={onPermanentlyDeleteCharacter}
+        />
+      )
+    },
+    {
+      id: 'threads',
+      label: 'Threads',
+      icon: '🧵',
+      component: (
+        <ThreadsControls
+          chapters={chapters}
+          characters={characters}
+          characterDetectionBlacklist={characterDetectionBlacklist}
+          onUpdateCharacterDetectionBlacklist={onUpdateCharacterDetectionBlacklist}
         />
       )
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import BookStructure from './components/BookStructure';
 import SceneEditor from './components/SceneEditor';
 import CharacterEditor from './components/CharacterEditor';
+import CharacterThreadVisualization from './components/CharacterThreadVisualization';
 import TemplateManager from './components/TemplateManager';
 import ExportDialog from './components/ExportDialog';
 import GitHubIntegration from './components/GitHubIntegration';
@@ -44,6 +45,7 @@ function App() {
       }
     ],
     characters: [],
+    characterDetectionBlacklist: [],
     template: {
       fontFamily: 'Times New Roman',
       fontSize: 12,
@@ -545,6 +547,11 @@ function App() {
         cleanBookData.characters = [];
       }
       
+      // Migrate old format - add character detection blacklist if missing
+      if (!cleanBookData.characterDetectionBlacklist) {
+        cleanBookData.characterDetectionBlacklist = [];
+      }
+      
       // Set all states in batch
       // Set all states simply and directly
       setBook(cleanBookData);
@@ -610,6 +617,7 @@ function App() {
         }
       ],
       characters: [],
+      characterDetectionBlacklist: [],
         template: {
           fontFamily: 'Times New Roman',
           fontSize: 12,
@@ -1007,6 +1015,15 @@ function App() {
     }
   };
 
+  const updateCharacterDetectionBlacklist = (blacklist) => {
+    setBook(prev => ({
+      ...prev,
+      characterDetectionBlacklist: blacklist,
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
   const handleBookRecovered = (filePath, bookData) => {
     // Load the recovered book
     // Set all states simply and directly
@@ -1131,6 +1148,10 @@ function App() {
           onRestoreCharacterFromRecycleBin={restoreCharacterFromRecycleBin}
           onPermanentlyDeleteCharacter={permanentlyDeleteCharacter}
           
+          // Character detection props
+          characterDetectionBlacklist={book.characterDetectionBlacklist}
+          onUpdateCharacterDetectionBlacklist={updateCharacterDetectionBlacklist}
+          
           // Tab props
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -1166,6 +1187,13 @@ function App() {
               </div>
             </div>
           )
+        ) : activeTab === 'threads' ? (
+          <CharacterThreadVisualization
+            chapters={book.chapters}
+            characters={book.characters}
+            characterDetectionBlacklist={book.characterDetectionBlacklist}
+            onUpdateCharacterDetectionBlacklist={updateCharacterDetectionBlacklist}
+          />
         ) : (
           <div className="scene-editor">
             <div className="no-scene">

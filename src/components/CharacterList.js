@@ -25,8 +25,14 @@ function CharacterList({
   };
 
   return (
-    <div className="character-list">
-      <div className="character-list-header">
+    <div className="character-list" style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      maxHeight: '100vh',
+      overflow: 'hidden'
+    }}>
+      <div className="character-list-header" style={{ flexShrink: 0 }}>
         <h3>Characters</h3>
         <p className="character-description">
           Manage your story's characters. Character information is saved with your book but won't appear in exports.
@@ -45,7 +51,11 @@ function CharacterList({
         </div>
       </div>
       
-      <div className="characters-container">
+      <div className="characters-container" style={{
+        flex: 1,
+        overflow: 'auto',
+        padding: '0 0 1rem 0'
+      }}>
         {characters.length === 0 ? (
           <div className="empty-characters">
             <span>No characters yet. Click "👤+ Character" to add one.</span>
@@ -129,7 +139,13 @@ function CharacterList({
       
       {/* Character Recycle Bin */}
       {showRecycleBin && (
-        <div className="recycle-bin">
+        <div className="recycle-bin" style={{
+          flexShrink: 0,
+          maxHeight: '300px',
+          overflow: 'auto',
+          borderTop: '1px solid #e5e7eb',
+          backgroundColor: '#fafafa'
+        }}>
           <div className="recycle-bin-header">
             <h4>🗑️ Character Recycle Bin</h4>
             <div className="recycle-bin-controls">
