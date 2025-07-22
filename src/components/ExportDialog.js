@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { exportToPDF, exportToHTML } from '../utils/exportManager';
+import { exportToPDF, exportToHTML, exportToEPUB } from '../utils/exportManager';
 
 function ExportDialog({ book, onClose, onExport }) {
   const [exportFormat, setExportFormat] = useState('pdf');
@@ -20,6 +20,9 @@ function ExportDialog({ book, onClose, onExport }) {
           break;
         case 'html':
           await exportToHTML(book, options);
+          break;
+        case 'epub':
+          await exportToEPUB(book, options);
           break;
         default:
           break;
@@ -48,6 +51,7 @@ function ExportDialog({ book, onClose, onExport }) {
             >
               <option value="pdf">PDF (Print Ready)</option>
               <option value="html">HTML (Web Preview)</option>
+              <option value="epub">EPUB (Ebook)</option>
             </select>
           </div>
 
@@ -62,22 +66,52 @@ function ExportDialog({ book, onClose, onExport }) {
             </label>
           </div>
 
-          <div className="form-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={includeSceneTitles}
-                onChange={(e) => setIncludeSceneTitles(e.target.checked)}
+          {exportFormat === 'epub' && (
+            <div className="form-group">
+              <div style={{ 
+                padding: '0.75rem', 
+                backgroundColor: '#f0f9ff', 
+                border: '1px solid #bae6fd', 
+                borderRadius: '0.25rem',
+                fontSize: '0.9em',
+                color: '#0369a1'
+              }}>
+                <strong>📱 Ebook Format Notes:</strong>
+                <ul style={{ margin: '0.5rem 0 0 1.5rem', padding: 0 }}>
+                  <li>No page breaks or mirror margins (content flows continuously)</li>
+                  <li>Chapter breaks use spacing instead of new pages</li>
+                  <li>Readers can adjust font size and typeface</li>
+                  <li>Optimized for various screen sizes</li>
+                  <li>EPUB works on most ebook readers (including newer Kindles)</li>
+                </ul>
+                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8em', fontStyle: 'italic' }}>
+                  💡 For older Kindles that need MOBI format, you can convert this EPUB using free tools like Calibre.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {exportFormat !== 'epub' && (
+            <div className="form-group">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={includeSceneTitles}
+                  onChange={(e) => setIncludeSceneTitles(e.target.checked)}
               />
-              Include scene titles
-            </label>
-          </div>
+                Include scene titles
+                </label>
+              </div>
+              )}
 
           <div className="book-preview">
             <h3>Book Preview</h3>
             <p><strong>Title:</strong> {book.title}</p>
             <p><strong>Author:</strong> {book.author}</p>
             <p><strong>Page Size:</strong> {(() => {
+              if (exportFormat === 'epub') {
+                return 'Responsive (adapts to any device)';
+              }
               const pageDimensions = {
                 'letter': 'US Letter (8.5" × 11")',
                 'a4': 'A4 (8.27" × 11.69")',
@@ -89,7 +123,10 @@ function ExportDialog({ book, onClose, onExport }) {
               };
               return pageDimensions[book.template.pageSize || 'letter'];
             })()}</p>
-            <p><strong>Text Alignment:</strong> {book.template.textAlign === 'left' ? 'Left Aligned' : 'Justified (Professional)'}</p>
+            <p><strong>Text Alignment:</strong> {exportFormat === 'epub' ? 
+              (book.template.textAlign === 'left' ? 'Left Aligned (reader adjustable)' : 'Justified (reader adjustable)') :
+              (book.template.textAlign === 'left' ? 'Left Aligned' : 'Justified (Professional)')
+            }</p>
             <p><strong>Paragraph Style:</strong> {book.template.paragraphStyle === 'indented' ? 'Indented (Traditional)' : 'Line Separated (Modern)'}</p>
             <p><strong>Chapters:</strong> {book.chapters.length}</p>
             <p><strong>Scenes:</strong> {

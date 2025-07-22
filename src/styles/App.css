@@ -1592,3 +1592,74 @@ body {
 .app {
   padding-bottom: 24px;
 }
+
+/* Enhanced scrolling styles for improved UX */
+.chapters-container, .characters-container {
+  scroll-behavior: smooth;
+}
+
+/* Better scrollbar styling for webkit browsers */
+.chapters-container::-webkit-scrollbar,
+.characters-container::-webkit-scrollbar,
+.recycle-bin::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chapters-container::-webkit-scrollbar-track,
+.characters-container::-webkit-scrollbar-track,
+.recycle-bin::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.chapters-container::-webkit-scrollbar-thumb,
+.characters-container::-webkit-scrollbar-thumb,
+.recycle-bin::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.chapters-container::-webkit-scrollbar-thumb:hover,
+.characters-container::-webkit-scrollbar-thumb:hover,
+.recycle-bin::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Ensure drag and drop still works with flexbox layout */
+.chapter-group, .scene-item, .character-item {
+  flex-shrink: 0;
+}
+
+/* Recycle bin specific improvements */
+.recycle-bin {
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+/* Empty state styling improvements */
+.empty-chapter, .empty-characters, .empty-bin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+}
+
+/* Tab layout improvements for better scrolling */
+.book-structure {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.book-structure-tabs {
+  flex-shrink: 0;
+}
+
+.tab-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}

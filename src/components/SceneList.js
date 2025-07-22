@@ -226,8 +226,14 @@ function SceneList({
   };
 
   return (
-    <div className="scene-list">
-      <div className="scene-list-header">
+    <div className="scene-list" style={{ 
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      maxHeight: '100vh',
+      overflow: 'hidden'
+    }}>
+      <div className="scene-list-header" style={{ flexShrink: 0 }}>
         <h3>Book Structure</h3>
         {currentChapterId && (
           <div className="current-chapter-indicator">
@@ -263,7 +269,11 @@ function SceneList({
         </div>
       </div>
       
-      <div className="chapters-container">
+      <div className="chapters-container" style={{
+        flex: 1,
+        overflow: 'auto',
+        padding: '0 0 1rem 0'
+      }}>
         {chapters.map((chapter, chapterIndex) => {
           const isExpanded = expandedChapters.has(chapter.id);
           const isCurrentChapter = chapter.id === currentChapterId;
@@ -469,7 +479,13 @@ function SceneList({
       
       {/* Recycle Bin */}
       {showRecycleBin && (
-        <div className="recycle-bin">
+        <div className="recycle-bin" style={{
+          flexShrink: 0,
+          maxHeight: '300px',
+          overflow: 'auto',
+          borderTop: '1px solid #e5e7eb',
+          backgroundColor: '#fafafa'
+        }}>
           <div className="recycle-bin-header">
             <h4>🗑️ Recycle Bin</h4>
             <div className="recycle-bin-controls">
