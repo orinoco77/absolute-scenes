@@ -1,6 +1,7 @@
 import React from 'react';
 import SceneList from './SceneList';
 import CharacterList from './CharacterList';
+import LocationList from './LocationList';
 import CharacterThreadVisualization from './CharacterThreadVisualization';
 
 // Threads control component for the sidebar
@@ -13,39 +14,51 @@ function ThreadsControls({ chapters, characters, characterDetectionBlacklist, on
   const totalScenes = chapters.reduce((total, ch) => total + ch.scenes.length, 0);
   
   return (
-    <div className="threads-controls" style={{ 
-      padding: '1rem',
-      height: '100%',
-      overflow: 'auto'
-    }}>
-      <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1em' }}>Thread View</h3>
+    <div className="tab-list">
+      <div className="tab-list-header">
+        <h3>Thread View</h3>
+        <p className="tab-description">
+          Visualize character appearances and story threads across your scenes. Track character continuity and narrative flow.
+        </p>
+      </div>
       
-      <div style={{ marginBottom: '1rem' }}>
-        <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '0.5rem' }}>
-          Analyzing {totalScenes} scenes across {chapters.length} chapters
-        </div>
-        <div style={{ fontSize: '0.9em', color: '#666' }}>
-          {characters.length} formal characters
-        </div>
-        {characterDetectionBlacklist && characterDetectionBlacklist.length > 0 && (
-          <div style={{ fontSize: '0.9em', color: '#dc2626' }}>
-            {characterDetectionBlacklist.length} blacklisted names
+      <div className="tab-content-container">
+        <div className="tab-info-section">
+          <div className="tab-stats">
+            <div className="tab-stat">
+              <span className="stat-label">Scenes analyzed:</span>
+              <span className="stat-value">{totalScenes}</span>
+            </div>
+            <div className="tab-stat">
+              <span className="stat-label">Chapters:</span>
+              <span className="stat-value">{chapters.length}</span>
+            </div>
+            <div className="tab-stat">
+              <span className="stat-label">Formal characters:</span>
+              <span className="stat-value">{characters.length}</span>
+            </div>
+            {characterDetectionBlacklist && characterDetectionBlacklist.length > 0 && (
+              <div className="tab-stat">
+                <span className="stat-label">Blacklisted names:</span>
+                <span className="stat-value" style={{color: '#dc2626'}}>{characterDetectionBlacklist.length}</span>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      
-      <div style={{ marginTop: '1.5rem', fontSize: '0.85em', color: '#6b7280', lineHeight: 1.4 }}>
-        <p><strong>How to use:</strong></p>
-        <ul style={{ margin: '0.5rem 0', paddingLeft: '1.2rem' }}>
-          <li>Click character names to highlight their threads</li>
-          <li>Use ✕ next to names to blacklist false positives</li>
-          <li>✓ marks characters from your character list</li>
-          <li>Connecting lines show character continuity between scenes</li>
-        </ul>
-      </div>
-      
-      <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: '#f8f9fa', borderRadius: '0.5rem', fontSize: '0.8em', color: '#666' }}>
-        <strong>Coming soon:</strong> Filter controls, character grouping, and export options will be added here.
+        </div>
+        
+        <div className="tab-help-section">
+          <h4>How to use:</h4>
+          <ul>
+            <li>Click character names to highlight their threads</li>
+            <li>Use ✕ next to names to blacklist false positives</li>
+            <li>✓ marks characters from your character list</li>
+            <li>Connecting lines show character continuity between scenes</li>
+          </ul>
+        </div>
+        
+        <div className="tab-coming-soon">
+          <strong>Coming soon:</strong> Filter controls, character grouping, and export options will be added here.
+        </div>
       </div>
     </div>
   );
@@ -88,6 +101,17 @@ function BookStructure({
   characterDetectionBlacklist,
   onUpdateCharacterDetectionBlacklist,
   
+  // Location props
+  locations,
+  currentLocationId,
+  onLocationSelect,
+  onLocationAdd,
+  onLocationDelete,
+  onLocationUpdate,
+  locationRecycleBin,
+  onRestoreLocationFromRecycleBin,
+  onPermanentlyDeleteLocation,
+  
   // Tab props
   activeTab,
   onTabChange
@@ -105,6 +129,8 @@ function BookStructure({
         onChapterSelect(firstChapterWithScenes.id);
         onSceneSelect(firstChapterWithScenes.scenes[0].id);
       }
+    } else if (tabId === 'locations' && !currentLocationId && locations.length > 0) {
+      onLocationSelect(locations[0].id);
     }
   };
 
@@ -167,27 +193,49 @@ function BookStructure({
           onUpdateCharacterDetectionBlacklist={onUpdateCharacterDetectionBlacklist}
         />
       )
+    },
+    {
+      id: 'locations',
+      label: 'Locations',
+      icon: '🌍',
+      component: (
+        <LocationList
+          locations={locations}
+          currentLocationId={currentLocationId}
+          onLocationSelect={onLocationSelect}
+          onLocationAdd={onLocationAdd}
+          onLocationDelete={onLocationDelete}
+          onLocationUpdate={onLocationUpdate}
+          locationRecycleBin={locationRecycleBin}
+          onRestoreFromRecycleBin={onRestoreLocationFromRecycleBin}
+          onPermanentlyDelete={onPermanentlyDeleteLocation}
+        />
+      )
     }
   ];
 
   return (
     <div className="book-structure">
-      <div className="book-structure-tabs">
+      <div className="accordion-container">
         {tabs.map(tab => (
-          <button
-            key={tab.id}
-            className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => handleTabChange(tab.id)}
-            title={tab.label}
-          >
-            <span className="tab-icon">{tab.icon}</span>
-            <span className="tab-label">{tab.label}</span>
-          </button>
+          <div key={tab.id} className={`accordion-section ${activeTab === tab.id ? 'active-section' : ''}`}>
+            <button
+              className={`accordion-button ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => handleTabChange(tab.id)}
+              title={tab.label}
+            >
+              <span className="accordion-icon">{tab.icon}</span>
+              <span className="accordion-label">{tab.label}</span>
+              <span className="accordion-chevron">{activeTab === tab.id ? '▼' : '▶'}</span>
+            </button>
+            
+            {activeTab === tab.id && (
+              <div className="accordion-content">
+                {tab.component}
+              </div>
+            )}
+          </div>
         ))}
-      </div>
-      
-      <div className="tab-content">
-        {tabs.find(tab => tab.id === activeTab)?.component}
       </div>
     </div>
   );

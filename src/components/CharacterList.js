@@ -25,25 +25,19 @@ function CharacterList({
   };
 
   return (
-    <div className="character-list" style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      maxHeight: '100vh',
-      overflow: 'hidden'
-    }}>
-      <div className="character-list-header" style={{ flexShrink: 0 }}>
+    <div className="tab-list">
+      <div className="tab-list-header">
         <h3>Characters</h3>
-        <p className="character-description">
+        <p className="tab-description">
           Manage your story's characters. Character information is saved with your book but won't appear in exports.
         </p>
         <div className="header-buttons">
-          <button onClick={onCharacterAdd} className="add-character-btn" title="Add Character">
+          <button onClick={onCharacterAdd} className="primary-btn" title="Add Character">
             👤+ Character
           </button>
           <button 
             onClick={() => setShowRecycleBin(!showRecycleBin)} 
-            className={`recycle-bin-btn ${characterRecycleBin.length > 0 ? 'has-items' : ''}`}
+            className={`secondary-btn ${characterRecycleBin.length > 0 ? 'has-items' : ''}`}
             title={`Character Recycle Bin (${characterRecycleBin.length} items)`}
           >
             🗑️ ({characterRecycleBin.length})
@@ -51,14 +45,10 @@ function CharacterList({
         </div>
       </div>
       
-      <div className="characters-container" style={{
-        flex: 1,
-        overflow: 'auto',
-        padding: '0 0 1rem 0'
-      }}>
+      <div className="tab-content-container">
         {characters.length === 0 ? (
-          <div className="empty-characters">
-            <span>No characters yet. Click "👤+ Character" to add one.</span>
+          <div className="empty-state">
+            <p>No characters yet. Click "👤+ Character" to add one.</p>
           </div>
         ) : (
           characters.map((character) => {
