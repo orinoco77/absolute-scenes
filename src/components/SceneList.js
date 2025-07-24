@@ -226,15 +226,12 @@ function SceneList({
   };
 
   return (
-    <div className="scene-list" style={{ 
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      maxHeight: '100vh',
-      overflow: 'hidden'
-    }}>
-      <div className="scene-list-header" style={{ flexShrink: 0 }}>
+    <div className="tab-list">
+      <div className="tab-list-header">
         <h3>Book Structure</h3>
+        <p className="tab-description">
+          Organize your story into chapters and scenes. Drag and drop to reorder, and manage your manuscript structure.
+        </p>
         {currentChapterId && (
           <div className="current-chapter-indicator">
             <small>
@@ -245,12 +242,12 @@ function SceneList({
           </div>
         )}
         <div className="header-buttons">
-          <button onClick={onChapterAdd} className="add-chapter-btn" title="Add Chapter">
+          <button onClick={onChapterAdd} className="primary-btn" title="Add Chapter">
             📁+ Chapter
           </button>
           <button 
             onClick={onSceneAdd} 
-            className="add-scene-btn" 
+            className="primary-btn" 
             title={currentChapterId 
               ? `Add Scene to ${chapters.find(ch => ch.id === currentChapterId)?.title || 'Current Chapter'}` 
               : 'Select a chapter first'
@@ -261,7 +258,7 @@ function SceneList({
           </button>
           <button 
             onClick={onToggleRecycleBin} 
-            className={`recycle-bin-btn ${recycleBin.length > 0 ? 'has-items' : ''}`}
+            className={`secondary-btn ${recycleBin.length > 0 ? 'has-items' : ''}`}
             title={`Recycle Bin (${recycleBin.length} items)`}
           >
             🗑️ ({recycleBin.length})
@@ -269,11 +266,7 @@ function SceneList({
         </div>
       </div>
       
-      <div className="chapters-container" style={{
-        flex: 1,
-        overflow: 'auto',
-        padding: '0 0 1rem 0'
-      }}>
+      <div className="tab-content-container chapters-container">
         {chapters.map((chapter, chapterIndex) => {
           const isExpanded = expandedChapters.has(chapter.id);
           const isCurrentChapter = chapter.id === currentChapterId;
@@ -479,13 +472,7 @@ function SceneList({
       
       {/* Recycle Bin */}
       {showRecycleBin && (
-        <div className="recycle-bin" style={{
-          flexShrink: 0,
-          maxHeight: '300px',
-          overflow: 'auto',
-          borderTop: '1px solid #e5e7eb',
-          backgroundColor: '#fafafa'
-        }}>
+        <div className="recycle-bin">
           <div className="recycle-bin-header">
             <h4>🗑️ Recycle Bin</h4>
             <div className="recycle-bin-controls">

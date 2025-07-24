@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import BookStructure from './components/BookStructure';
 import SceneEditor from './components/SceneEditor';
 import CharacterEditor from './components/CharacterEditor';
+import LocationEditor from './components/LocationEditor';
 import CharacterThreadVisualization from './components/CharacterThreadVisualization';
 import TemplateManager from './components/TemplateManager';
 import ExportDialog from './components/ExportDialog';
@@ -46,6 +47,7 @@ function App() {
     ],
     characters: [],
     characterDetectionBlacklist: [],
+    locations: [],
     template: {
       fontFamily: 'Times New Roman',
       fontSize: 12,
@@ -55,30 +57,30 @@ function App() {
       genre: 'general',
       pageMargins: { 
         top: 1, 
-          bottom: 1, 
-          inside: 1.25,  // Inner margin (towards spine)
-          outside: 1     // Outer margin (towards edge)
-        },
-        mirrorMargins: false, // Use different margins for odd/even pages
-        textAlign: 'justified', // 'left', 'justified'
-        chapterHeader: {
-          style: 'numbered',
-          format: 'Chapter {number}',
-          fontSize: 18,
-          fontWeight: 'bold',
-          alignment: 'center',
-          pageBreak: true,
-          spacing: 2,
-          lineBreaksBefore: 3,
-          startOnRightPage: false
-        },
-        runningHeaders: {
-          enabled: false,
-          alignment: 'outside', // 'outside' or 'center'
-          fontSize: 10,
-          skipChapterPages: true
-        }
+        bottom: 1, 
+        inside: 1.25,  // Inner margin (towards spine)
+        outside: 1     // Outer margin (towards edge)
       },
+      mirrorMargins: false, // Use different margins for odd/even pages
+      textAlign: 'justified', // 'left', 'justified'
+      chapterHeader: {
+        style: 'numbered',
+        format: 'Chapter {number}',
+        fontSize: 18,
+        fontWeight: 'bold',
+        alignment: 'center',
+        pageBreak: true,
+        spacing: 2,
+        lineBreaksBefore: 3,
+        startOnRightPage: false
+      },
+      runningHeaders: {
+        enabled: false,
+        alignment: 'outside', // 'outside' or 'center'
+        fontSize: 10,
+        skipChapterPages: true
+      }
+    },
     github: {
       repository: null,
       lastSyncTime: null
@@ -92,6 +94,7 @@ function App() {
   const [currentSceneId, setCurrentSceneId] = useState(null);
   const [currentChapterId, setCurrentChapterId] = useState('default');
   const [currentCharacterId, setCurrentCharacterId] = useState(null);
+  const [currentLocationId, setCurrentLocationId] = useState(null);
   const [activeTab, setActiveTab] = useState('manuscript');
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -102,6 +105,7 @@ function App() {
   const [recycleBin, setRecycleBin] = useState([]);
   const [showRecycleBin, setShowRecycleBin] = useState(false);
   const [characterRecycleBin, setCharacterRecycleBin] = useState([]);
+  const [locationRecycleBin, setLocationRecycleBin] = useState([]);
   const [currentFilePath, setCurrentFilePath] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false); // Flag to prevent marking changes during save
@@ -147,6 +151,14 @@ function App() {
       setCurrentCharacterId(book.characters[0].id);
     }
   }, [activeTab, currentCharacterId, book.characters]);
+
+  // Auto-select first location if none selected but locations exist
+  useEffect(() => {
+    if (activeTab === 'locations' && !currentLocationId && book.locations && book.locations.length > 0) {
+      console.log('Auto-selecting first location:', book.locations[0].id);
+      setCurrentLocationId(book.locations[0].id);
+    }
+  }, [activeTab, currentLocationId, book.locations]);
 
   const markAsChanged = () => {
     if (isSaving) {
@@ -552,6 +564,11 @@ function App() {
         cleanBookData.characterDetectionBlacklist = [];
       }
       
+      // Migrate old format - add locations array if missing
+      if (!cleanBookData.locations) {
+        cleanBookData.locations = [];
+      }
+      
       // Set all states in batch
       // Set all states simply and directly
       setBook(cleanBookData);
@@ -618,39 +635,40 @@ function App() {
       ],
       characters: [],
       characterDetectionBlacklist: [],
-        template: {
-          fontFamily: 'Times New Roman',
-          fontSize: 12,
-          lineHeight: 1.6,
-          paragraphStyle: 'indented',
-          pageSize: 'letter',
-          genre: 'general',
-          pageMargins: { 
-            top: 1, 
-            bottom: 1, 
-            inside: 1.25,  // Inner margin (towards spine)
-            outside: 1     // Outer margin (towards edge)
-          },
-          mirrorMargins: false, // Use different margins for odd/even pages
-          textAlign: 'justified', // 'left', 'justified'
-          chapterHeader: {
-            style: 'numbered',
-            format: 'Chapter {number}',
-            fontSize: 18,
-            fontWeight: 'bold',
-            alignment: 'center',
-            pageBreak: true,
-            spacing: 2,
-            lineBreaksBefore: 3,
-            startOnRightPage: false
-          },
-          runningHeaders: {
-            enabled: false,
-            alignment: 'outside', // 'outside' or 'center'
-            fontSize: 10,
-            skipChapterPages: true
-          }
+      locations: [],
+      template: {
+        fontFamily: 'Times New Roman',
+        fontSize: 12,
+        lineHeight: 1.6,
+        paragraphStyle: 'indented',
+        pageSize: 'letter',
+        genre: 'general',
+        pageMargins: { 
+          top: 1, 
+          bottom: 1, 
+          inside: 1.25,  // Inner margin (towards spine)
+          outside: 1     // Outer margin (towards edge)
         },
+        mirrorMargins: false, // Use different margins for odd/even pages
+        textAlign: 'justified', // 'left', 'justified'
+        chapterHeader: {
+          style: 'numbered',
+          format: 'Chapter {number}',
+          fontSize: 18,
+          fontWeight: 'bold',
+          alignment: 'center',
+          pageBreak: true,
+          spacing: 2,
+          lineBreaksBefore: 3,
+          startOnRightPage: false
+        },
+        runningHeaders: {
+          enabled: false,
+          alignment: 'outside', // 'outside' or 'center'
+          fontSize: 10,
+          skipChapterPages: true
+        }
+      },
       github: {
         repository: null,
         lastSyncTime: null
@@ -667,6 +685,7 @@ function App() {
     setCurrentSceneId(null);
     setCurrentChapterId('default');
     setCurrentCharacterId(null);
+    setCurrentLocationId(null);
     setCurrentFilePath(null);
     setHasUnsavedChanges(false);
   };
@@ -1023,6 +1042,86 @@ function App() {
     }));
     markAsChanged();
   };
+  // Location management functions
+  const handleNewLocation = () => {
+    const newLocation = {
+      id: Date.now().toString(),
+      name: `Location ${book.locations.length + 1}`,
+      description: '',
+      type: 'General',
+      icon: '📍',
+      notes: '',
+      created: new Date().toISOString(),
+      modified: new Date().toISOString()
+    };
+
+    setBook(prev => ({
+      ...prev,
+      locations: [...prev.locations, newLocation],
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    setCurrentLocationId(newLocation.id);
+    markAsChanged();
+  };
+
+  const updateLocation = (locationId, updates) => {
+    setBook(prev => ({
+      ...prev,
+      locations: prev.locations.map(location =>
+        location.id === locationId
+          ? { ...location, ...updates, modified: new Date().toISOString() }
+          : location
+      ),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  const moveLocationToRecycleBin = (locationId) => {
+    const location = book.locations.find(l => l.id === locationId);
+    if (!location) return;
+
+    const recycleBinItem = {
+      id: Date.now().toString(),
+      type: 'location',
+      item: location,
+      deletedAt: new Date().toISOString()
+    };
+
+    setLocationRecycleBin(prev => [...prev, recycleBinItem]);
+
+    setBook(prev => ({
+      ...prev,
+      locations: prev.locations.filter(location => location.id !== locationId),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+
+    if (currentLocationId === locationId) {
+      setCurrentLocationId(null);
+    }
+
+    markAsChanged();
+  };
+
+  const restoreLocationFromRecycleBin = (recycleBinItemId) => {
+    const recycleBinItem = locationRecycleBin.find(item => item.id === recycleBinItemId);
+    if (!recycleBinItem) return;
+
+    setBook(prev => ({
+      ...prev,
+      locations: [...prev.locations, recycleBinItem.item],
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+
+    setLocationRecycleBin(prev => prev.filter(item => item.id !== recycleBinItemId));
+    markAsChanged();
+  };
+
+  const permanentlyDeleteLocation = (recycleBinItemId) => {
+    if (window.confirm('Permanently delete this location? This cannot be undone.')) {
+      setLocationRecycleBin(prev => prev.filter(item => item.id !== recycleBinItemId));
+    }
+  };
 
   const handleBookRecovered = (filePath, bookData) => {
     // Load the recovered book
@@ -1031,6 +1130,7 @@ function App() {
     setCurrentChapterId(bookData.chapters[0]?.id || 'default');
     setCurrentSceneId(bookData.chapters[0]?.scenes[0]?.id || null);
     setCurrentCharacterId(null);
+    setCurrentLocationId(null);
     setCurrentFilePath(filePath);
     setHasUnsavedChanges(false);
   };
@@ -1116,7 +1216,6 @@ function App() {
 
       <div className="app-content">
         <BookStructure
-          // Scene/Chapter props
           chapters={book.chapters}
           currentSceneId={currentSceneId}
           currentChapterId={currentChapterId}
@@ -1136,8 +1235,6 @@ function App() {
           onRestoreFromRecycleBin={restoreFromRecycleBin}
           onPermanentlyDelete={permanentlyDeleteFromRecycleBin}
           onEmptyRecycleBin={emptyRecycleBin}
-          
-          // Character props
           characters={book.characters}
           currentCharacterId={currentCharacterId}
           onCharacterSelect={setCurrentCharacterId}
@@ -1147,12 +1244,17 @@ function App() {
           characterRecycleBin={characterRecycleBin}
           onRestoreCharacterFromRecycleBin={restoreCharacterFromRecycleBin}
           onPermanentlyDeleteCharacter={permanentlyDeleteCharacter}
-          
-          // Character detection props
           characterDetectionBlacklist={book.characterDetectionBlacklist}
           onUpdateCharacterDetectionBlacklist={updateCharacterDetectionBlacklist}
-          
-          // Tab props
+          locations={book.locations}
+          currentLocationId={currentLocationId}
+          onLocationSelect={setCurrentLocationId}
+          onLocationAdd={handleNewLocation}
+          onLocationDelete={moveLocationToRecycleBin}
+          onLocationUpdate={updateLocation}
+          locationRecycleBin={locationRecycleBin}
+          onRestoreLocationFromRecycleBin={restoreLocationFromRecycleBin}
+          onPermanentlyDeleteLocation={permanentlyDeleteLocation}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
@@ -1194,6 +1296,21 @@ function App() {
             characterDetectionBlacklist={book.characterDetectionBlacklist}
             onUpdateCharacterDetectionBlacklist={updateCharacterDetectionBlacklist}
           />
+        ) : activeTab === 'locations' ? (
+          book.locations.find(l => l.id === currentLocationId) ? (
+            <LocationEditor
+              location={book.locations.find(l => l.id === currentLocationId)}
+              template={book.template}
+              onLocationUpdate={updateLocation}
+            />
+          ) : (
+            <div className="location-editor">
+              <div className="no-location">
+                <h3>No Location Selected</h3>
+                <p>Select a location from the list to edit its information, or create a new location.</p>
+              </div>
+            </div>
+          )
         ) : (
           <div className="scene-editor">
             <div className="no-scene">
@@ -1217,8 +1334,8 @@ function App() {
           book={book}
           onClose={() => setShowExportDialog(false)}
           onExport={(format) => {
-            
-		  }}
+            // TODO: Implement export functionality
+          }}
         />
       )}
 
