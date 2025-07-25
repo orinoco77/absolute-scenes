@@ -44,11 +44,15 @@ describe('Utility Functions Tests', () => {
     const generateId = () => Date.now().toString();
 
     const id1 = generateId();
-    // Wait a tiny bit to ensure different timestamp
-    setTimeout(() => {
-      const id2 = generateId();
-      expect(id1).not.toBe(id2);
-    }, 1);
+    // Use a mock to simulate passage of time instead of setTimeout
+    const originalDateNow = Date.now;
+    Date.now = jest.fn(() => originalDateNow() + 1);
+
+    const id2 = generateId();
+    expect(id1).not.toBe(id2);
+
+    // Restore original Date.now
+    Date.now = originalDateNow;
 
     expect(typeof id1).toBe('string');
     expect(id1.length).toBeGreaterThan(0);
