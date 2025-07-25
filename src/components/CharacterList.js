@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-function CharacterList({ 
+function CharacterList({
   characters,
   currentCharacterId,
   onCharacterSelect,
@@ -19,7 +19,7 @@ function CharacterList({
     setEditingCharacter(null);
   };
 
-  const getWordCount = (content) => {
+  const getWordCount = content => {
     if (!content) return 0;
     return content.split(/\s+/).filter(word => word.length > 0).length;
   };
@@ -29,14 +29,19 @@ function CharacterList({
       <div className="tab-list-header">
         <h3>Characters</h3>
         <p className="tab-description">
-          Manage your story's characters. Character information is saved with your book but won't appear in exports.
+          Manage your story's characters. Character information is saved with
+          your book but won't appear in exports.
         </p>
         <div className="header-buttons">
-          <button onClick={onCharacterAdd} className="primary-btn" title="Add Character">
+          <button
+            onClick={onCharacterAdd}
+            className="primary-btn"
+            title="Add Character"
+          >
             👤+ Character
           </button>
-          <button 
-            onClick={() => setShowRecycleBin(!showRecycleBin)} 
+          <button
+            onClick={() => setShowRecycleBin(!showRecycleBin)}
             className={`secondary-btn ${characterRecycleBin.length > 0 ? 'has-items' : ''}`}
             title={`Character Recycle Bin (${characterRecycleBin.length} items)`}
           >
@@ -44,16 +49,16 @@ function CharacterList({
           </button>
         </div>
       </div>
-      
+
       <div className="tab-content-container">
         {characters.length === 0 ? (
           <div className="empty-state">
             <p>No characters yet. Click "👤+ Character" to add one.</p>
           </div>
         ) : (
-          characters.map((character) => {
+          characters.map(character => {
             const wordCount = getWordCount(character.description);
-            
+
             return (
               <div
                 key={character.id}
@@ -65,7 +70,7 @@ function CharacterList({
                 <div className="character-avatar">
                   {character.avatar || '👤'}
                 </div>
-                
+
                 <div className="character-content">
                   {editingCharacter === character.id ? (
                     <input
@@ -73,20 +78,25 @@ function CharacterList({
                       defaultValue={character.name}
                       className="character-name-edit"
                       autoFocus
-                      onBlur={(e) => handleCharacterTitleChange(character.id, e.target.value)}
-                      onKeyDown={(e) => {
+                      onBlur={e =>
+                        handleCharacterTitleChange(character.id, e.target.value)
+                      }
+                      onKeyDown={e => {
                         if (e.key === 'Enter') {
-                          handleCharacterTitleChange(character.id, e.target.value);
+                          handleCharacterTitleChange(
+                            character.id,
+                            e.target.value
+                          );
                         } else if (e.key === 'Escape') {
                           setEditingCharacter(null);
                         }
                       }}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                     />
                   ) : (
-                    <div 
+                    <div
                       className="character-name"
-                      onDoubleClick={(e) => {
+                      onDoubleClick={e => {
                         e.stopPropagation();
                         setEditingCharacter(character.id);
                       }}
@@ -94,11 +104,11 @@ function CharacterList({
                       {character.name}
                     </div>
                   )}
-                  
+
                   {character.role && (
                     <div className="character-role">{character.role}</div>
                   )}
-                  
+
                   <div className="character-meta">
                     <span className="character-date">
                       {new Date(character.modified).toLocaleDateString()}
@@ -108,11 +118,11 @@ function CharacterList({
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="character-actions">
-                  <button 
+                  <button
                     className="delete-character-btn"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       onCharacterDelete(character.id);
                     }}
@@ -126,24 +136,33 @@ function CharacterList({
           })
         )}
       </div>
-      
+
       {/* Character Recycle Bin */}
       {showRecycleBin && (
-        <div className="recycle-bin" style={{
-          flexShrink: 0,
-          maxHeight: '300px',
-          overflow: 'auto',
-          borderTop: '1px solid #e5e7eb',
-          backgroundColor: '#fafafa'
-        }}>
+        <div
+          className="recycle-bin"
+          style={{
+            flexShrink: 0,
+            maxHeight: '300px',
+            overflow: 'auto',
+            borderTop: '1px solid #e5e7eb',
+            backgroundColor: '#fafafa'
+          }}
+        >
           <div className="recycle-bin-header">
             <h4>🗑️ Character Recycle Bin</h4>
             <div className="recycle-bin-controls">
               {characterRecycleBin.length > 0 && (
-                <button 
+                <button
                   onClick={() => {
-                    if (window.confirm('Permanently delete all characters in recycle bin? This cannot be undone.')) {
-                      characterRecycleBin.forEach(item => onPermanentlyDelete(item.id));
+                    if (
+                      window.confirm(
+                        'Permanently delete all characters in recycle bin? This cannot be undone.'
+                      )
+                    ) {
+                      characterRecycleBin.forEach(item =>
+                        onPermanentlyDelete(item.id)
+                      );
                     }
                   }}
                   className="empty-bin-btn"
@@ -152,7 +171,7 @@ function CharacterList({
                   Empty Bin
                 </button>
               )}
-              <button 
+              <button
                 onClick={() => setShowRecycleBin(false)}
                 className="close-bin-btn"
                 title="Close recycle bin"
@@ -161,7 +180,7 @@ function CharacterList({
               </button>
             </div>
           </div>
-          
+
           <div className="recycle-bin-content">
             {characterRecycleBin.length === 0 ? (
               <div className="empty-bin">
@@ -175,19 +194,21 @@ function CharacterList({
                       👤 {item.item.name}
                     </div>
                     <div className="recycle-item-meta">
-                      <span>deleted {new Date(item.deletedAt).toLocaleDateString()}</span>
+                      <span>
+                        deleted {new Date(item.deletedAt).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div className="recycle-item-actions">
-                    <button 
+                    <button
                       onClick={() => onRestoreFromRecycleBin(item.id)}
                       className="restore-btn"
                       title="Restore character"
                     >
                       ↩️
                     </button>
-                    <button 
+                    <button
                       onClick={() => onPermanentlyDelete(item.id)}
                       className="permanent-delete-btn"
                       title="Permanently delete"

@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-function LocationList({ 
-  locations, 
-  currentLocationId, 
-  onLocationSelect, 
-  onLocationAdd, 
-  onLocationDelete, 
+function LocationList({
+  locations,
+  currentLocationId,
+  onLocationSelect,
+  onLocationAdd,
+  onLocationDelete,
   onLocationUpdate,
   locationRecycleBin,
   onRestoreFromRecycleBin,
@@ -14,12 +14,12 @@ function LocationList({
   const [editingLocationId, setEditingLocationId] = useState(null);
   const [editingName, setEditingName] = useState('');
 
-  const handleNameEdit = (location) => {
+  const handleNameEdit = location => {
     setEditingLocationId(location.id);
     setEditingName(location.name);
   };
 
-  const handleNameSave = (locationId) => {
+  const handleNameSave = locationId => {
     onLocationUpdate(locationId, { name: editingName });
     setEditingLocationId(null);
     setEditingName('');
@@ -43,10 +43,11 @@ function LocationList({
       <div className="tab-list-header">
         <h3>Locations</h3>
         <p className="tab-description">
-          Define and manage the places in your story. Track settings, atmosphere, and geographic details.
+          Define and manage the places in your story. Track settings,
+          atmosphere, and geographic details.
         </p>
         <div className="header-buttons">
-          <button 
+          <button
             onClick={onLocationAdd}
             className="primary-btn"
             title="Add New Location"
@@ -69,40 +70,44 @@ function LocationList({
                 className={`location-item ${currentLocationId === location.id ? 'active' : ''}`}
                 onClick={() => onLocationSelect(location.id)}
               >
-                <div className="location-icon">
-                  {location.icon || '📍'}
-                </div>
-                
+                <div className="location-icon">{location.icon || '📍'}</div>
+
                 <div className="location-content">
                   {editingLocationId === location.id ? (
                     <input
                       type="text"
                       value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
+                      onChange={e => setEditingName(e.target.value)}
                       onBlur={() => handleNameSave(location.id)}
-                      onKeyDown={(e) => handleKeyDown(e, location.id)}
+                      onKeyDown={e => handleKeyDown(e, location.id)}
                       className="location-name-edit"
                       autoFocus
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                     />
                   ) : (
                     <>
-                      <div className="location-name" onDoubleClick={() => handleNameEdit(location)}>
+                      <div
+                        className="location-name"
+                        onDoubleClick={() => handleNameEdit(location)}
+                      >
                         {location.name}
                       </div>
                       <div className="location-type">
                         {location.type || 'General'}
                       </div>
                       <div className="location-meta">
-                        <span>Created {new Date(location.created).toLocaleDateString()}</span>
+                        <span>
+                          Created{' '}
+                          {new Date(location.created).toLocaleDateString()}
+                        </span>
                       </div>
                     </>
                   )}
                 </div>
-                
+
                 <div className="location-actions">
                   <button
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       onLocationDelete(location.id);
                     }}
@@ -127,9 +132,16 @@ function LocationList({
               {locationRecycleBin.map(recycleBinItem => (
                 <div key={recycleBinItem.id} className="recycle-bin-item">
                   <div className="recycle-item-content">
-                    <div className="recycle-item-title">{recycleBinItem.item.name}</div>
+                    <div className="recycle-item-title">
+                      {recycleBinItem.item.name}
+                    </div>
                     <div className="recycle-item-meta">
-                      <span>Deleted {new Date(recycleBinItem.deletedAt).toLocaleDateString()}</span>
+                      <span>
+                        Deleted{' '}
+                        {new Date(
+                          recycleBinItem.deletedAt
+                        ).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
                   <div className="recycle-item-actions">

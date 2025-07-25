@@ -1,3 +1,4 @@
+/* eslint-disable import/no-anonymous-default-export */
 /**
  * Streamlined GitHub Integration Service
  * Handles token-based authentication and repository management for non-technical users
@@ -7,7 +8,8 @@ class GitHubService {
   constructor() {
     this.token = null;
     this.userInfo = null;
-    this.isElectron = typeof window !== 'undefined' && typeof window.require === 'function';
+    this.isElectron =
+      typeof window !== 'undefined' && typeof window.require === 'function';
     this._hasCheckedStoredAuth = false; // Track if we've tried loading stored auth
   }
 
@@ -76,18 +78,24 @@ class GitHubService {
    */
   async startConnectionFlow() {
     if (!this.isElectron) {
-      throw new Error('GitHub integration is only available in the desktop app');
+      throw new Error(
+        'GitHub integration is only available in the desktop app'
+      );
     }
 
     const { shell } = window.require('electron');
 
     // Create a unique token name with timestamp to avoid conflicts
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-')
+      .slice(0, 19);
     const tokenName = `AbsoluteScenes-Book-Writer-${timestamp}`;
     const tokenDescription = `Token for AbsoluteScenes Book Writer App (Created: ${new Date().toLocaleString()})`;
 
     // Open GitHub token creation page with pre-filled settings and unique name
-    const tokenUrl = 'https://github.com/settings/tokens/new?' +
+    const tokenUrl =
+      'https://github.com/settings/tokens/new?' +
       'scopes=repo,user:email&' +
       `description=${encodeURIComponent(tokenDescription)}&` +
       `note=${encodeURIComponent(tokenName)}`;
@@ -101,34 +109,40 @@ class GitHubService {
    */
   async validateAndSetupToken(token) {
     if (!token || !token.startsWith('ghp_')) {
-      throw new Error('Please enter a valid GitHub personal access token (starts with "ghp_")');
+      throw new Error(
+        'Please enter a valid GitHub personal access token (starts with "ghp_")'
+      );
     }
 
     // Test the token by getting user info
     try {
       const response = await fetch('https://api.github.com/user', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github.v3+json',
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github.v3+json',
           'User-Agent': 'AbsoluteScenes-BookWriter'
         }
       });
 
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error('Invalid token. Please check that you copied it correctly.');
+          throw new Error(
+            'Invalid token. Please check that you copied it correctly.'
+          );
         } else if (response.status === 403) {
-          throw new Error('Token lacks required permissions. Please ensure "repo" and "user:email" scopes are selected.');
+          throw new Error(
+            'Token lacks required permissions. Please ensure "repo" and "user:email" scopes are selected.'
+          );
         } else {
           throw new Error(`GitHub API error: ${response.status}`);
         }
       }
 
       const userInfo = await response.json();
-      
+
       // Store the valid token
       this.storeAuth(token, userInfo);
-      
+
       return userInfo;
     } catch (error) {
       console.error('Token validation failed:', error);
@@ -147,8 +161,8 @@ class GitHubService {
     try {
       const response = await fetch('https://api.github.com/user', {
         headers: {
-          'Authorization': `Bearer ${this.token}`,
-          'Accept': 'application/vnd.github.v3+json',
+          Authorization: `Bearer ${this.token}`,
+          Accept: 'application/vnd.github.v3+json',
           'User-Agent': 'AbsoluteScenes-BookWriter'
         }
       });
@@ -186,8 +200,8 @@ class GitHubService {
       const response = await fetch('https://api.github.com/user/repos', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.token}`,
-          'Accept': 'application/vnd.github.v3+json',
+          Authorization: `Bearer ${this.token}`,
+          Accept: 'application/vnd.github.v3+json',
           'User-Agent': 'AbsoluteScenes-BookWriter',
           'Content-Type': 'application/json'
         },
@@ -203,7 +217,9 @@ class GitHubService {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || `Failed to create repository: ${response.status}`);
+        throw new Error(
+          error.message || `Failed to create repository: ${response.status}`
+        );
       }
 
       const repo = await response.json();
@@ -224,13 +240,16 @@ class GitHubService {
     }
 
     try {
-      const response = await fetch(`https://api.github.com/repos/${this.userInfo.login}/${repoName}`, {
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'AbsoluteScenes-BookWriter'
+      const response = await fetch(
+        `https://api.github.com/repos/${this.userInfo.login}/${repoName}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            Accept: 'application/vnd.github.v3+json',
+            'User-Agent': 'AbsoluteScenes-BookWriter'
+          }
         }
-      });
+      );
 
       if (response.status === 404) {
         return null; // Repository doesn't exist
@@ -250,7 +269,12 @@ class GitHubService {
   /**
    * Save book content to repository
    */
-  async saveBookToRepository(repo, bookData, commitMessage = 'Auto-save from AbsoluteScenes', filename = 'manuscript.book') {
+  async saveBookToRepository(
+    repo,
+    bookData,
+    commitMessage = 'Auto-save from AbsoluteScenes',
+    filename = 'manuscript.book'
+  ) {
     if (!this.token) {
       throw new Error('Not authenticated');
     }
@@ -259,7 +283,7 @@ class GitHubService {
       // Prepare file content
       const fileContent = JSON.stringify(bookData, null, 2);
       const fileName = filename;
-      
+
       // Get current file (if exists) to get SHA for update
       let fileSha = null;
       try {
@@ -267,13 +291,13 @@ class GitHubService {
           `https://api.github.com/repos/${repo.full_name}/contents/${fileName}`,
           {
             headers: {
-              'Authorization': `Bearer ${this.token}`,
-              'Accept': 'application/vnd.github.v3+json',
+              Authorization: `Bearer ${this.token}`,
+              Accept: 'application/vnd.github.v3+json',
               'User-Agent': 'AbsoluteScenes-BookWriter'
             }
           }
         );
-        
+
         if (fileResponse.ok) {
           const fileData = await fileResponse.json();
           fileSha = fileData.sha;
@@ -281,7 +305,9 @@ class GitHubService {
           // File doesn't exist yet - this is expected for new files
           console.log(`Creating new file: ${fileName}`);
         } else {
-          console.warn(`Unexpected response when checking for existing file: ${fileResponse.status}`);
+          console.warn(
+            `Unexpected response when checking for existing file: ${fileResponse.status}`
+          );
         }
       } catch (error) {
         // Network error or other issue - proceed without SHA (will create new file)
@@ -304,8 +330,8 @@ class GitHubService {
         {
           method: 'PUT',
           headers: {
-            'Authorization': `Bearer ${this.token}`,
-            'Accept': 'application/vnd.github.v3+json',
+            Authorization: `Bearer ${this.token}`,
+            Accept: 'application/vnd.github.v3+json',
             'User-Agent': 'AbsoluteScenes-BookWriter',
             'Content-Type': 'application/json'
           },
@@ -315,7 +341,9 @@ class GitHubService {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || `Failed to save to repository: ${response.status}`);
+        throw new Error(
+          error.message || `Failed to save to repository: ${response.status}`
+        );
       }
 
       const result = await response.json();
@@ -372,20 +400,23 @@ class GitHubService {
     }
 
     try {
-      const response = await fetch('https://api.github.com/user/repos?type=owner&sort=updated&per_page=100', {
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'AbsoluteScenes-BookWriter'
+      const response = await fetch(
+        'https://api.github.com/user/repos?type=owner&sort=updated&per_page=100',
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            Accept: 'application/vnd.github.v3+json',
+            'User-Agent': 'AbsoluteScenes-BookWriter'
+          }
         }
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`GitHub API error: ${response.status}`);
       }
 
       const repos = await response.json();
-      
+
       // Filter for repositories that likely contain book files
       const bookRepos = [];
       for (const repo of repos) {
@@ -402,7 +433,7 @@ class GitHubService {
           continue;
         }
       }
-      
+
       return bookRepos;
     } catch (error) {
       console.error('Failed to get repositories:', error);
@@ -415,32 +446,37 @@ class GitHubService {
    */
   async checkRepositoryForBookFile(repo) {
     try {
-      const response = await fetch(`https://api.github.com/repos/${repo.full_name}/contents`, {
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'AbsoluteScenes-BookWriter'
+      const response = await fetch(
+        `https://api.github.com/repos/${repo.full_name}/contents`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            Accept: 'application/vnd.github.v3+json',
+            'User-Agent': 'AbsoluteScenes-BookWriter'
+          }
         }
-      });
+      );
 
       if (response.status === 404) {
         // Repository is empty or inaccessible - this is normal
         return null;
       }
-      
+
       if (!response.ok) {
         // Other error - log for debugging but don't fail
-        console.warn(`Could not check repository ${repo.full_name}: ${response.status}`);
+        console.warn(
+          `Could not check repository ${repo.full_name}: ${response.status}`
+        );
         return null;
       }
 
       const contents = await response.json();
-      
+
       // Look for .book files
-      const bookFile = contents.find(file => 
-        file.type === 'file' && file.name.endsWith('.book')
+      const bookFile = contents.find(
+        file => file.type === 'file' && file.name.endsWith('.book')
       );
-      
+
       return bookFile || null;
     } catch (error) {
       // Network error or parsing issue
@@ -457,23 +493,26 @@ class GitHubService {
     }
 
     try {
-      const response = await fetch(`https://api.github.com/repos/${repo.full_name}/contents/${bookFile.name}`, {
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'AbsoluteScenes-BookWriter'
+      const response = await fetch(
+        `https://api.github.com/repos/${repo.full_name}/contents/${bookFile.name}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            Accept: 'application/vnd.github.v3+json',
+            'User-Agent': 'AbsoluteScenes-BookWriter'
+          }
         }
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to download file: ${response.status}`);
       }
 
       const fileData = await response.json();
-      
+
       // Decode base64 content
       const content = atob(fileData.content.replace(/\s/g, ''));
-      
+
       // Parse and return book data
       try {
         const bookData = JSON.parse(content);

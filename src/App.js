@@ -1,15 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+/* eslint-disable no-console */
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useState, useEffect, useCallback, useRef } from 'react';
+import BackupRecovery from './components/BackupRecovery';
 import BookStructure from './components/BookStructure';
-import SceneEditor from './components/SceneEditor';
 import CharacterEditor from './components/CharacterEditor';
-import LocationEditor from './components/LocationEditor';
 import CharacterThreadVisualization from './components/CharacterThreadVisualization';
-import TemplateManager from './components/TemplateManager';
 import ExportDialog from './components/ExportDialog';
 import GitHubIntegration from './components/GitHubIntegration';
-import BackupRecovery from './components/BackupRecovery';
+import LocationEditor from './components/LocationEditor';
+import SceneEditor from './components/SceneEditor';
 import StatusBar from './components/StatusBar';
-import { saveBook, saveBookToFile, loadBook } from './utils/fileOperations';
+import TemplateManager from './components/TemplateManager';
+import { saveBook, saveBookToFile } from './utils/fileOperations';
 import { initializeFontSystem } from './utils/fontManager';
 import './styles/App.css';
 
@@ -32,7 +34,9 @@ if (isElectron()) {
 function App() {
   // Check if we're in Electron environment
   const isElectronApp = () => {
-    return typeof window !== 'undefined' && typeof window.require === 'function';
+    return (
+      typeof window !== 'undefined' && typeof window.require === 'function'
+    );
   };
 
   const [book, setBook] = useState({
@@ -55,11 +59,11 @@ function App() {
       paragraphStyle: 'indented',
       pageSize: 'letter',
       genre: 'general',
-      pageMargins: { 
-        top: 1, 
-        bottom: 1, 
-        inside: 1.25,  // Inner margin (towards spine)
-        outside: 1     // Outer margin (towards edge)
+      pageMargins: {
+        top: 1,
+        bottom: 1,
+        inside: 1.25, // Inner margin (towards spine)
+        outside: 1 // Outer margin (towards edge)
       },
       mirrorMargins: false, // Use different margins for odd/even pages
       textAlign: 'justified', // 'left', 'justified'
@@ -110,7 +114,7 @@ function App() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false); // Flag to prevent marking changes during save
   const [currentOperation, setCurrentOperation] = useState(null);
-  
+
   // Add ref to track save operations more reliably
   const saveOperationRef = useRef(false);
 
@@ -120,7 +124,10 @@ function App() {
     let fileName = 'Untitled';
     if (currentFilePath) {
       // Extract just the filename from the full path
-      fileName = currentFilePath.split(/[\\/]/).pop().replace(/\.(book|json)$/, '');
+      fileName = currentFilePath
+        .split(/[\\/]/)
+        .pop()
+        .replace(/\.(book|json)$/, '');
     }
     const unsavedIndicator = hasUnsavedChanges ? ' *' : '';
     const newTitle = `${fileName}${unsavedIndicator} - AbsoluteScenes`;
@@ -135,9 +142,14 @@ function App() {
   useEffect(() => {
     if (activeTab === 'manuscript' && !currentSceneId && book.chapters) {
       // Find first chapter with scenes
-      const firstChapterWithScenes = book.chapters.find(ch => ch.scenes && ch.scenes.length > 0);
+      const firstChapterWithScenes = book.chapters.find(
+        ch => ch.scenes && ch.scenes.length > 0
+      );
       if (firstChapterWithScenes && firstChapterWithScenes.scenes.length > 0) {
-        console.log('Auto-selecting first scene:', firstChapterWithScenes.scenes[0].id);
+        console.log(
+          'Auto-selecting first scene:',
+          firstChapterWithScenes.scenes[0].id
+        );
         setCurrentChapterId(firstChapterWithScenes.id);
         setCurrentSceneId(firstChapterWithScenes.scenes[0].id);
       }
@@ -146,7 +158,12 @@ function App() {
 
   // Auto-select first character if none selected but characters exist
   useEffect(() => {
-    if (activeTab === 'characters' && !currentCharacterId && book.characters && book.characters.length > 0) {
+    if (
+      activeTab === 'characters' &&
+      !currentCharacterId &&
+      book.characters &&
+      book.characters.length > 0
+    ) {
       console.log('Auto-selecting first character:', book.characters[0].id);
       setCurrentCharacterId(book.characters[0].id);
     }
@@ -154,7 +171,12 @@ function App() {
 
   // Auto-select first location if none selected but locations exist
   useEffect(() => {
-    if (activeTab === 'locations' && !currentLocationId && book.locations && book.locations.length > 0) {
+    if (
+      activeTab === 'locations' &&
+      !currentLocationId &&
+      book.locations &&
+      book.locations.length > 0
+    ) {
       console.log('Auto-selecting first location:', book.locations[0].id);
       setCurrentLocationId(book.locations[0].id);
     }
@@ -167,7 +189,7 @@ function App() {
     setHasUnsavedChanges(true);
   };
 
-  const updateGitHubSettings = (settings) => {
+  const updateGitHubSettings = settings => {
     setBook(prev => ({
       ...prev,
       github: { ...prev.github, ...settings },
@@ -176,7 +198,7 @@ function App() {
     markAsChanged();
   };
 
-  const updateGitHubSyncStatus = (settings) => {
+  const updateGitHubSyncStatus = settings => {
     // Update GitHub settings without marking as changed (for sync metadata only)
     setBook(prev => ({
       ...prev,
@@ -195,13 +217,13 @@ function App() {
     saveOperationRef.current = true;
     setIsSaving(true);
     setCurrentOperation('Saving book...');
-    
+
     console.log('=== SAVE OPERATION STARTED ===');
-    
+
     try {
       let saveResult;
       let savedFilePath = currentFilePath;
-      
+
       // Ensure we have clean book data before saving
       const bookDataToSave = {
         ...book,
@@ -210,30 +232,30 @@ function App() {
           modified: new Date().toISOString()
         }
       };
-      
+
       if (currentFilePath) {
         // Quick save to existing file
         console.log('Performing quick save to:', currentFilePath);
         setCurrentOperation('Saving to file...');
         saveResult = await saveBookToFile(bookDataToSave, currentFilePath);
       } else {
-        // Save As dialog for new files  
+        // Save As dialog for new files
         console.log('Performing Save As...');
         setCurrentOperation('Choose save location...');
         saveResult = await saveBook(bookDataToSave);
         savedFilePath = saveResult.filePath;
       }
-      
+
       // Only update state after file operations are completely finished
       if (saveResult.success) {
         const now = new Date().toISOString();
-        
+
         // Update state
         setCurrentFilePath(savedFilePath);
         setHasUnsavedChanges(false);
-        
+
         console.log('=== SAVE OPERATION COMPLETED ===');
-        
+
         // Handle GitHub sync separately and non-blocking
         if (bookDataToSave.github?.repository) {
           setCurrentOperation('Syncing to GitHub...');
@@ -282,74 +304,88 @@ function App() {
     })(),
     [handleSaveBook, isSaving]
   );
-  
+
   // Separate GitHub sync function to avoid blocking UI
-  const handleGitHubSync = useCallback(async (filePath, saveTime, bookData = null) => {
-    const dataToSync = bookData || book; // Use passed data or fallback to current state
-    
-    console.log('🔄 Starting GitHub sync with data:', {
-      repository: dataToSync.github?.repository,
-      filePath,
-      bookTitle: dataToSync.title
-    });
-    
-    try {
-      const GitHubService = (await import('./utils/gitHubService')).default;
-      
-      console.log('🔍 Checking GitHub authentication...');
-      const isAuth = GitHubService.isAuthenticated();
-      console.log('🔍 Auth check result:', {
-        isAuthenticated: isAuth,
-        hasToken: !!GitHubService.token,
-        hasUserInfo: !!GitHubService.userInfo
+  const handleGitHubSync = useCallback(
+    async (filePath, saveTime, bookData = null) => {
+      const dataToSync = bookData || book; // Use passed data or fallback to current state
+
+      console.log('🔄 Starting GitHub sync with data:', {
+        repository: dataToSync.github?.repository,
+        filePath,
+        bookTitle: dataToSync.title
       });
-      
-      if (isAuth) {
-        console.log('✅ GitHub authenticated, proceeding with sync');
-        const commitMessage = `Auto-save: ${new Date().toLocaleString()}`;
-        
-        // Generate filename
-        let filename = 'manuscript.book';
-        if (filePath) {
-          filename = filePath.split(/[\\/]/).pop();
-          if (!filename.endsWith('.book')) {
-            filename = filename.replace(/\.(book|json)$/, '') + '.book';
-          }
-        } else if (dataToSync.title?.trim()) {
-          filename = dataToSync.title.toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '') + '.book';
-        }
-        
-        console.log('📤 Syncing to GitHub:', {
-          repository: dataToSync.github.repository,
-          filename,
-          commitMessage
+
+      try {
+        const GitHubService = (await import('./utils/gitHubService')).default;
+
+        console.log('🔍 Checking GitHub authentication...');
+        const isAuth = GitHubService.isAuthenticated();
+        console.log('🔍 Auth check result:', {
+          isAuthenticated: isAuth,
+          hasToken: !!GitHubService.token,
+          hasUserInfo: !!GitHubService.userInfo
         });
-        
-        await GitHubService.saveBookToRepository(dataToSync.github.repository, dataToSync, commitMessage, filename);
-        updateGitHubSyncStatus({ lastSyncTime: saveTime });
-        console.log('✅ Book automatically synced to GitHub successfully');
-      } else {
-        console.warn('❌ GitHub sync failed - not authenticated');
-        alert('GitHub auto-sync failed: Not authenticated. Please check your GitHub connection in settings.');
+
+        if (isAuth) {
+          console.log('✅ GitHub authenticated, proceeding with sync');
+          const commitMessage = `Auto-save: ${new Date().toLocaleString()}`;
+
+          // Generate filename
+          let filename = 'manuscript.book';
+          if (filePath) {
+            filename = filePath.split(/[\\/]/).pop();
+            if (!filename.endsWith('.book')) {
+              filename = filename.replace(/\.(book|json)$/, '') + '.book';
+            }
+          } else if (dataToSync.title?.trim()) {
+            filename =
+              dataToSync.title
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '') + '.book';
+          }
+
+          console.log('📤 Syncing to GitHub:', {
+            repository: dataToSync.github.repository,
+            filename,
+            commitMessage
+          });
+
+          await GitHubService.saveBookToRepository(
+            dataToSync.github.repository,
+            dataToSync,
+            commitMessage,
+            filename
+          );
+          updateGitHubSyncStatus({ lastSyncTime: saveTime });
+          console.log('✅ Book automatically synced to GitHub successfully');
+        } else {
+          console.warn('❌ GitHub sync failed - not authenticated');
+          alert(
+            'GitHub auto-sync failed: Not authenticated. Please check your GitHub connection in settings.'
+          );
+        }
+      } catch (error) {
+        console.error('❌ GitHub sync failed with error:', error);
+        console.warn('GitHub sync failed:', error.message);
+        // Show user-friendly error for auto-sync failures
+        alert(
+          `GitHub auto-sync failed: ${error.message}. You can manually sync from the GitHub settings.`
+        );
+      } finally {
+        // Clear operation when sync is complete (success or failure)
+        setCurrentOperation(null);
       }
-    } catch (error) {
-      console.error('❌ GitHub sync failed with error:', error);
-      console.warn('GitHub sync failed:', error.message);
-      // Show user-friendly error for auto-sync failures
-      alert(`GitHub auto-sync failed: ${error.message}. You can manually sync from the GitHub settings.`);
-    } finally {
-      // Clear operation when sync is complete (success or failure)
-      setCurrentOperation(null);
-    }
-  }, [updateGitHubSyncStatus]); // Removed 'book' from dependencies since we pass it as parameter
+    },
+    [updateGitHubSyncStatus]
+  ); // Removed 'book' from dependencies since we pass it as parameter
 
   // Add keyboard shortcuts with debouncing
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = e => {
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 's') {
           console.log('Ctrl+S pressed, save state:', {
@@ -357,10 +393,10 @@ function App() {
             saveOperationRef: saveOperationRef.current,
             hasUnsavedChanges
           });
-          
+
           e.preventDefault();
           e.stopPropagation();
-          
+
           if (!saveOperationRef.current && !isSaving) {
             debouncedSave();
           } else {
@@ -372,7 +408,8 @@ function App() {
 
     // Use capture phase to ensure we get the event first
     window.addEventListener('keydown', handleKeyDown, { capture: true });
-    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+    return () =>
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
   }, [debouncedSave, isSaving, hasUnsavedChanges]);
 
   // IPC event handlers (stable, don't change frequently)
@@ -388,7 +425,7 @@ function App() {
       console.log('Menu: New Book');
       handleNewBook();
     };
-    
+
     const handleMenuSaveBook = () => {
       console.log('Menu: Save Book triggered');
       if (!saveOperationRef.current && !isSaving) {
@@ -397,7 +434,7 @@ function App() {
         console.log('Ignoring menu save - save in progress');
       }
     };
-    
+
     const handleMenuSaveAs = async () => {
       console.log('Menu: Save As triggered');
       if (saveOperationRef.current || isSaving) {
@@ -409,9 +446,9 @@ function App() {
       saveOperationRef.current = true;
       setIsSaving(true);
       setCurrentOperation('Save As...');
-      
+
       console.log('=== SAVE AS OPERATION STARTED ===');
-      
+
       try {
         // Ensure we have clean book data before saving
         const bookDataToSave = {
@@ -421,22 +458,22 @@ function App() {
             modified: new Date().toISOString()
           }
         };
-        
+
         // Always show save dialog for Save As
         console.log('Performing Save As...');
         setCurrentOperation('Choose save location...');
         const saveResult = await saveBook(bookDataToSave);
-        
+
         // Only update state after file operations are completely finished
         if (saveResult.success) {
           const now = new Date().toISOString();
-          
+
           // Update state
           setCurrentFilePath(saveResult.filePath);
           setHasUnsavedChanges(false);
-          
+
           console.log('=== SAVE AS OPERATION COMPLETED ===');
-          
+
           // Handle GitHub sync separately and non-blocking
           if (bookDataToSave.github?.repository) {
             setCurrentOperation('Syncing to GitHub...');
@@ -462,27 +499,27 @@ function App() {
         console.log('=== SAVE AS OPERATION CLEANUP ===');
       }
     };
-    
+
     const handleMenuExportBook = () => {
       console.log('Menu: Export Book');
       setShowExportDialog(true);
     };
-    
+
     const handleMenuNewScene = () => {
       console.log('Menu: New Scene');
       handleNewScene();
     };
-    
+
     const handleMenuDeleteScene = () => {
       console.log('Menu: Delete Scene');
       handleDeleteScene();
     };
-    
+
     const handleMenuNewChapter = () => {
       console.log('Menu: New Chapter');
       handleNewChapter();
     };
-    
+
     const handleMenuDeleteChapter = () => {
       console.log('Menu: Delete Chapter');
       if (currentChapterId) {
@@ -491,7 +528,7 @@ function App() {
         alert('Please select a chapter to delete');
       }
     };
-    
+
     const handleMenuDelete = () => {
       console.log('Menu: Delete');
       // Context-sensitive delete: delete current scene or chapter
@@ -501,45 +538,45 @@ function App() {
         handleDeleteChapter(currentChapterId);
       }
     };
-    
+
     const handleMenuToggleRecycleBin = () => {
       console.log('Menu: Toggle Recycle Bin');
       setShowRecycleBin(!showRecycleBin);
     };
-    
+
     const handleMenuTemplateSettings = () => {
       console.log('Menu: Template Settings');
       setShowTemplateManager(true);
     };
-    
+
     const handleMenuGitHubIntegration = () => {
       console.log('Menu: GitHub Integration');
       setShowGitHubIntegration(true);
     };
-    
+
     const handleMenuBackupRecovery = () => {
       console.log('Menu: Backup Recovery');
       setShowBackupRecovery(true);
     };
-    
+
     const handleMenuEmptyRecycleBin = () => {
       console.log('Menu: Empty Recycle Bin');
       emptyRecycleBin();
     };
-    
+
     const handleBookLoaded = (event, bookData) => {
       console.log('=== BOOK LOADED EVENT RECEIVED ===');
       console.log('Event:', event);
       console.log('Book data:', bookData);
       console.log('File path from book data:', bookData.filePath);
-      
+
       // Extract and remove filePath from book data (it's metadata, not content)
       const filePath = bookData.filePath || null;
       const cleanBookData = { ...bookData };
       delete cleanBookData.filePath;
-      
+
       console.log('Clean book data (without filePath):', cleanBookData);
-      
+
       // Migrate old format to new chapter format if needed
       if (cleanBookData.scenes && !cleanBookData.chapters) {
         console.log('Migrating old format: scenes to chapters');
@@ -552,7 +589,7 @@ function App() {
         ];
         delete cleanBookData.scenes;
       }
-      
+
       // Migrate old format - add GitHub settings if missing
       if (!cleanBookData.github) {
         cleanBookData.github = {
@@ -560,22 +597,22 @@ function App() {
           lastSyncTime: null
         };
       }
-      
+
       // Migrate old format - add characters array if missing
       if (!cleanBookData.characters) {
         cleanBookData.characters = [];
       }
-      
+
       // Migrate old format - add character detection blacklist if missing
       if (!cleanBookData.characterDetectionBlacklist) {
         cleanBookData.characterDetectionBlacklist = [];
       }
-      
+
       // Migrate old format - add locations array if missing
       if (!cleanBookData.locations) {
         cleanBookData.locations = [];
       }
-      
+
       console.log('Setting book state...');
       // Set all states in batch
       // Set all states simply and directly
@@ -585,7 +622,7 @@ function App() {
       setCurrentCharacterId(null);
       setCurrentFilePath(filePath);
       setHasUnsavedChanges(false);
-      
+
       console.log('Book loaded successfully via file association!');
     };
 
@@ -607,7 +644,7 @@ function App() {
     ipcRenderer.on('book-loaded', handleBookLoaded);
 
     console.log('IPC event listeners registered successfully');
-    
+
     // Set IPC ready flag for file association handling
     window.ipcReady = true;
     console.log('IPC marked as ready');
@@ -629,17 +666,22 @@ function App() {
       ipcRenderer.removeAllListeners('menu-backup-recovery');
       ipcRenderer.removeAllListeners('menu-empty-recycle-bin');
       ipcRenderer.removeAllListeners('book-loaded');
-      
+
       // Clear IPC ready flag
       window.ipcReady = false;
     };
   }, []); // Empty dependency array - only set up once
 
   const handleNewBook = () => {
-    if (hasUnsavedChanges && !window.confirm('You have unsaved changes. Are you sure you want to create a new book?')) {
+    if (
+      hasUnsavedChanges &&
+      !window.confirm(
+        'You have unsaved changes. Are you sure you want to create a new book?'
+      )
+    ) {
       return;
     }
-    
+
     const newBookData = {
       title: '',
       author: '',
@@ -660,11 +702,11 @@ function App() {
         paragraphStyle: 'indented',
         pageSize: 'letter',
         genre: 'general',
-        pageMargins: { 
-          top: 1, 
-          bottom: 1, 
-          inside: 1.25,  // Inner margin (towards spine)
-          outside: 1     // Outer margin (towards edge)
+        pageMargins: {
+          top: 1,
+          bottom: 1,
+          inside: 1.25, // Inner margin (towards spine)
+          outside: 1 // Outer margin (towards edge)
         },
         mirrorMargins: false, // Use different margins for odd/even pages
         textAlign: 'justified', // 'left', 'justified'
@@ -695,7 +737,7 @@ function App() {
         modified: new Date().toISOString()
       }
     };
-    
+
     // Set all states in batch
     // Set all states simply and directly
     setBook(newBookData);
@@ -709,7 +751,7 @@ function App() {
 
   const handleNewScene = () => {
     const currentChapter = book.chapters.find(ch => ch.id === currentChapterId);
-    
+
     if (!currentChapter) {
       alert('Please select a chapter first');
       return;
@@ -760,14 +802,16 @@ function App() {
     }
   };
 
-  const moveSceneToRecycleBin = (sceneId) => {
+  const moveSceneToRecycleBin = sceneId => {
     const scene = getCurrentScene();
     if (!scene) return;
-    
+
     // Find which chapter the scene belongs to
-    const chapter = book.chapters.find(ch => ch.scenes.some(s => s.id === sceneId));
+    const chapter = book.chapters.find(ch =>
+      ch.scenes.some(s => s.id === sceneId)
+    );
     if (!chapter) return;
-    
+
     // Add to recycle bin with metadata
     const recycleBinItem = {
       id: Date.now().toString(),
@@ -777,9 +821,9 @@ function App() {
       originalChapterTitle: chapter.title,
       deletedAt: new Date().toISOString()
     };
-    
+
     setRecycleBin(prev => [...prev, recycleBinItem]);
-    
+
     // Remove from chapters
     setBook(prev => ({
       ...prev,
@@ -792,18 +836,22 @@ function App() {
     markAsChanged();
   };
 
-  const restoreFromRecycleBin = (recycleBinItemId) => {
-    const recycleBinItem = recycleBin.find(item => item.id === recycleBinItemId);
+  const restoreFromRecycleBin = recycleBinItemId => {
+    const recycleBinItem = recycleBin.find(
+      item => item.id === recycleBinItemId
+    );
     if (!recycleBinItem) return;
-    
+
     if (recycleBinItem.type === 'scene') {
       // Find the original chapter or use the first chapter if not found
-      const targetChapter = book.chapters.find(ch => ch.id === recycleBinItem.originalChapterId) || book.chapters[0];
-      
+      const targetChapter =
+        book.chapters.find(ch => ch.id === recycleBinItem.originalChapterId) ||
+        book.chapters[0];
+
       if (targetChapter) {
         setBook(prev => ({
           ...prev,
-          chapters: prev.chapters.map(chapter => 
+          chapters: prev.chapters.map(chapter =>
             chapter.id === targetChapter.id
               ? { ...chapter, scenes: [...chapter.scenes, recycleBinItem.item] }
               : chapter
@@ -813,19 +861,25 @@ function App() {
         markAsChanged();
       }
     }
-    
+
     // Remove from recycle bin
     setRecycleBin(prev => prev.filter(item => item.id !== recycleBinItemId));
   };
 
-  const permanentlyDeleteFromRecycleBin = (recycleBinItemId) => {
-    if (window.confirm('Permanently delete this item? This cannot be undone.')) {
+  const permanentlyDeleteFromRecycleBin = recycleBinItemId => {
+    if (
+      window.confirm('Permanently delete this item? This cannot be undone.')
+    ) {
       setRecycleBin(prev => prev.filter(item => item.id !== recycleBinItemId));
     }
   };
 
   const emptyRecycleBin = () => {
-    if (window.confirm('Permanently delete all items in the recycle bin? This cannot be undone.')) {
+    if (
+      window.confirm(
+        'Permanently delete all items in the recycle bin? This cannot be undone.'
+      )
+    ) {
       setRecycleBin([]);
     }
   };
@@ -834,7 +888,7 @@ function App() {
     const newChapters = [...book.chapters];
     const [movedChapter] = newChapters.splice(fromIndex, 1);
     newChapters.splice(toIndex, 0, movedChapter);
-    
+
     setBook(prev => ({
       ...prev,
       chapters: newChapters,
@@ -860,15 +914,20 @@ function App() {
     markAsChanged();
   };
 
-  const moveSceneBetweenChapters = (sceneId, fromChapterId, toChapterId, toIndex = -1) => {
+  const moveSceneBetweenChapters = (
+    sceneId,
+    fromChapterId,
+    toChapterId,
+    toIndex = -1
+  ) => {
     if (fromChapterId === toChapterId) return;
-    
+
     const scene = book.chapters
       .find(ch => ch.id === fromChapterId)
       ?.scenes.find(s => s.id === sceneId);
-    
+
     if (!scene) return;
-    
+
     setBook(prev => ({
       ...prev,
       chapters: prev.chapters.map(chapter => {
@@ -892,7 +951,7 @@ function App() {
     markAsChanged();
   };
 
-  const handleDeleteChapter = (chapterId) => {
+  const handleDeleteChapter = chapterId => {
     if (book.chapters.length <= 1) {
       alert('Cannot delete the last chapter');
       return;
@@ -938,16 +997,14 @@ function App() {
     setBook(prev => ({
       ...prev,
       chapters: prev.chapters.map(chapter =>
-        chapter.id === chapterId
-          ? { ...chapter, ...updates }
-          : chapter
+        chapter.id === chapterId ? { ...chapter, ...updates } : chapter
       ),
       metadata: { ...prev.metadata, modified: new Date().toISOString() }
     }));
     markAsChanged();
   };
 
-  const updateBookMetadata = (metadata) => {
+  const updateBookMetadata = metadata => {
     setBook(prev => ({
       ...prev,
       ...metadata,
@@ -956,7 +1013,7 @@ function App() {
     markAsChanged();
   };
 
-  const updateTemplate = (template) => {
+  const updateTemplate = template => {
     setBook(prev => ({
       ...prev,
       template: { ...prev.template, ...template },
@@ -1000,10 +1057,10 @@ function App() {
     markAsChanged();
   };
 
-  const moveCharacterToRecycleBin = (characterId) => {
+  const moveCharacterToRecycleBin = characterId => {
     const character = book.characters.find(c => c.id === characterId);
     if (!character) return;
-    
+
     // Add to recycle bin with metadata
     const recycleBinItem = {
       id: Date.now().toString(),
@@ -1011,47 +1068,59 @@ function App() {
       item: character,
       deletedAt: new Date().toISOString()
     };
-    
+
     setCharacterRecycleBin(prev => [...prev, recycleBinItem]);
-    
+
     // Remove from characters
     setBook(prev => ({
       ...prev,
-      characters: prev.characters.filter(character => character.id !== characterId),
+      characters: prev.characters.filter(
+        character => character.id !== characterId
+      ),
       metadata: { ...prev.metadata, modified: new Date().toISOString() }
     }));
-    
+
     // Clear selection if this character was selected
     if (currentCharacterId === characterId) {
       setCurrentCharacterId(null);
     }
-    
+
     markAsChanged();
   };
 
-  const restoreCharacterFromRecycleBin = (recycleBinItemId) => {
-    const recycleBinItem = characterRecycleBin.find(item => item.id === recycleBinItemId);
+  const restoreCharacterFromRecycleBin = recycleBinItemId => {
+    const recycleBinItem = characterRecycleBin.find(
+      item => item.id === recycleBinItemId
+    );
     if (!recycleBinItem) return;
-    
+
     // Add back to characters
     setBook(prev => ({
       ...prev,
       characters: [...prev.characters, recycleBinItem.item],
       metadata: { ...prev.metadata, modified: new Date().toISOString() }
     }));
-    
+
     // Remove from recycle bin
-    setCharacterRecycleBin(prev => prev.filter(item => item.id !== recycleBinItemId));
+    setCharacterRecycleBin(prev =>
+      prev.filter(item => item.id !== recycleBinItemId)
+    );
     markAsChanged();
   };
 
-  const permanentlyDeleteCharacter = (recycleBinItemId) => {
-    if (window.confirm('Permanently delete this character? This cannot be undone.')) {
-      setCharacterRecycleBin(prev => prev.filter(item => item.id !== recycleBinItemId));
+  const permanentlyDeleteCharacter = recycleBinItemId => {
+    if (
+      window.confirm(
+        'Permanently delete this character? This cannot be undone.'
+      )
+    ) {
+      setCharacterRecycleBin(prev =>
+        prev.filter(item => item.id !== recycleBinItemId)
+      );
     }
   };
 
-  const updateCharacterDetectionBlacklist = (blacklist) => {
+  const updateCharacterDetectionBlacklist = blacklist => {
     setBook(prev => ({
       ...prev,
       characterDetectionBlacklist: blacklist,
@@ -1094,7 +1163,7 @@ function App() {
     markAsChanged();
   };
 
-  const moveLocationToRecycleBin = (locationId) => {
+  const moveLocationToRecycleBin = locationId => {
     const location = book.locations.find(l => l.id === locationId);
     if (!location) return;
 
@@ -1120,8 +1189,10 @@ function App() {
     markAsChanged();
   };
 
-  const restoreLocationFromRecycleBin = (recycleBinItemId) => {
-    const recycleBinItem = locationRecycleBin.find(item => item.id === recycleBinItemId);
+  const restoreLocationFromRecycleBin = recycleBinItemId => {
+    const recycleBinItem = locationRecycleBin.find(
+      item => item.id === recycleBinItemId
+    );
     if (!recycleBinItem) return;
 
     setBook(prev => ({
@@ -1130,13 +1201,19 @@ function App() {
       metadata: { ...prev.metadata, modified: new Date().toISOString() }
     }));
 
-    setLocationRecycleBin(prev => prev.filter(item => item.id !== recycleBinItemId));
+    setLocationRecycleBin(prev =>
+      prev.filter(item => item.id !== recycleBinItemId)
+    );
     markAsChanged();
   };
 
-  const permanentlyDeleteLocation = (recycleBinItemId) => {
-    if (window.confirm('Permanently delete this location? This cannot be undone.')) {
-      setLocationRecycleBin(prev => prev.filter(item => item.id !== recycleBinItemId));
+  const permanentlyDeleteLocation = recycleBinItemId => {
+    if (
+      window.confirm('Permanently delete this location? This cannot be undone.')
+    ) {
+      setLocationRecycleBin(prev =>
+        prev.filter(item => item.id !== recycleBinItemId)
+      );
     }
   };
 
@@ -1163,7 +1240,10 @@ function App() {
 
   // Find current character
   const getCurrentCharacter = () => {
-    return book.characters.find(character => character.id === currentCharacterId) || null;
+    return (
+      book.characters.find(character => character.id === currentCharacterId) ||
+      null
+    );
   };
 
   const currentScene = getCurrentScene();
@@ -1171,27 +1251,33 @@ function App() {
 
   return (
     <div className={`app ${isSaving ? 'saving' : ''}`}>
-      <header className={`app-header ${hasUnsavedChanges ? 'has-unsaved-changes' : ''}`}>
+      <header
+        className={`app-header ${hasUnsavedChanges ? 'has-unsaved-changes' : ''}`}
+      >
         <div className="book-info">
           <input
             type="text"
             value={book.title}
-            onChange={(e) => updateBookMetadata({ title: e.target.value })}
+            onChange={e => updateBookMetadata({ title: e.target.value })}
             className="book-title"
             placeholder="Book Title"
-            title={currentFilePath ? `File: ${currentFilePath}` : 'No file selected'}
+            title={
+              currentFilePath ? `File: ${currentFilePath}` : 'No file selected'
+            }
           />
           <input
             type="text"
             value={book.author}
-            onChange={(e) => updateBookMetadata({ author: e.target.value })}
+            onChange={e => updateBookMetadata({ author: e.target.value })}
             className="book-author"
             placeholder="Author"
-            title={currentFilePath ? `File: ${currentFilePath}` : 'No file selected'}
+            title={
+              currentFilePath ? `File: ${currentFilePath}` : 'No file selected'
+            }
           />
         </div>
         <div className="toolbar">
-          <button 
+          <button
             onClick={() => setShowTemplateManager(true)}
             className="icon-button"
             title="Template Settings - Customize fonts, layout, and formatting"
@@ -1199,7 +1285,7 @@ function App() {
           >
             ⚙️
           </button>
-          <button 
+          <button
             onClick={() => setShowExportDialog(true)}
             className="icon-button"
             title="Export Book - Create PDF or HTML versions"
@@ -1207,7 +1293,7 @@ function App() {
           >
             📤
           </button>
-          <button 
+          <button
             onClick={() => setShowGitHubIntegration(true)}
             className="icon-button"
             title="GitHub Integration - Version control and backup"
@@ -1215,7 +1301,7 @@ function App() {
           >
             🔗
           </button>
-          <button 
+          <button
             onClick={() => setShowBackupRecovery(true)}
             className="icon-button"
             title="Open from Backup - Recover books from GitHub"
@@ -1262,7 +1348,9 @@ function App() {
           onRestoreCharacterFromRecycleBin={restoreCharacterFromRecycleBin}
           onPermanentlyDeleteCharacter={permanentlyDeleteCharacter}
           characterDetectionBlacklist={book.characterDetectionBlacklist}
-          onUpdateCharacterDetectionBlacklist={updateCharacterDetectionBlacklist}
+          onUpdateCharacterDetectionBlacklist={
+            updateCharacterDetectionBlacklist
+          }
           locations={book.locations}
           currentLocationId={currentLocationId}
           onLocationSelect={setCurrentLocationId}
@@ -1275,7 +1363,7 @@ function App() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
-        
+
         {activeTab === 'manuscript' ? (
           currentScene ? (
             <SceneEditor
@@ -1287,7 +1375,10 @@ function App() {
             <div className="scene-editor">
               <div className="no-scene">
                 <h3>No Scene Selected</h3>
-                <p>Select a scene from the chapters to start writing, or create a new scene.</p>
+                <p>
+                  Select a scene from the chapters to start writing, or create a
+                  new scene.
+                </p>
               </div>
             </div>
           )
@@ -1302,7 +1393,10 @@ function App() {
             <div className="character-editor">
               <div className="no-character">
                 <h3>No Character Selected</h3>
-                <p>Select a character from the list to edit their information, or create a new character.</p>
+                <p>
+                  Select a character from the list to edit their information, or
+                  create a new character.
+                </p>
               </div>
             </div>
           )
@@ -1311,7 +1405,9 @@ function App() {
             chapters={book.chapters}
             characters={book.characters}
             characterDetectionBlacklist={book.characterDetectionBlacklist}
-            onUpdateCharacterDetectionBlacklist={updateCharacterDetectionBlacklist}
+            onUpdateCharacterDetectionBlacklist={
+              updateCharacterDetectionBlacklist
+            }
           />
         ) : activeTab === 'locations' ? (
           book.locations.find(l => l.id === currentLocationId) ? (
@@ -1324,7 +1420,10 @@ function App() {
             <div className="location-editor">
               <div className="no-location">
                 <h3>No Location Selected</h3>
-                <p>Select a location from the list to edit its information, or create a new location.</p>
+                <p>
+                  Select a location from the list to edit its information, or
+                  create a new location.
+                </p>
               </div>
             </div>
           )
@@ -1350,7 +1449,7 @@ function App() {
         <ExportDialog
           book={book}
           onClose={() => setShowExportDialog(false)}
-          onExport={(format) => {
+          onExport={_format => {
             // TODO: Implement export functionality
           }}
         />

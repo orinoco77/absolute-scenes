@@ -1,27 +1,34 @@
-import React from 'react';
-import SceneList from './SceneList';
 import CharacterList from './CharacterList';
 import LocationList from './LocationList';
-import CharacterThreadVisualization from './CharacterThreadVisualization';
+import SceneList from './SceneList';
 
 // Threads control component for the sidebar
-function ThreadsControls({ chapters, characters, characterDetectionBlacklist, onUpdateCharacterDetectionBlacklist }) {
+function ThreadsControls({
+  chapters,
+  characters,
+  characterDetectionBlacklist,
+  onUpdateCharacterDetectionBlacklist: _onUpdateCharacterDetectionBlacklist
+}) {
   // Get character count for display
   const allCharacters = new Set();
   characters.forEach(char => allCharacters.add(char.name));
-  
+
   // Count scenes
-  const totalScenes = chapters.reduce((total, ch) => total + ch.scenes.length, 0);
-  
+  const totalScenes = chapters.reduce(
+    (total, ch) => total + ch.scenes.length,
+    0
+  );
+
   return (
     <div className="tab-list">
       <div className="tab-list-header">
         <h3>Thread View</h3>
         <p className="tab-description">
-          Visualize character appearances and story threads across your scenes. Track character continuity and narrative flow.
+          Visualize character appearances and story threads across your scenes.
+          Track character continuity and narrative flow.
         </p>
       </div>
-      
+
       <div className="tab-content-container">
         <div className="tab-info-section">
           <div className="tab-stats">
@@ -37,15 +44,18 @@ function ThreadsControls({ chapters, characters, characterDetectionBlacklist, on
               <span className="stat-label">Formal characters:</span>
               <span className="stat-value">{characters.length}</span>
             </div>
-            {characterDetectionBlacklist && characterDetectionBlacklist.length > 0 && (
-              <div className="tab-stat">
-                <span className="stat-label">Blacklisted names:</span>
-                <span className="stat-value" style={{color: '#dc2626'}}>{characterDetectionBlacklist.length}</span>
-              </div>
-            )}
+            {characterDetectionBlacklist &&
+              characterDetectionBlacklist.length > 0 && (
+                <div className="tab-stat">
+                  <span className="stat-label">Blacklisted names:</span>
+                  <span className="stat-value" style={{ color: '#dc2626' }}>
+                    {characterDetectionBlacklist.length}
+                  </span>
+                </div>
+              )}
           </div>
         </div>
-        
+
         <div className="tab-help-section">
           <h4>How to use:</h4>
           <ul>
@@ -55,25 +65,26 @@ function ThreadsControls({ chapters, characters, characterDetectionBlacklist, on
             <li>Connecting lines show character continuity between scenes</li>
           </ul>
         </div>
-        
+
         <div className="tab-coming-soon">
-          <strong>Coming soon:</strong> Filter controls, character grouping, and export options will be added here.
+          <strong>Coming soon:</strong> Filter controls, character grouping, and
+          export options will be added here.
         </div>
       </div>
     </div>
   );
 }
 
-function BookStructure({ 
+function BookStructure({
   // Scene/Chapter props
-  chapters, 
-  currentSceneId, 
+  chapters,
+  currentSceneId,
   currentChapterId,
-  onSceneSelect, 
+  onSceneSelect,
   onChapterSelect,
-  onSceneAdd, 
+  onSceneAdd,
   onChapterAdd,
-  onSceneDelete, 
+  onSceneDelete,
   onChapterDelete,
   onChapterUpdate,
   onReorderChapters,
@@ -85,7 +96,7 @@ function BookStructure({
   onRestoreFromRecycleBin,
   onPermanentlyDelete,
   onEmptyRecycleBin,
-  
+
   // Character props
   characters,
   currentCharacterId,
@@ -96,11 +107,11 @@ function BookStructure({
   characterRecycleBin,
   onRestoreCharacterFromRecycleBin,
   onPermanentlyDeleteCharacter,
-  
+
   // Character detection props
   characterDetectionBlacklist,
   onUpdateCharacterDetectionBlacklist,
-  
+
   // Location props
   locations,
   currentLocationId,
@@ -111,25 +122,37 @@ function BookStructure({
   locationRecycleBin,
   onRestoreLocationFromRecycleBin,
   onPermanentlyDeleteLocation,
-  
+
   // Tab props
   activeTab,
   onTabChange
 }) {
-  const handleTabChange = (tabId) => {
+  const handleTabChange = tabId => {
     onTabChange(tabId);
-    
+
     // Auto-select first item when switching tabs if nothing is selected
-    if (tabId === 'characters' && !currentCharacterId && characters.length > 0) {
+    if (
+      tabId === 'characters' &&
+      !currentCharacterId &&
+      characters.length > 0
+    ) {
       onCharacterSelect(characters[0].id);
-    } else if (tabId === 'manuscript' && !currentSceneId && chapters.length > 0) {
+    } else if (
+      tabId === 'manuscript' &&
+      !currentSceneId &&
+      chapters.length > 0
+    ) {
       // Find first scene in first chapter
       const firstChapterWithScenes = chapters.find(ch => ch.scenes.length > 0);
       if (firstChapterWithScenes) {
         onChapterSelect(firstChapterWithScenes.id);
         onSceneSelect(firstChapterWithScenes.scenes[0].id);
       }
-    } else if (tabId === 'locations' && !currentLocationId && locations.length > 0) {
+    } else if (
+      tabId === 'locations' &&
+      !currentLocationId &&
+      locations.length > 0
+    ) {
       onLocationSelect(locations[0].id);
     }
   };
@@ -190,7 +213,9 @@ function BookStructure({
           chapters={chapters}
           characters={characters}
           characterDetectionBlacklist={characterDetectionBlacklist}
-          onUpdateCharacterDetectionBlacklist={onUpdateCharacterDetectionBlacklist}
+          onUpdateCharacterDetectionBlacklist={
+            onUpdateCharacterDetectionBlacklist
+          }
         />
       )
     },
@@ -218,7 +243,10 @@ function BookStructure({
     <div className="book-structure">
       <div className="accordion-container">
         {tabs.map(tab => (
-          <div key={tab.id} className={`accordion-section ${activeTab === tab.id ? 'active-section' : ''}`}>
+          <div
+            key={tab.id}
+            className={`accordion-section ${activeTab === tab.id ? 'active-section' : ''}`}
+          >
             <button
               className={`accordion-button ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => handleTabChange(tab.id)}
@@ -226,13 +254,13 @@ function BookStructure({
             >
               <span className="accordion-icon">{tab.icon}</span>
               <span className="accordion-label">{tab.label}</span>
-              <span className="accordion-chevron">{activeTab === tab.id ? '▼' : '▶'}</span>
+              <span className="accordion-chevron">
+                {activeTab === tab.id ? '▼' : '▶'}
+              </span>
             </button>
-            
+
             {activeTab === tab.id && (
-              <div className="accordion-content">
-                {tab.component}
-              </div>
+              <div className="accordion-content">{tab.component}</div>
             )}
           </div>
         ))}

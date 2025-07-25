@@ -7,10 +7,10 @@ global.window.require = jest.fn();
 const mockIpcRenderer = {
   invoke: jest.fn(),
   on: jest.fn(),
-  removeAllListeners: jest.fn(),
+  removeAllListeners: jest.fn()
 };
 
-global.window.require.mockImplementation((module) => {
+global.window.require.mockImplementation(module => {
   if (module === 'electron') {
     return { ipcRenderer: mockIpcRenderer };
   }
@@ -24,5 +24,5 @@ global.URL.revokeObjectURL = jest.fn();
 // Mock navigator.onLine
 Object.defineProperty(navigator, 'onLine', {
   writable: true,
-  value: true,
+  value: true
 });

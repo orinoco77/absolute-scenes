@@ -1,11 +1,47 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 // Available location icons
 const LOCATION_ICONS = [
-  '📍', '🏠', '🏢', '🏰', '🏛️', '⛪', '🕌', '🗼', '🌆', '🌉',
-  '🏔️', '🌋', '🏞️', '🏜️', '🏖️', '🌊', '🌲', '🌳', '🌴', '🌺',
-  '🎪', '🎡', '🎢', '🏪', '🏬', '🏥', '🏦', '🏨', '🚉', '✈️',
-  '🚗', '⛵', '🎭', '📚', '🎨', '⚔️', '🔮', '💎', '👑', '🗝️'
+  '📍',
+  '🏠',
+  '🏢',
+  '🏰',
+  '🏛️',
+  '⛪',
+  '🕌',
+  '🗼',
+  '🌆',
+  '🌉',
+  '🏔️',
+  '🌋',
+  '🏞️',
+  '🏜️',
+  '🏖️',
+  '🌊',
+  '🌲',
+  '🌳',
+  '🌴',
+  '🌺',
+  '🎪',
+  '🎡',
+  '🎢',
+  '🏪',
+  '🏬',
+  '🏥',
+  '🏦',
+  '🏨',
+  '🚉',
+  '✈️',
+  '🚗',
+  '⛵',
+  '🎭',
+  '📚',
+  '🎨',
+  '⚔️',
+  '🔮',
+  '💎',
+  '👑',
+  '🗝️'
 ];
 
 // Location types
@@ -32,22 +68,25 @@ function LocationEditor({ location, template, onLocationUpdate }) {
     onLocationUpdate(location.id, { [field]: value });
   };
 
-  const handleIconSelect = (icon) => {
+  const handleIconSelect = icon => {
     handleUpdate('icon', icon);
     setShowIconDropdown(false);
   };
 
-  const handleDescriptionChange = (e) => {
+  const handleDescriptionChange = e => {
     handleUpdate('description', e.target.value);
   };
 
-  const handleNotesChange = (e) => {
+  const handleNotesChange = e => {
     handleUpdate('notes', e.target.value);
   };
 
   // Count words in description
-  const wordCount = location.description 
-    ? location.description.trim().split(/\s+/).filter(word => word.length > 0).length 
+  const wordCount = location.description
+    ? location.description
+        .trim()
+        .split(/\s+/)
+        .filter(word => word.length > 0).length
     : 0;
 
   return (
@@ -55,8 +94,8 @@ function LocationEditor({ location, template, onLocationUpdate }) {
       <div className="location-header">
         <div className="location-title-section">
           <div className="location-avatar-selector">
-            <div 
-              className="current-avatar" 
+            <div
+              className="current-avatar"
               onClick={() => setShowIconDropdown(!showIconDropdown)}
               title="Click to change icon"
             >
@@ -76,38 +115,44 @@ function LocationEditor({ location, template, onLocationUpdate }) {
               </div>
             )}
           </div>
-          
+
           <div className="location-title-inputs">
             <input
               type="text"
               value={location.name || ''}
-              onChange={(e) => handleUpdate('name', e.target.value)}
+              onChange={e => handleUpdate('name', e.target.value)}
               className="location-name-input"
               placeholder="Location Name"
             />
             <select
               value={location.type || 'General'}
-              onChange={(e) => handleUpdate('type', e.target.value)}
+              onChange={e => handleUpdate('type', e.target.value)}
               className="location-type-input"
             >
               {LOCATION_TYPES.map(type => (
-                <option key={type} value={type}>{type}</option>
+                <option key={type} value={type}>
+                  {type}
+                </option>
               ))}
             </select>
           </div>
         </div>
-        
+
         <div className="location-stats">
           <span>{wordCount} words</span>
           <span>Created {new Date(location.created).toLocaleDateString()}</span>
-          <span>Modified {new Date(location.modified).toLocaleDateString()}</span>
+          <span>
+            Modified {new Date(location.modified).toLocaleDateString()}
+          </span>
         </div>
       </div>
 
       <div className="location-editor-textarea">
         <div className="editor-toolbar">
           <span>📝 Description</span>
-          <span className="format-help">Describe the location, its appearance, atmosphere, and significance</span>
+          <span className="format-help">
+            Describe the location, its appearance, atmosphere, and significance
+          </span>
         </div>
         <textarea
           value={location.description || ''}
@@ -116,7 +161,7 @@ function LocationEditor({ location, template, onLocationUpdate }) {
           style={{
             fontFamily: template?.fontFamily || 'Times New Roman',
             fontSize: `${(template?.fontSize || 12) + 4}px`,
-            lineHeight: template?.lineHeight || 1.6,
+            lineHeight: template?.lineHeight || 1.6
           }}
         />
       </div>
@@ -127,7 +172,7 @@ function LocationEditor({ location, template, onLocationUpdate }) {
           <input
             type="text"
             value={location.geography || ''}
-            onChange={(e) => handleUpdate('geography', e.target.value)}
+            onChange={e => handleUpdate('geography', e.target.value)}
             placeholder="e.g., Urban downtown, Rural countryside, Mountain valley"
             className="location-detail-input"
           />
@@ -138,7 +183,7 @@ function LocationEditor({ location, template, onLocationUpdate }) {
           <input
             type="text"
             value={location.climate || ''}
-            onChange={(e) => handleUpdate('climate', e.target.value)}
+            onChange={e => handleUpdate('climate', e.target.value)}
             placeholder="e.g., Temperate, Hot and humid, Cold and snowy"
             className="location-detail-input"
           />
@@ -149,7 +194,7 @@ function LocationEditor({ location, template, onLocationUpdate }) {
           <input
             type="text"
             value={location.features || ''}
-            onChange={(e) => handleUpdate('features', e.target.value)}
+            onChange={e => handleUpdate('features', e.target.value)}
             placeholder="e.g., Stone walls, Large windows, Hidden passages"
             className="location-detail-input"
           />
@@ -160,7 +205,7 @@ function LocationEditor({ location, template, onLocationUpdate }) {
           <input
             type="text"
             value={location.significance || ''}
-            onChange={(e) => handleUpdate('significance', e.target.value)}
+            onChange={e => handleUpdate('significance', e.target.value)}
             placeholder="e.g., Meeting place, Character's home, Scene of conflict"
             className="location-detail-input"
           />

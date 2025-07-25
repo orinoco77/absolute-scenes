@@ -1,14 +1,14 @@
+/* eslint-disable import/no-anonymous-default-export */
+/* eslint-disable no-console */
 /**
  * Advanced Font Management System for Book Publishing
  * Handles custom font loading for jsPDF and provides fallbacks
  */
 
-import jsPDF from 'jspdf';
-
 // Font definitions with characteristics for book publishing
 export const BOOK_FONTS = {
   // Classic Serif Fonts (Best for Book Bodies)
-  'palatino': {
+  palatino: {
     name: 'Palatino Linotype',
     category: 'serif',
     description: 'Elegant and highly readable, designed specifically for books',
@@ -18,7 +18,7 @@ export const BOOK_FONTS = {
     webFont: 'Palatino, "Palatino Linotype", "Book Antiqua", serif',
     quality: 'premium'
   },
-  'garamond': {
+  garamond: {
     name: 'EB Garamond',
     category: 'serif',
     description: 'Timeless classic, widely used in professional publishing',
@@ -38,7 +38,7 @@ export const BOOK_FONTS = {
     webFont: '"Cormorant Garamond", Garamond, "Times New Roman", serif',
     quality: 'premium'
   },
-  'caslon': {
+  caslon: {
     name: 'Adobe Caslon Pro',
     category: 'serif',
     description: 'Traditional choice used for the Declaration of Independence',
@@ -48,7 +48,7 @@ export const BOOK_FONTS = {
     webFont: 'Caslon, "Adobe Caslon Pro", serif',
     quality: 'premium'
   },
-  'baskerville': {
+  baskerville: {
     name: 'Libre Baskerville',
     category: 'serif',
     description: 'Dramatic elegance with excellent readability',
@@ -58,17 +58,17 @@ export const BOOK_FONTS = {
     webFont: '"Libre Baskerville", Baskerville, "Times New Roman", serif',
     quality: 'premium'
   },
-  'minion': {
+  minion: {
     name: 'Minion Pro',
     category: 'serif',
-    description: 'Adobe\'s professional publishing standard',
+    description: "Adobe's professional publishing standard",
     characteristics: 'Professional, clean, highly readable',
     bestFor: ['magazines', 'newspapers', 'professional'],
     fallback: 'times',
     webFont: 'Minion, "Minion Pro", serif',
     quality: 'premium'
   },
-  'sabon': {
+  sabon: {
     name: 'Sabon',
     category: 'serif',
     description: 'Elegant typeface, particularly good for romance novels',
@@ -78,7 +78,7 @@ export const BOOK_FONTS = {
     webFont: 'Sabon, serif',
     quality: 'premium'
   },
-  'bembo': {
+  bembo: {
     name: 'Bembo',
     category: 'serif',
     description: 'Classic contemporary look, widely used in fiction',
@@ -88,9 +88,9 @@ export const BOOK_FONTS = {
     webFont: 'Bembo, serif',
     quality: 'premium'
   },
-  
+
   // Standard High-Quality Alternatives
-  'georgia': {
+  georgia: {
     name: 'Georgia',
     category: 'serif',
     description: 'Designed for screen reading, excellent for digital books',
@@ -101,7 +101,7 @@ export const BOOK_FONTS = {
     quality: 'high',
     systemFont: true
   },
-  'times': {
+  times: {
     name: 'Times New Roman',
     category: 'serif',
     description: 'Classic and reliable, though somewhat dated',
@@ -112,7 +112,7 @@ export const BOOK_FONTS = {
     quality: 'standard',
     systemFont: true
   },
-  'crimson': {
+  crimson: {
     name: 'Crimson Text',
     category: 'serif',
     description: 'Contemporary serif designed for both print and digital',
@@ -125,14 +125,15 @@ export const BOOK_FONTS = {
   'source-serif': {
     name: 'Source Serif 4',
     category: 'serif',
-    description: 'Adobe\'s open-source serif designed for professional publishing',
+    description:
+      "Adobe's open-source serif designed for professional publishing",
     characteristics: 'Professional, clean, highly readable',
     bestFor: ['non-fiction', 'technical', 'professional'],
     fallback: 'times',
     webFont: '"Source Serif Pro", "Times New Roman", serif',
     quality: 'premium'
   },
-  
+
   // Sans-Serif (for headers and special uses)
   'gill-sans': {
     name: 'Gill Sans',
@@ -144,7 +145,7 @@ export const BOOK_FONTS = {
     webFont: '"Gill Sans", "Gill Sans MT", sans-serif',
     quality: 'premium'
   },
-  'helvetica': {
+  helvetica: {
     name: 'Helvetica',
     category: 'sans-serif',
     description: 'Clean and modern, good for headers and titles',
@@ -155,9 +156,9 @@ export const BOOK_FONTS = {
     quality: 'high',
     systemFont: true
   },
-  
+
   // Monospace
-  'courier': {
+  courier: {
     name: 'Courier New',
     category: 'monospace',
     description: 'Typewriter style, good for code or special effects',
@@ -171,8 +172,8 @@ export const BOOK_FONTS = {
 };
 
 // Font loading state
-let loadedFonts = new Set();
-let fontLoadingPromises = new Map();
+const loadedFonts = new Set();
+const fontLoadingPromises = new Map();
 let fontSystemInitialized = false; // Guard to prevent duplicate initialization
 
 /**
@@ -181,7 +182,7 @@ let fontSystemInitialized = false; // Guard to prevent duplicate initialization
  * @param {string} fontPath - Path to the font file (relative to public folder)
  * @param {Object} options - Font options
  */
-export async function loadCustomFont(fontKey, fontPath, options = {}) {
+export async function loadCustomFont(fontKey, fontPath, _options = {}) {
   if (loadedFonts.has(fontKey)) {
     return true; // Already loaded
   }
@@ -198,9 +199,9 @@ export async function loadCustomFont(fontKey, fontPath, options = {}) {
       // 1. Fetch the font file
       // 2. Convert it to base64
       // 3. Add it to jsPDF using addFont()
-      
+
       console.log(`Font ${fontKey} would be loaded from ${fontPath}`);
-      
+
       // Mark as loaded (even though we're using fallback)
       loadedFonts.add(fontKey);
       resolve(true);
@@ -223,17 +224,20 @@ export function getPdfFont(fontFamily) {
   // First, try to find exact match in our font catalog
   const fontKey = Object.keys(BOOK_FONTS).find(key => {
     const font = BOOK_FONTS[key];
-    return font.name === fontFamily || key === fontFamily.toLowerCase().replace(/\s+/g, '-');
+    return (
+      font.name === fontFamily ||
+      key === fontFamily.toLowerCase().replace(/\s+/g, '-')
+    );
   });
 
   if (fontKey && BOOK_FONTS[fontKey]) {
     const font = BOOK_FONTS[fontKey];
-    
+
     // Check if custom font is loaded
     if (loadedFonts.has(fontKey)) {
       return fontKey; // Use the custom font
     }
-    
+
     // Fall back to jsPDF built-in font
     return font.fallback;
   }
@@ -241,25 +245,25 @@ export function getPdfFont(fontFamily) {
   // Legacy mapping for backward compatibility
   const legacyFontMap = {
     'Times New Roman': 'times',
-    'Georgia': 'times',
-    'Garamond': 'times',
+    Georgia: 'times',
+    Garamond: 'times',
     'Palatino Linotype': 'times',
     'Book Antiqua': 'times',
     'Minion Pro': 'times',
     'Adobe Caslon Pro': 'times',
     'Crimson Text': 'times',
-    'Baskerville': 'times',
-    'Sabon': 'times',
-    'Bembo': 'times',
-    
-    'Arial': 'helvetica',
-    'Helvetica': 'helvetica',
-    'Calibri': 'helvetica',
+    Baskerville: 'times',
+    Sabon: 'times',
+    Bembo: 'times',
+
+    Arial: 'helvetica',
+    Helvetica: 'helvetica',
+    Calibri: 'helvetica',
     'Gill Sans': 'helvetica',
-    
+
     'Courier New': 'courier',
-    'Monaco': 'courier',
-    'Consolas': 'courier'
+    Monaco: 'courier',
+    Consolas: 'courier'
   };
 
   return legacyFontMap[fontFamily] || 'times';
@@ -272,7 +276,7 @@ export function getPdfFont(fontFamily) {
  */
 export function getFontRecommendations(genre) {
   const recommendations = [];
-  
+
   Object.keys(BOOK_FONTS).forEach(key => {
     const font = BOOK_FONTS[key];
     if (font.bestFor.includes(genre) || font.bestFor.includes('general')) {
@@ -288,7 +292,7 @@ export function getFontRecommendations(genre) {
   return recommendations.sort((a, b) => {
     if (a.recommended && !b.recommended) return -1;
     if (!a.recommended && b.recommended) return 1;
-    
+
     const qualityOrder = { premium: 3, high: 2, standard: 1 };
     return (qualityOrder[b.quality] || 0) - (qualityOrder[a.quality] || 0);
   });
@@ -302,7 +306,10 @@ export function getFontRecommendations(genre) {
 export function getCssFontFamily(fontFamily) {
   const fontKey = Object.keys(BOOK_FONTS).find(key => {
     const font = BOOK_FONTS[key];
-    return font.name === fontFamily || key === fontFamily.toLowerCase().replace(/\s+/g, '-');
+    return (
+      font.name === fontFamily ||
+      key === fontFamily.toLowerCase().replace(/\s+/g, '-')
+    );
   });
 
   if (fontKey && BOOK_FONTS[fontKey]) {
@@ -310,11 +317,15 @@ export function getCssFontFamily(fontFamily) {
   }
 
   // Return the original font family with fallbacks
-  if (fontFamily.includes('serif') || 
-      ['Times New Roman', 'Georgia', 'Garamond'].includes(fontFamily)) {
+  if (
+    fontFamily.includes('serif') ||
+    ['Times New Roman', 'Georgia', 'Garamond'].includes(fontFamily)
+  ) {
     return `"${fontFamily}", serif`;
-  } else if (fontFamily.includes('sans') || 
-             ['Arial', 'Helvetica'].includes(fontFamily)) {
+  } else if (
+    fontFamily.includes('sans') ||
+    ['Arial', 'Helvetica'].includes(fontFamily)
+  ) {
     return `"${fontFamily}", sans-serif`;
   } else if (['Courier', 'Monaco'].includes(fontFamily)) {
     return `"${fontFamily}", monospace`;
@@ -332,23 +343,30 @@ export function initializeFontSystem() {
     console.log('Font system already initialized - skipping duplicate');
     return;
   }
-  
-  console.log('Font system initialized with', Object.keys(BOOK_FONTS).length, 'available fonts');
+
+  console.log(
+    'Font system initialized with',
+    Object.keys(BOOK_FONTS).length,
+    'available fonts'
+  );
   fontSystemInitialized = true;
-  
+
   // Check if we're in Electron environment
-  const isElectron = typeof window !== 'undefined' && typeof window.require === 'function';
-  
+  const isElectron =
+    typeof window !== 'undefined' && typeof window.require === 'function';
+
   if (isElectron) {
     // Load local fonts in Electron environment
     console.log('Electron environment detected - loading local fonts');
-    
+
     const link = document.createElement('link');
     link.href = './fonts/fonts.css';
     link.rel = 'stylesheet';
     link.onload = () => {
       console.log('Local fonts loaded successfully');
-      console.log('Available fonts: EB Garamond, Libre Baskerville, Crimson Text, Source Serif 4, Cormorant Garamond');
+      console.log(
+        'Available fonts: EB Garamond, Libre Baskerville, Crimson Text, Source Serif 4, Cormorant Garamond'
+      );
     };
     link.onerror = () => {
       console.warn('Local fonts not found - using system fonts instead');
@@ -358,14 +376,14 @@ export function initializeFontSystem() {
   } else {
     // Load Google Fonts in browser environment
     console.log('Browser environment detected - loading Google Fonts');
-    
+
     const googleFonts = [
       'EB+Garamond:400,400i,700,700i',
       'Libre+Baskerville:400,400i,700',
       'Crimson+Text:400,400i,600,600i',
       'Source+Serif+Pro:400,400i,700'
     ];
-    
+
     const link = document.createElement('link');
     link.href = `https://fonts.googleapis.com/css2?${googleFonts.map(f => `family=${f}`).join('&')}&display=swap`;
     link.rel = 'stylesheet';
@@ -389,7 +407,7 @@ export function getFontLicenseInfo(fontFamily) {
 
   if (fontKey && BOOK_FONTS[fontKey]) {
     const font = BOOK_FONTS[fontKey];
-    
+
     if (font.systemFont) {
       return {
         requiresLicense: false,
