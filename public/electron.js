@@ -1,6 +1,13 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron');
-const path = require('path');
 const fs = require('fs').promises;
+const path = require('path');
+const {
+  app,
+  BrowserWindow,
+  Menu,
+  dialog,
+  ipcMain,
+  shell
+} = require('electron');
 
 let mainWindow;
 let pendingFileToOpen = null; // Store file path to open once app is ready
@@ -11,13 +18,13 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
 } else {
-  app.on('second-instance', (event, commandLine, workingDirectory) => {
+  app.on('second-instance', (event, commandLine, _workingDirectory) => {
     // Someone tried to run a second instance, focus our window instead
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
     }
-    
+
     // Handle file opening from second instance (Windows/Linux)
     const filePath = getFilePathFromArgs(commandLine);
     if (filePath) {
@@ -30,7 +37,7 @@ if (!gotTheLock) {
 function createWindow() {
   // Register IPC handlers first, before creating the window
   registerIpcHandlers();
-  
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 940,
@@ -45,8 +52,8 @@ function createWindow() {
 
   const isDev = process.env.ELECTRON_IS_DEV === 'true';
   mainWindow.loadURL(
-    isDev 
-      ? 'http://localhost:3000' 
+    isDev
+      ? 'http://localhost:3000'
       : `file://${path.join(__dirname, '../build/index.html')}`
   );
 
@@ -79,7 +86,7 @@ function getFilePathFromArgs(args) {
       }
       return null;
     },
-    
+
     // Approach 2: Look for .book files in all arguments (including first 2)
     () => {
       for (const arg of args) {
@@ -89,7 +96,7 @@ function getFilePathFromArgs(args) {
       }
       return null;
     },
-    
+
     // Approach 3: Check if the last argument is a .book file
     () => {
       const lastArg = args[args.length - 1];
@@ -98,7 +105,7 @@ function getFilePathFromArgs(args) {
       }
       return null;
     },
-    
+
     // Approach 4: Look for any file with .book extension anywhere in the args
     () => {
       for (const arg of args) {
@@ -109,7 +116,7 @@ function getFilePathFromArgs(args) {
       return null;
     }
   ];
-  
+
   // Try each approach until we find a file
   for (let i = 0; i < approaches.length; i++) {
     const result = approaches[i]();
@@ -117,7 +124,7 @@ function getFilePathFromArgs(args) {
       return result;
     }
   }
-  
+
   return null;
 }
 
@@ -126,7 +133,7 @@ function attemptToOpenPendingFile() {
   if (!pendingFileToOpen) {
     return;
   }
-  
+
   if (mainWindow && !mainWindow.isDestroyed()) {
     openBookFile(pendingFileToOpen);
     pendingFileToOpen = null; // Clear after attempting to open
@@ -138,24 +145,24 @@ async function openBookFile(filePath) {
   if (!filePath) {
     return;
   }
-  
+
   try {
     // Check if file exists and is readable
     const stats = await fs.stat(filePath);
     if (!stats.isFile()) {
       throw new Error('Path is not a file');
     }
-    
+
     // Read and parse the file
     const content = await fs.readFile(filePath, 'utf8');
     const bookData = JSON.parse(content);
-    
+
     // Enhanced approach to send book data to renderer
     const bookDataWithPath = {
       ...bookData,
       filePath: filePath
     };
-    
+
     // Try multiple approaches to ensure the message gets through
     const sendAttempts = [
       // Attempt 1: Try sending immediately
@@ -166,11 +173,15 @@ async function openBookFile(filePath) {
         }
         return false;
       },
-      
+
       // Attempt 2: Wait for webContents to be ready
       () => {
-        return new Promise((resolve) => {
-          if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
+        return new Promise(resolve => {
+          if (
+            mainWindow &&
+            !mainWindow.isDestroyed() &&
+            mainWindow.webContents
+          ) {
             if (mainWindow.webContents.isLoading()) {
               mainWindow.webContents.once('did-finish-load', () => {
                 mainWindow.webContents.send('book-loaded', bookDataWithPath);
@@ -186,47 +197,64 @@ async function openBookFile(filePath) {
         });
       }
     ];
-    
+
     // Try the first attempt
     if (!sendAttempts[0]()) {
       await sendAttempts[1]();
     }
-    
+
     // Also try with a delay to ensure React app is ready
     setTimeout(() => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('book-loaded', bookDataWithPath);
       }
     }, 2000);
-    
   } catch (error) {
     console.error('Error opening book file:', error);
     if (mainWindow && !mainWindow.isDestroyed()) {
-      dialog.showErrorBox('Error Opening File', 
-        `Failed to open book file: ${error.message}\n\nFile: ${filePath}`);
+      dialog.showErrorBox(
+        'Error Opening File',
+        `Failed to open book file: ${error.message}\n\nFile: ${filePath}`
+      );
     }
   }
 }
 
 function createMenu() {
   const isMac = process.platform === 'darwin';
-  
+
   const template = [
     // App Menu (macOS only)
-    ...(isMac ? [{
-      label: app.getName(),
-      submenu: [
-        { label: 'About AbsoluteScenes', click: () => showAboutDialog() },
-        { type: 'separator' },
-        { label: 'Services', role: 'services', submenu: [] },
-        { type: 'separator' },
-        { label: 'Hide AbsoluteScenes', accelerator: 'Command+H', role: 'hide' },
-        { label: 'Hide Others', accelerator: 'Command+Shift+H', role: 'hideothers' },
-        { label: 'Show All', role: 'unhide' },
-        { type: 'separator' },
-        { label: 'Quit', accelerator: 'Command+Q', click: () => app.quit() }
-      ]
-    }] : []),
+    ...(isMac
+      ? [
+          {
+            label: app.getName(),
+            submenu: [
+              { label: 'About AbsoluteScenes', click: () => showAboutDialog() },
+              { type: 'separator' },
+              { label: 'Services', role: 'services', submenu: [] },
+              { type: 'separator' },
+              {
+                label: 'Hide AbsoluteScenes',
+                accelerator: 'Command+H',
+                role: 'hide'
+              },
+              {
+                label: 'Hide Others',
+                accelerator: 'Command+Shift+H',
+                role: 'hideothers'
+              },
+              { label: 'Show All', role: 'unhide' },
+              { type: 'separator' },
+              {
+                label: 'Quit',
+                accelerator: 'Command+Q',
+                click: () => app.quit()
+              }
+            ]
+          }
+        ]
+      : []),
 
     // File Menu
     {
@@ -260,13 +288,15 @@ function createMenu() {
           click: () => mainWindow.webContents.send('menu-export-book')
         },
         { type: 'separator' },
-        ...(!isMac ? [
-          {
-            label: 'Exit',
-            accelerator: 'Alt+F4',
-            click: () => app.quit()
-          }
-        ] : [])
+        ...(!isMac
+          ? [
+              {
+                label: 'Exit',
+                accelerator: 'Alt+F4',
+                click: () => app.quit()
+              }
+            ]
+          : [])
       ]
     },
 
@@ -275,7 +305,11 @@ function createMenu() {
       label: 'Edit',
       submenu: [
         { label: 'Undo', accelerator: 'CmdOrCtrl+Z', role: 'undo' },
-        { label: 'Redo', accelerator: isMac ? 'Cmd+Shift+Z' : 'Ctrl+Y', role: 'redo' },
+        {
+          label: 'Redo',
+          accelerator: isMac ? 'Cmd+Shift+Z' : 'Ctrl+Y',
+          role: 'redo'
+        },
         { type: 'separator' },
         { label: 'Cut', accelerator: 'CmdOrCtrl+X', role: 'cut' },
         { label: 'Copy', accelerator: 'CmdOrCtrl+C', role: 'copy' },
@@ -335,14 +369,26 @@ function createMenu() {
         },
         { type: 'separator' },
         { label: 'Reload', accelerator: 'CmdOrCtrl+R', role: 'reload' },
-        { label: 'Force Reload', accelerator: 'CmdOrCtrl+Shift+F5', role: 'forceReload' },
-        { label: 'Toggle Developer Tools', accelerator: 'F12', role: 'toggleDevTools' },
+        {
+          label: 'Force Reload',
+          accelerator: 'CmdOrCtrl+Shift+F5',
+          role: 'forceReload'
+        },
+        {
+          label: 'Toggle Developer Tools',
+          accelerator: 'F12',
+          role: 'toggleDevTools'
+        },
         { type: 'separator' },
         { label: 'Actual Size', accelerator: 'CmdOrCtrl+0', role: 'resetZoom' },
         { label: 'Zoom In', accelerator: 'CmdOrCtrl+Plus', role: 'zoomIn' },
         { label: 'Zoom Out', accelerator: 'CmdOrCtrl+-', role: 'zoomOut' },
         { type: 'separator' },
-        { label: 'Toggle Fullscreen', accelerator: 'F11', role: 'togglefullscreen' }
+        {
+          label: 'Toggle Fullscreen',
+          accelerator: 'F11',
+          role: 'togglefullscreen'
+        }
       ]
     },
 
@@ -374,15 +420,23 @@ function createMenu() {
     },
 
     // Window Menu (macOS)
-    ...(isMac ? [{
-      label: 'Window',
-      submenu: [
-        { label: 'Minimize', accelerator: 'CmdOrCtrl+M', role: 'minimize' },
-        { label: 'Close', accelerator: 'CmdOrCtrl+W', role: 'close' },
-        { type: 'separator' },
-        { label: 'Bring All to Front', role: 'front' }
-      ]
-    }] : []),
+    ...(isMac
+      ? [
+          {
+            label: 'Window',
+            submenu: [
+              {
+                label: 'Minimize',
+                accelerator: 'CmdOrCtrl+M',
+                role: 'minimize'
+              },
+              { label: 'Close', accelerator: 'CmdOrCtrl+W', role: 'close' },
+              { type: 'separator' },
+              { label: 'Bring All to Front', role: 'front' }
+            ]
+          }
+        ]
+      : []),
 
     // Help Menu
     {
@@ -390,19 +444,25 @@ function createMenu() {
       submenu: [
         {
           label: 'Learn More',
-          click: () => shell.openExternal('https://github.com/your-repo/absolutescenes')
+          click: () =>
+            shell.openExternal('https://github.com/your-repo/absolutescenes')
         },
         {
           label: 'Report an Issue',
-          click: () => shell.openExternal('https://github.com/your-repo/absolutescenes/issues')
+          click: () =>
+            shell.openExternal(
+              'https://github.com/your-repo/absolutescenes/issues'
+            )
         },
         { type: 'separator' },
-        ...(!isMac ? [
-          {
-            label: 'About AbsoluteScenes',
-            click: () => showAboutDialog()
-          }
-        ] : [])
+        ...(!isMac
+          ? [
+              {
+                label: 'About AbsoluteScenes',
+                click: () => showAboutDialog()
+              }
+            ]
+          : [])
       ]
     }
   ];
@@ -443,65 +503,78 @@ async function openBook() {
 }
 
 // Track active save operations to prevent conflicts
-let activeSaveOperations = new Set();
+const activeSaveOperations = new Set();
 
 // Register all IPC handlers
 function registerIpcHandlers() {
   // Handler for save dialog
-  ipcMain.handle('save-book-dialog', async (event, bookData, existingFilePath = null) => {
-    const operationId = Date.now() + '-' + Math.random();
-    
-    try {
-      // Check if another save is in progress
-      if (activeSaveOperations.size > 0) {
-        return { success: false, error: 'Another save operation is in progress' };
-      }
-      
-      activeSaveOperations.add(operationId);
-      
-      // Ensure window is focused for dialog
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.focus();
-      }
-      
-      const result = await dialog.showSaveDialog(mainWindow, {
-        defaultPath: existingFilePath || undefined,
-        filters: [
-          { name: 'Book Files', extensions: ['book'] },
-          { name: 'JSON Files', extensions: ['json'] }
-        ]
-      });
+  ipcMain.handle(
+    'save-book-dialog',
+    async (event, bookData, existingFilePath = null) => {
+      const operationId = Date.now() + '-' + Math.random();
 
-      if (!result.canceled && result.filePath) {
-        await fs.writeFile(result.filePath, JSON.stringify(bookData, null, 2), 'utf8');
-        return { success: true, filePath: result.filePath };
+      try {
+        // Check if another save is in progress
+        if (activeSaveOperations.size > 0) {
+          return {
+            success: false,
+            error: 'Another save operation is in progress'
+          };
+        }
+
+        activeSaveOperations.add(operationId);
+
+        // Ensure window is focused for dialog
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.focus();
+        }
+
+        const result = await dialog.showSaveDialog(mainWindow, {
+          defaultPath: existingFilePath || undefined,
+          filters: [
+            { name: 'Book Files', extensions: ['book'] },
+            { name: 'JSON Files', extensions: ['json'] }
+          ]
+        });
+
+        if (!result.canceled && result.filePath) {
+          await fs.writeFile(
+            result.filePath,
+            JSON.stringify(bookData, null, 2),
+            'utf8'
+          );
+          return { success: true, filePath: result.filePath };
+        }
+
+        return { success: false, canceled: true };
+      } catch (error) {
+        console.error('Error in save-book-dialog:', error);
+        return { success: false, error: error.message };
+      } finally {
+        activeSaveOperations.delete(operationId);
       }
-      
-      return { success: false, canceled: true };
-    } catch (error) {
-      console.error('Error in save-book-dialog:', error);
-      return { success: false, error: error.message };
-    } finally {
-      activeSaveOperations.delete(operationId);
     }
-  });
+  );
 
   // Handler for direct file saves (when file path is already known)
   ipcMain.handle('save-book-to-file', async (event, bookData, filePath) => {
     const operationId = Date.now() + '-' + Math.random();
-    
+
     try {
       if (!filePath) {
         return { success: false, error: 'No file path provided' };
       }
-      
+
       // Check if another save is in progress
       if (activeSaveOperations.size > 0) {
-        return { success: false, error: 'Another save operation is in progress' };
+        return {
+          success: false,
+          error: 'Another save operation is in progress'
+        };
       }
-      
+
       activeSaveOperations.add(operationId);
-      
+
       await fs.writeFile(filePath, JSON.stringify(bookData, null, 2), 'utf8');
       return { success: true, filePath };
     } catch (error) {
@@ -513,42 +586,52 @@ function registerIpcHandlers() {
   });
 
   // Handler for recovered book saves
-  ipcMain.handle('save-recovered-book', async (event, { bookData, suggestedFilename }) => {
-    const operationId = Date.now() + '-' + Math.random();
-    
-    try {
-      if (activeSaveOperations.size > 0) {
-        return { success: false, error: 'Another save operation is in progress' };
-      }
-      
-      activeSaveOperations.add(operationId);
-      
-      // Ensure window is focused for dialog
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.focus();
-      }
-      
-      const result = await dialog.showSaveDialog(mainWindow, {
-        defaultPath: suggestedFilename || 'recovered-book.book',
-        filters: [
-          { name: 'Book Files', extensions: ['book'] },
-          { name: 'JSON Files', extensions: ['json'] }
-        ]
-      });
+  ipcMain.handle(
+    'save-recovered-book',
+    async (event, { bookData, suggestedFilename }) => {
+      const operationId = Date.now() + '-' + Math.random();
 
-      if (!result.canceled && result.filePath) {
-        await fs.writeFile(result.filePath, JSON.stringify(bookData, null, 2), 'utf8');
-        return { success: true, filePath: result.filePath };
+      try {
+        if (activeSaveOperations.size > 0) {
+          return {
+            success: false,
+            error: 'Another save operation is in progress'
+          };
+        }
+
+        activeSaveOperations.add(operationId);
+
+        // Ensure window is focused for dialog
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.focus();
+        }
+
+        const result = await dialog.showSaveDialog(mainWindow, {
+          defaultPath: suggestedFilename || 'recovered-book.book',
+          filters: [
+            { name: 'Book Files', extensions: ['book'] },
+            { name: 'JSON Files', extensions: ['json'] }
+          ]
+        });
+
+        if (!result.canceled && result.filePath) {
+          await fs.writeFile(
+            result.filePath,
+            JSON.stringify(bookData, null, 2),
+            'utf8'
+          );
+          return { success: true, filePath: result.filePath };
+        }
+
+        return { success: false, canceled: true };
+      } catch (error) {
+        console.error('Error in save-recovered-book:', error);
+        return { success: false, error: error.message };
+      } finally {
+        activeSaveOperations.delete(operationId);
       }
-      
-      return { success: false, canceled: true };
-    } catch (error) {
-      console.error('Error in save-recovered-book:', error);
-      return { success: false, error: error.message };
-    } finally {
-      activeSaveOperations.delete(operationId);
     }
-  });
+  );
 
   // Simple ping handler to verify IPC is ready
   ipcMain.handle('ipc-ready', () => {
@@ -558,10 +641,10 @@ function registerIpcHandlers() {
 
 app.whenReady().then(() => {
   createWindow();
-  
+
   // Enhanced file opening from command line
   const filePath = getFilePathFromArgs(process.argv);
-  
+
   if (filePath) {
     pendingFileToOpen = filePath;
   }
@@ -571,7 +654,11 @@ app.whenReady().then(() => {
 // This allows: absolute-scenes file.book
 if (process.argv.length >= 3) {
   const potentialFile = process.argv[process.argv.length - 1];
-  if (potentialFile && potentialFile.endsWith('.book') && !potentialFile.startsWith('-')) {
+  if (
+    potentialFile &&
+    potentialFile.endsWith('.book') &&
+    !potentialFile.startsWith('-')
+  ) {
     // If app is already running, this will be handled by second-instance event
     // If app is not running, this will be handled in app.whenReady()
   }
@@ -580,7 +667,7 @@ if (process.argv.length >= 3) {
 // Handle file opening on macOS
 app.on('open-file', (event, filePath) => {
   event.preventDefault();
-  
+
   if (filePath.endsWith('.book')) {
     pendingFileToOpen = filePath;
     if (mainWindow && !mainWindow.isDestroyed()) {

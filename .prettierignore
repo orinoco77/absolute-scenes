@@ -1,0 +1,70 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs
+build/
+dist/
+*.tgz
+
+# Generated files
+coverage/
+.nyc_output
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Electron build artifacts
+electron-builder.env
+
+# Assets that shouldn't be formatted
+assets/installer.nsh
+assets/*.sh
+assets/*.plist
+
+# Binary files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.pdf
+*.exe
+*.dmg
+*.deb
+*.rpm
+
+# Generated documentation
+docs/
+
+# Test coverage reports
+coverage/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp

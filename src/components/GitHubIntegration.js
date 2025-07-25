@@ -1,7 +1,16 @@
-import React, { useState, useEffect } from 'react';
+/* eslint-disable jsx-a11y/anchor-is-valid */
+import { useState, useEffect } from 'react';
 import GitHubService from '../utils/gitHubService';
 
-function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncStatusUpdate, onClose, book, currentFilePath, onStatusMessage }) {
+function GitHubIntegration({
+  currentRepo,
+  onGitHubSettingsUpdate,
+  onGitHubSyncStatusUpdate,
+  onClose,
+  book,
+  currentFilePath,
+  onStatusMessage
+}) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
   const [showTokenSetup, setShowTokenSetup] = useState(false);
@@ -11,9 +20,11 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState(null);
   const [step, setStep] = useState(1); // 1: intro, 2: token creation, 3: token input
-  
+
   // Use sync time from book data
-  const lastSyncTime = book.github?.lastSyncTime ? new Date(book.github.lastSyncTime) : null;
+  const lastSyncTime = book.github?.lastSyncTime
+    ? new Date(book.github.lastSyncTime)
+    : null;
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -31,7 +42,9 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
   const handleStartSetup = async () => {
     // Validate that book has title and author before proceeding
     if (!book.title?.trim() || !book.author?.trim()) {
-      setError('Please set a book title and author before connecting to GitHub. This helps us create a properly named repository for your book.');
+      setError(
+        'Please set a book title and author before connecting to GitHub. This helps us create a properly named repository for your book.'
+      );
       return;
     }
 
@@ -64,7 +77,7 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
       setIsAuthenticated(true);
       setUserInfo(user);
       setShowTokenSetup(false);
-      
+
       // Auto-setup repository for their book
       if (book.title?.trim() && book.author?.trim()) {
         await handleSetupRepository();
@@ -82,7 +95,9 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
 
     // Validate that book has title and author before creating repo
     if (!book.title?.trim() || !book.author?.trim()) {
-      setError('Please set a book title and author before creating a repository. This ensures your repository has a meaningful name.');
+      setError(
+        'Please set a book title and author before creating a repository. This ensures your repository has a meaningful name.'
+      );
       return;
     }
 
@@ -94,33 +109,40 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
         book.title || 'Untitled Book',
         book.author || 'Author'
       );
-      
+
       setCurrentRepository(repo);
       onGitHubSettingsUpdate({ repository: repo });
-      
+
       // Immediately save the current book to the repo with proper filename
       setIsSyncing(true);
       try {
         const commitMessage = `Initial commit: ${book.title} by ${book.author}`;
-        
-      // Generate filename based on current file or book title
-      let filename = 'manuscript.book';
-      if (currentFilePath) {
-        // Extract filename from path, keep as .book
-        filename = currentFilePath.split(/[\\/]/).pop();
-        if (!filename.endsWith('.book')) {
-          filename = filename.replace(/\.(book|json)$/, '') + '.book';
+
+        // Generate filename based on current file or book title
+        let filename = 'manuscript.book';
+        if (currentFilePath) {
+          // Extract filename from path, keep as .book
+          filename = currentFilePath.split(/[\\/]/).pop();
+          if (!filename.endsWith('.book')) {
+            filename = filename.replace(/\.(book|json)$/, '') + '.book';
+          }
+        } else if (book.title?.trim()) {
+          // Generate filename from book title
+          filename =
+            book.title
+              .toLowerCase()
+              .replace(/[^a-z0-9\s-]/g, '')
+              .replace(/\s+/g, '-')
+              .replace(/-+/g, '-')
+              .replace(/^-|-$/g, '') + '.book';
         }
-      } else if (book.title?.trim()) {
-        // Generate filename from book title
-        filename = book.title.toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-')
-          .replace(/^-|-$/g, '') + '.book';
-      }
-        
-        await GitHubService.saveBookToRepository(repo, book, commitMessage, filename);
+
+        await GitHubService.saveBookToRepository(
+          repo,
+          book,
+          commitMessage,
+          filename
+        );
         onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
       } catch (syncError) {
         console.warn('Initial sync failed:', syncError.message);
@@ -143,7 +165,7 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
 
     try {
       const commitMessage = `Manual sync: ${new Date().toLocaleString()}`;
-      
+
       // Generate filename based on current file or book title
       let filename = 'manuscript.book';
       if (currentFilePath) {
@@ -154,14 +176,21 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
         }
       } else if (book.title?.trim()) {
         // Generate filename from book title
-        filename = book.title.toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-')
-          .replace(/^-|-$/g, '') + '.book';
+        filename =
+          book.title
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '') + '.book';
       }
-      
-      await GitHubService.saveBookToRepository(currentRepository, book, commitMessage, filename);
+
+      await GitHubService.saveBookToRepository(
+        currentRepository,
+        book,
+        commitMessage,
+        filename
+      );
       onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
       if (onStatusMessage) onStatusMessage('');
     } catch (error) {
@@ -203,19 +232,23 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
         <div className="modal">
           <div className="modal-header">
             <h2>🔗 Connect to GitHub</h2>
-            <button onClick={onClose} className="close-btn">×</button>
+            <button onClick={onClose} className="close-btn">
+              ×
+            </button>
           </div>
 
           <div className="modal-content">
             {error && (
-              <div style={{
-                padding: '12px',
-                background: '#ffebee',
-                border: '1px solid #f44336',
-                borderRadius: '4px',
-                color: '#c62828',
-                marginBottom: '20px'
-              }}>
+              <div
+                style={{
+                  padding: '12px',
+                  background: '#ffebee',
+                  border: '1px solid #f44336',
+                  borderRadius: '4px',
+                  color: '#c62828',
+                  marginBottom: '20px'
+                }}
+              >
                 <strong>⚠️ Error:</strong> {error}
               </div>
             )}
@@ -223,43 +256,71 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
             {step === 2 && (
               <div style={{ textAlign: 'center', padding: '20px' }}>
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>🌐</div>
-                <h3 style={{ margin: '0 0 12px 0' }}>Step 1: Create Access Token</h3>
-                <p style={{ margin: '0 0 20px 0', color: '#666', lineHeight: '1.5' }}>
-                  We've opened GitHub in your browser. Follow these simple steps:
+                <h3 style={{ margin: '0 0 12px 0' }}>
+                  Step 1: Create Access Token
+                </h3>
+                <p
+                  style={{
+                    margin: '0 0 20px 0',
+                    color: '#666',
+                    lineHeight: '1.5'
+                  }}
+                >
+                  We've opened GitHub in your browser. Follow these simple
+                  steps:
                 </p>
-                <div style={{
-                  textAlign: 'left',
-                  background: '#f8f9fa',
-                  padding: '16px',
-                  borderRadius: '6px',
-                  marginBottom: '20px'
-                }}>
-                  <div style={{
-                    padding: '12px',
-                    background: '#e8f5e8',
-                    borderRadius: '4px',
-                    marginBottom: '12px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    color: '#2d5a2d'
-                  }}>
+                <div
+                  style={{
+                    textAlign: 'left',
+                    background: '#f8f9fa',
+                    padding: '16px',
+                    borderRadius: '6px',
+                    marginBottom: '20px'
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '12px',
+                      background: '#e8f5e8',
+                      borderRadius: '4px',
+                      marginBottom: '12px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      color: '#2d5a2d'
+                    }}
+                  >
                     💡 Important: Don't change anything on the GitHub page!
                   </div>
-                  <ol style={{ margin: 0, paddingLeft: '20px', lineHeight: '1.6' }}>
-                    <li>✅ All settings are pre-configured perfectly for you</li>
-                    <li>📅 The expiration date is optional ("No expiration" is fine)</li>
+                  <ol
+                    style={{
+                      margin: 0,
+                      paddingLeft: '20px',
+                      lineHeight: '1.6'
+                    }}
+                  >
+                    <li>
+                      ✅ All settings are pre-configured perfectly for you
+                    </li>
+                    <li>
+                      📅 The expiration date is optional ("No expiration" is
+                      fine)
+                    </li>
                     <li>🟢 Simply scroll down and click "Generate token"</li>
                     <li>📋 Copy the token that appears (starts with "ghp_")</li>
                   </ol>
-                  <div style={{
-                    padding: '12px',
-                    background: '#fff3cd',
-                    borderRadius: '4px',
-                    marginTop: '12px',
-                    fontSize: '13px',
-                    color: '#856404'
-                  }}>
-                    <strong>💡 Reconnecting?</strong> If you have an existing AbsoluteScenes token, you can use that instead of creating a new one.
+                  <div
+                    style={{
+                      padding: '12px',
+                      background: '#fff3cd',
+                      borderRadius: '4px',
+                      marginTop: '12px',
+                      fontSize: '13px',
+                      color: '#856404'
+                    }}
+                  >
+                    <strong>💡 Reconnecting?</strong> If you have an existing
+                    AbsoluteScenes token, you can use that instead of creating a
+                    new one.
                   </div>
                 </div>
                 <button
@@ -282,25 +343,35 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
 
             {step === 3 && (
               <div>
-                <h3 style={{ margin: '0 0 16px 0', textAlign: 'center' }}>Step 2: Enter Your Token</h3>
-                <div style={{
-                  padding: '16px',
-                  background: '#e3f2fd',
-                  borderRadius: '6px',
-                  marginBottom: '16px',
-                  fontSize: '14px'
-                }}>
-                  <strong>🔐 Privacy Note:</strong> Your token is stored locally on your computer only. 
-                  We never send it to our servers.
+                <h3 style={{ margin: '0 0 16px 0', textAlign: 'center' }}>
+                  Step 2: Enter Your Token
+                </h3>
+                <div
+                  style={{
+                    padding: '16px',
+                    background: '#e3f2fd',
+                    borderRadius: '6px',
+                    marginBottom: '16px',
+                    fontSize: '14px'
+                  }}
+                >
+                  <strong>🔐 Privacy Note:</strong> Your token is stored locally
+                  on your computer only. We never send it to our servers.
                 </div>
                 <div className="form-group">
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontWeight: 'bold'
+                    }}
+                  >
                     GitHub Personal Access Token
                   </label>
                   <input
                     type="password"
                     value={token}
-                    onChange={(e) => setToken(e.target.value)}
+                    onChange={e => setToken(e.target.value)}
                     placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                     style={{
                       width: '100%',
@@ -310,17 +381,27 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
                       fontSize: '14px',
                       fontFamily: 'monospace'
                     }}
-                    onKeyPress={(e) => {
+                    onKeyPress={e => {
                       if (e.key === 'Enter') {
                         handleTokenSubmit();
                       }
                     }}
                   />
-                  <small style={{ display: 'block', marginTop: '8px', color: '#666' }}>
-                    Paste the token you just copied from GitHub (starts with "ghp_"). You can also reuse an existing AbsoluteScenes token if you have one.
+                  <small
+                    style={{
+                      display: 'block',
+                      marginTop: '8px',
+                      color: '#666'
+                    }}
+                  >
+                    Paste the token you just copied from GitHub (starts with
+                    "ghp_"). You can also reuse an existing AbsoluteScenes token
+                    if you have one.
                   </small>
                 </div>
-                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                <div
+                  style={{ display: 'flex', gap: '12px', marginTop: '20px' }}
+                >
                   <button
                     onClick={() => setStep(2)}
                     style={{
@@ -345,8 +426,9 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
-                      cursor: (isValidating || !token.trim()) ? 'wait' : 'pointer',
-                      opacity: (isValidating || !token.trim()) ? 0.7 : 1
+                      cursor:
+                        isValidating || !token.trim() ? 'wait' : 'pointer',
+                      opacity: isValidating || !token.trim() ? 0.7 : 1
                     }}
                   >
                     {isValidating ? '🔄 Connecting...' : '🚀 Connect to GitHub'}
@@ -357,13 +439,13 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
           </div>
 
           <div className="modal-footer">
-            <button 
+            <button
               onClick={() => {
                 setShowTokenSetup(false);
                 setStep(1);
                 setToken('');
                 setError(null);
-              }} 
+              }}
               className="btn-secondary"
             >
               Cancel
@@ -379,19 +461,23 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
       <div className="modal">
         <div className="modal-header">
           <h2>📚 Book Backup & Sync</h2>
-          <button onClick={onClose} className="close-btn">×</button>
+          <button onClick={onClose} className="close-btn">
+            ×
+          </button>
         </div>
 
         <div className="modal-content">
           {error && (
-            <div style={{
-              padding: '12px',
-              background: '#ffebee',
-              border: '1px solid #f44336',
-              borderRadius: '4px',
-              color: '#c62828',
-              marginBottom: '20px'
-            }}>
+            <div
+              style={{
+                padding: '12px',
+                background: '#ffebee',
+                border: '1px solid #f44336',
+                borderRadius: '4px',
+                color: '#c62828',
+                marginBottom: '20px'
+              }}
+            >
               <strong>⚠️ Error:</strong> {error}
             </div>
           )}
@@ -399,52 +485,80 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
           {!isAuthenticated ? (
             <div className="github-setup">
               {(!book.title?.trim() || !book.author?.trim()) && (
-                <div style={{
-                  padding: '15px',
-                  background: '#fff3cd',
-                  border: '1px solid #ffeaa7',
-                  borderRadius: '6px',
-                  marginBottom: '20px',
-                  fontSize: '14px',
-                  color: '#856404'
-                }}>
-                  <strong>📝 Almost Ready!</strong> Please set your book title and author above before connecting to GitHub. This helps us create a properly named repository for your book.
+                <div
+                  style={{
+                    padding: '15px',
+                    background: '#fff3cd',
+                    border: '1px solid #ffeaa7',
+                    borderRadius: '6px',
+                    marginBottom: '20px',
+                    fontSize: '14px',
+                    color: '#856404'
+                  }}
+                >
+                  <strong>📝 Almost Ready!</strong> Please set your book title
+                  and author above before connecting to GitHub. This helps us
+                  create a properly named repository for your book.
                 </div>
               )}
-              <div style={{
-                textAlign: 'center',
-                padding: '20px',
-                background: '#f8f9fa',
-                borderRadius: '8px',
-                marginBottom: '20px'
-              }}>
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '20px',
+                  background: '#f8f9fa',
+                  borderRadius: '8px',
+                  marginBottom: '20px'
+                }}
+              >
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔒</div>
-                <h3 style={{ margin: '0 0 12px 0', color: '#333' }}>Safe & Secure Book Backup</h3>
+                <h3 style={{ margin: '0 0 12px 0', color: '#333' }}>
+                  Safe & Secure Book Backup
+                </h3>
                 <p style={{ margin: '0', color: '#666', lineHeight: '1.5' }}>
-                  Keep your book safe with automatic cloud backup and version history.
-                  Your work is always secure and never lost.
+                  Keep your book safe with automatic cloud backup and version
+                  history. Your work is always secure and never lost.
                 </p>
               </div>
 
               <div style={{ marginBottom: '20px' }}>
                 <h4 style={{ margin: '0 0 12px 0' }}>✨ What you get:</h4>
-                <ul style={{ margin: '0', paddingLeft: '20px', lineHeight: '1.6' }}>
-                  <li><strong>Automatic backup</strong> - Your book is saved to the cloud</li>
-                  <li><strong>Version history</strong> - See all your changes over time</li>
-                  <li><strong>Access anywhere</strong> - View your work from any device</li>
-                  <li><strong>Always free</strong> - No subscription required</li>
+                <ul
+                  style={{
+                    margin: '0',
+                    paddingLeft: '20px',
+                    lineHeight: '1.6'
+                  }}
+                >
+                  <li>
+                    <strong>Automatic backup</strong> - Your book is saved to
+                    the cloud
+                  </li>
+                  <li>
+                    <strong>Version history</strong> - See all your changes over
+                    time
+                  </li>
+                  <li>
+                    <strong>Access anywhere</strong> - View your work from any
+                    device
+                  </li>
+                  <li>
+                    <strong>Always free</strong> - No subscription required
+                  </li>
                 </ul>
               </div>
 
-              <div style={{
-                padding: '15px',
-                background: '#e3f2fd',
-                borderRadius: '6px',
-                marginBottom: '20px',
-                fontSize: '14px'
-              }}>
-                <strong>🔐 Privacy & Security:</strong> We use GitHub's secure system. 
-                Your work stays private, and you control who can access it.
+              <div
+                style={{
+                  padding: '15px',
+                  background: '#e3f2fd',
+                  borderRadius: '6px',
+                  marginBottom: '20px',
+                  fontSize: '14px'
+                }}
+              >
+                <strong>🔐 Privacy & Security:</strong> We use GitHub's secure
+                system. Your work stays private, and you control who can access
+                it.
               </div>
 
               <button
@@ -455,12 +569,19 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
                   padding: '15px',
                   fontSize: '16px',
                   fontWeight: 'bold',
-                  background: (!book.title?.trim() || !book.author?.trim()) ? '#ccc' : '#2ea043',
+                  background:
+                    !book.title?.trim() || !book.author?.trim()
+                      ? '#ccc'
+                      : '#2ea043',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: (!book.title?.trim() || !book.author?.trim()) ? 'not-allowed' : 'pointer',
-                  opacity: (!book.title?.trim() || !book.author?.trim()) ? 0.6 : 1,
+                  cursor:
+                    !book.title?.trim() || !book.author?.trim()
+                      ? 'not-allowed'
+                      : 'pointer',
+                  opacity:
+                    !book.title?.trim() || !book.author?.trim() ? 0.6 : 1,
                   transition: 'all 0.2s ease'
                 }}
               >
@@ -468,16 +589,18 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
                 Get Started - It's Free!
               </button>
 
-              <div style={{
-                textAlign: 'center',
-                marginTop: '16px',
-                fontSize: '13px',
-                color: '#666'
-              }}>
-                Don't have a GitHub account? 
-                <a 
-                  href="#" 
-                  onClick={(e) => {
+              <div
+                style={{
+                  textAlign: 'center',
+                  marginTop: '16px',
+                  fontSize: '13px',
+                  color: '#666'
+                }}
+              >
+                Don't have a GitHub account?
+                <a
+                  href="#"
+                  onClick={e => {
                     e.preventDefault();
                     openGitHubSignup();
                   }}
@@ -485,21 +608,34 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
                 >
                   Create one free here
                 </a>
-                <br />It takes less than 2 minutes!
+                <br />
+                It takes less than 2 minutes!
               </div>
             </div>
           ) : (
             <div className="github-connected">
-              <div style={{
-                padding: '16px',
-                background: '#d4edda',
-                border: '1px solid #c3e6cb',
-                borderRadius: '6px',
-                marginBottom: '20px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '20px', marginRight: '8px' }}>✅</span>
-                  <strong style={{ color: '#155724' }}>Connected to GitHub</strong>
+              <div
+                style={{
+                  padding: '16px',
+                  background: '#d4edda',
+                  border: '1px solid #c3e6cb',
+                  borderRadius: '6px',
+                  marginBottom: '20px'
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginBottom: '8px'
+                  }}
+                >
+                  <span style={{ fontSize: '20px', marginRight: '8px' }}>
+                    ✅
+                  </span>
+                  <strong style={{ color: '#155724' }}>
+                    Connected to GitHub
+                  </strong>
                 </div>
                 <div style={{ fontSize: '14px', color: '#155724' }}>
                   Signed in as <strong>{userInfo?.login}</strong>
@@ -508,15 +644,23 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
 
               {currentRepository ? (
                 <div>
-                  <div style={{
-                    padding: '16px',
-                    background: '#f8f9fa',
-                    border: '1px solid #dee2e6',
-                    borderRadius: '6px',
-                    marginBottom: '20px'
-                  }}>
+                  <div
+                    style={{
+                      padding: '16px',
+                      background: '#f8f9fa',
+                      border: '1px solid #dee2e6',
+                      borderRadius: '6px',
+                      marginBottom: '20px'
+                    }}
+                  >
                     <h4 style={{ margin: '0 0 8px 0' }}>📖 Book Repository</h4>
-                    <div style={{ fontSize: '14px', color: '#666', marginBottom: '12px' }}>
+                    <div
+                      style={{
+                        fontSize: '14px',
+                        color: '#666',
+                        marginBottom: '12px'
+                      }}
+                    >
                       <strong>Name:</strong> {currentRepository.name}
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -554,14 +698,16 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
                   </div>
 
                   {lastSyncTime && (
-                    <div style={{
-                      padding: '12px',
-                      background: '#e8f5e8',
-                      borderRadius: '4px',
-                      fontSize: '13px',
-                      color: '#2d5a2d',
-                      marginBottom: '16px'
-                    }}>
+                    <div
+                      style={{
+                        padding: '12px',
+                        background: '#e8f5e8',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        color: '#2d5a2d',
+                        marginBottom: '16px'
+                      }}
+                    >
                       ✅ Last synced: {lastSyncTime.toLocaleString()}
                     </div>
                   )}
@@ -569,37 +715,60 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
               ) : (
                 <div style={{ textAlign: 'center', padding: '20px' }}>
                   {(!book.title?.trim() || !book.author?.trim()) && (
-                    <div style={{
-                      padding: '15px',
-                      background: '#fff3cd',
-                      border: '1px solid #ffeaa7',
-                      borderRadius: '6px',
-                      marginBottom: '20px',
-                      fontSize: '14px',
-                      color: '#856404'
-                    }}>
-                      <strong>📝 Required:</strong> Please set your book title and author above before creating a repository.
+                    <div
+                      style={{
+                        padding: '15px',
+                        background: '#fff3cd',
+                        border: '1px solid #ffeaa7',
+                        borderRadius: '6px',
+                        marginBottom: '20px',
+                        fontSize: '14px',
+                        color: '#856404'
+                      }}
+                    >
+                      <strong>📝 Required:</strong> Please set your book title
+                      and author above before creating a repository.
                     </div>
                   )}
-                  
-                  <div style={{ fontSize: '32px', marginBottom: '12px' }}>📂</div>
+
+                  <div style={{ fontSize: '32px', marginBottom: '12px' }}>
+                    📂
+                  </div>
                   <h4 style={{ margin: '0 0 8px 0' }}>Setup Book Repository</h4>
-                  <p style={{ margin: '0 0 16px 0', color: '#666', fontSize: '14px' }}>
-                    We'll create a private repository for your book automatically.
+                  <p
+                    style={{
+                      margin: '0 0 16px 0',
+                      color: '#666',
+                      fontSize: '14px'
+                    }}
+                  >
+                    We'll create a private repository for your book
+                    automatically.
                   </p>
                   <button
                     onClick={handleSetupRepository}
-                    disabled={isSyncing || !book.title?.trim() || !book.author?.trim()}
+                    disabled={
+                      isSyncing || !book.title?.trim() || !book.author?.trim()
+                    }
                     style={{
                       padding: '12px 24px',
-                      background: (!book.title?.trim() || !book.author?.trim()) ? '#ccc' : '#2ea043',
+                      background:
+                        !book.title?.trim() || !book.author?.trim()
+                          ? '#ccc'
+                          : '#2ea043',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
                       fontSize: '14px',
                       fontWeight: 'bold',
-                      cursor: (isSyncing || !book.title?.trim() || !book.author?.trim()) ? 'not-allowed' : 'pointer',
-                      opacity: (isSyncing || !book.title?.trim() || !book.author?.trim()) ? 0.7 : 1
+                      cursor:
+                        isSyncing || !book.title?.trim() || !book.author?.trim()
+                          ? 'not-allowed'
+                          : 'pointer',
+                      opacity:
+                        isSyncing || !book.title?.trim() || !book.author?.trim()
+                          ? 0.7
+                          : 1
                     }}
                   >
                     {isSyncing ? '🔄 Setting up...' : '🚀 Setup Repository'}
@@ -607,11 +776,13 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
                 </div>
               )}
 
-              <div style={{
-                borderTop: '1px solid #eee',
-                paddingTop: '16px',
-                textAlign: 'center'
-              }}>
+              <div
+                style={{
+                  borderTop: '1px solid #eee',
+                  paddingTop: '16px',
+                  textAlign: 'center'
+                }}
+              >
                 <button
                   onClick={handleDisconnect}
                   style={{
@@ -632,7 +803,9 @@ function GitHubIntegration({ currentRepo, onGitHubSettingsUpdate, onGitHubSyncSt
         </div>
 
         <div className="modal-footer">
-          <button onClick={onClose} className="btn-secondary">Close</button>
+          <button onClick={onClose} className="btn-secondary">
+            Close
+          </button>
         </div>
       </div>
     </div>

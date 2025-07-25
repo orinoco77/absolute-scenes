@@ -29,7 +29,7 @@ describe('Utility Functions Tests', () => {
   });
 
   test('word count function simulation', () => {
-    const countWords = (text) => {
+    const countWords = text => {
       return text.split(/\s+/).filter(word => word.length > 0).length;
     };
 
@@ -42,14 +42,14 @@ describe('Utility Functions Tests', () => {
 
   test('scene id generation simulation', () => {
     const generateId = () => Date.now().toString();
-    
+
     const id1 = generateId();
     // Wait a tiny bit to ensure different timestamp
     setTimeout(() => {
       const id2 = generateId();
       expect(id1).not.toBe(id2);
     }, 1);
-    
+
     expect(typeof id1).toBe('string');
     expect(id1.length).toBeGreaterThan(0);
   });

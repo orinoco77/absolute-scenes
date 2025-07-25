@@ -1,4 +1,4 @@
-import React from 'react';
+/* eslint-disable testing-library/no-node-access */
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import BookStructure from '../BookStructure';
@@ -9,7 +9,9 @@ jest.mock('../SceneList', () => {
     return (
       <div data-testid="scene-list">
         <button onClick={() => props.onSceneSelect('scene-1')}>Scene 1</button>
-        <button onClick={() => props.onChapterSelect('chapter-1')}>Chapter 1</button>
+        <button onClick={() => props.onChapterSelect('chapter-1')}>
+          Chapter 1
+        </button>
         <button onClick={props.onSceneAdd}>Add Scene</button>
         <button onClick={props.onChapterAdd}>Add Chapter</button>
       </div>
@@ -21,8 +23,12 @@ jest.mock('../CharacterList', () => {
   return function MockedCharacterList(props) {
     return (
       <div data-testid="character-list">
-        <button onClick={() => props.onCharacterSelect('character-1')}>Hero</button>
-        <button onClick={() => props.onCharacterSelect('character-2')}>Villain</button>
+        <button onClick={() => props.onCharacterSelect('character-1')}>
+          Hero
+        </button>
+        <button onClick={() => props.onCharacterSelect('character-2')}>
+          Villain
+        </button>
         <button onClick={props.onCharacterAdd}>Add Character</button>
       </div>
     );
@@ -41,21 +47,19 @@ const mockChapters = [
     title: 'Chapter 1',
     scenes: [
       { id: 'scene-1', title: 'Scene 1' },
-      { id: 'scene-2', title: 'Scene 2' },
-    ],
+      { id: 'scene-2', title: 'Scene 2' }
+    ]
   },
   {
     id: 'chapter-2',
     title: 'Chapter 2',
-    scenes: [
-      { id: 'scene-3', title: 'Scene 3' },
-    ],
-  },
+    scenes: [{ id: 'scene-3', title: 'Scene 3' }]
+  }
 ];
 
 const mockCharacters = [
   { id: 'character-1', name: 'Hero' },
-  { id: 'character-2', name: 'Villain' },
+  { id: 'character-2', name: 'Villain' }
 ];
 
 const mockFunctions = {
@@ -80,7 +84,7 @@ const mockFunctions = {
   onRestoreCharacterFromRecycleBin: jest.fn(),
   onPermanentlyDeleteCharacter: jest.fn(),
   onUpdateCharacterDetectionBlacklist: jest.fn(),
-  onTabChange: jest.fn(),
+  onTabChange: jest.fn()
 };
 
 const renderComponent = (activeTab = 'manuscript') =>
@@ -162,7 +166,9 @@ describe('BookStructure Component', () => {
   test('renders threads tab with controls', () => {
     renderComponent('threads');
     expect(screen.getByText('Thread View')).toBeInTheDocument();
-    expect(screen.getByText(/Analyzing 3 scenes across 2 chapters/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Analyzing 3 scenes across 2 chapters/)
+    ).toBeInTheDocument();
     expect(screen.getByText(/2 formal characters/)).toBeInTheDocument();
   });
 
@@ -216,7 +222,7 @@ describe('BookStructure Component', () => {
     renderComponent('characters');
     const charactersButton = screen.getByText('Characters').closest('button');
     const manuscriptButton = screen.getByText('Manuscript').closest('button');
-    
+
     expect(charactersButton).toHaveClass('active');
     expect(manuscriptButton).not.toHaveClass('active');
   });
@@ -231,7 +237,7 @@ describe('BookStructure Component', () => {
         {...mockFunctions}
       />
     );
-    
+
     expect(screen.getByText(/2 blacklisted names/)).toBeInTheDocument();
   });
 
@@ -245,8 +251,7 @@ describe('BookStructure Component', () => {
         {...mockFunctions}
       />
     );
-    
+
     expect(screen.queryByText(/blacklisted names/)).not.toBeInTheDocument();
   });
 });
-
