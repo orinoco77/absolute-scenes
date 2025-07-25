@@ -528,14 +528,21 @@ function App() {
     };
     
     const handleBookLoaded = (event, bookData) => {
-      console.log('Menu: Book Loaded');
+      console.log('=== BOOK LOADED EVENT RECEIVED ===');
+      console.log('Event:', event);
+      console.log('Book data:', bookData);
+      console.log('File path from book data:', bookData.filePath);
+      
       // Extract and remove filePath from book data (it's metadata, not content)
       const filePath = bookData.filePath || null;
       const cleanBookData = { ...bookData };
       delete cleanBookData.filePath;
       
+      console.log('Clean book data (without filePath):', cleanBookData);
+      
       // Migrate old format to new chapter format if needed
       if (cleanBookData.scenes && !cleanBookData.chapters) {
+        console.log('Migrating old format: scenes to chapters');
         cleanBookData.chapters = [
           {
             id: 'default',
@@ -569,6 +576,7 @@ function App() {
         cleanBookData.locations = [];
       }
       
+      console.log('Setting book state...');
       // Set all states in batch
       // Set all states simply and directly
       setBook(cleanBookData);
@@ -577,6 +585,8 @@ function App() {
       setCurrentCharacterId(null);
       setCurrentFilePath(filePath);
       setHasUnsavedChanges(false);
+      
+      console.log('Book loaded successfully via file association!');
     };
 
     // Register all IPC event listeners
@@ -597,6 +607,10 @@ function App() {
     ipcRenderer.on('book-loaded', handleBookLoaded);
 
     console.log('IPC event listeners registered successfully');
+    
+    // Set IPC ready flag for file association handling
+    window.ipcReady = true;
+    console.log('IPC marked as ready');
 
     return () => {
       console.log('Cleaning up IPC event listeners...');
@@ -615,6 +629,9 @@ function App() {
       ipcRenderer.removeAllListeners('menu-backup-recovery');
       ipcRenderer.removeAllListeners('menu-empty-recycle-bin');
       ipcRenderer.removeAllListeners('book-loaded');
+      
+      // Clear IPC ready flag
+      window.ipcReady = false;
     };
   }, []); // Empty dependency array - only set up once
 

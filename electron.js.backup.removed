@@ -3,7 +3,6 @@ const path = require('path');
 const fs = require('fs').promises;
 
 let mainWindow;
-let pendingFileToOpen = null; // Store file path to open once app is ready
 
 // Handle single instance - prevent multiple instances of the app
 const gotTheLock = app.requestSingleInstanceLock();
@@ -12,6 +11,7 @@ if (!gotTheLock) {
   app.quit();
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
+    console.log('=== SECOND INSTANCE EVENT ===');
     // Someone tried to run a second instance, focus our window instead
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
@@ -21,8 +21,10 @@ if (!gotTheLock) {
     // Handle file opening from second instance (Windows/Linux)
     const filePath = getFilePathFromArgs(commandLine);
     if (filePath) {
-      pendingFileToOpen = filePath;
-      attemptToOpenPendingFile();
+      console.log('File from second instance:', filePath);
+      setTimeout(() => {
+        openBookFile(filePath);
+      }, 500);
     }
   });
 }
@@ -54,156 +56,88 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  // Set up event listeners for when the renderer is ready
-  mainWindow.webContents.once('did-finish-load', () => {
-    // Try to open any pending file after a short delay
-    setTimeout(() => {
-      attemptToOpenPendingFile();
-    }, 1000);
-  });
-
   createMenu();
 }
 
-// Enhanced function to extract file path from command line arguments
+// Helper function to extract file path from command line arguments
 function getFilePathFromArgs(args) {
-  // Try different approaches to find the .book file
-  const approaches = [
-    // Approach 1: Look for .book files in all arguments (skip first 2)
-    () => {
-      const fileArgs = args.slice(2);
-      for (const arg of fileArgs) {
-        if (arg.endsWith('.book') && !arg.startsWith('-') && arg.length > 5) {
-          return arg;
-        }
-      }
-      return null;
-    },
-    
-    // Approach 2: Look for .book files in all arguments (including first 2)
-    () => {
-      for (const arg of args) {
-        if (arg.endsWith('.book') && !arg.startsWith('-') && arg.length > 5) {
-          return arg;
-        }
-      }
-      return null;
-    },
-    
-    // Approach 3: Check if the last argument is a .book file
-    () => {
-      const lastArg = args[args.length - 1];
-      if (lastArg && lastArg.endsWith('.book') && !lastArg.startsWith('-')) {
-        return lastArg;
-      }
-      return null;
-    },
-    
-    // Approach 4: Look for any file with .book extension anywhere in the args
-    () => {
-      for (const arg of args) {
-        if (typeof arg === 'string' && arg.includes('.book')) {
-          return arg;
-        }
-      }
-      return null;
-    }
-  ];
+  console.log('Parsing command line arguments:', args);
   
-  // Try each approach until we find a file
-  for (let i = 0; i < approaches.length; i++) {
-    const result = approaches[i]();
-    if (result) {
-      return result;
+  // Skip the first two arguments (electron executable and main script)
+  const fileArgs = args.slice(2);
+  console.log('File arguments after slicing:', fileArgs);
+  
+  for (const arg of fileArgs) {
+    console.log('Checking argument:', arg);
+    // Check if argument is a .book file
+    if (arg.endsWith('.book') && !arg.startsWith('-')) {
+      console.log('Found .book file:', arg);
+      return arg;
     }
   }
-  
+  console.log('No .book file found in arguments');
   return null;
 }
 
-// Function to attempt opening a pending file
-function attemptToOpenPendingFile() {
-  if (!pendingFileToOpen) {
-    return;
-  }
-  
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    openBookFile(pendingFileToOpen);
-    pendingFileToOpen = null; // Clear after attempting to open
-  }
-}
-
-// Enhanced function to open a book file with better error handling and retry logic
+// Function to open a book file
 async function openBookFile(filePath) {
-  if (!filePath) {
-    return;
-  }
+  if (!filePath) return;
   
   try {
-    // Check if file exists and is readable
+    console.log('=== OPENING BOOK FILE ===');
+    console.log('File path:', filePath);
+    
+    // Check if file exists
     const stats = await fs.stat(filePath);
     if (!stats.isFile()) {
       throw new Error('Path is not a file');
     }
     
-    // Read and parse the file
     const content = await fs.readFile(filePath, 'utf8');
     const bookData = JSON.parse(content);
+    console.log('Book data loaded successfully');
     
-    // Enhanced approach to send book data to renderer
-    const bookDataWithPath = {
-      ...bookData,
-      filePath: filePath
+    // Simple approach: keep trying until the window is ready
+    const sendBookData = () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        console.log('Sending book-loaded event to renderer');
+        mainWindow.webContents.send('book-loaded', {
+          ...bookData,
+          filePath: filePath
+        });
+        return true;
+      }
+      return false;
     };
     
-    // Try multiple approaches to ensure the message gets through
-    const sendAttempts = [
-      // Attempt 1: Try sending immediately
-      () => {
-        if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
-          mainWindow.webContents.send('book-loaded', bookDataWithPath);
-          return true;
-        }
-        return false;
-      },
+    // Try to send immediately
+    if (!sendBookData()) {
+      console.log('Window not ready, will try again...');
+      // If that fails, keep trying every 500ms for up to 10 seconds
+      let attempts = 0;
+      const maxAttempts = 20;
       
-      // Attempt 2: Wait for webContents to be ready
-      () => {
-        return new Promise((resolve) => {
-          if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
-            if (mainWindow.webContents.isLoading()) {
-              mainWindow.webContents.once('did-finish-load', () => {
-                mainWindow.webContents.send('book-loaded', bookDataWithPath);
-                resolve(true);
-              });
-            } else {
-              mainWindow.webContents.send('book-loaded', bookDataWithPath);
-              resolve(true);
-            }
-          } else {
-            resolve(false);
+      const retry = setInterval(() => {
+        attempts++;
+        console.log(`Retry attempt ${attempts}/${maxAttempts}`);
+        
+        if (sendBookData()) {
+          console.log('Successfully sent book data on retry');
+          clearInterval(retry);
+        } else if (attempts >= maxAttempts) {
+          console.error('Failed to send book data after all retries');
+          clearInterval(retry);
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            dialog.showErrorBox('Error', 'Could not load the book file. Please try opening it manually from the File menu.');
           }
-        });
-      }
-    ];
-    
-    // Try the first attempt
-    if (!sendAttempts[0]()) {
-      await sendAttempts[1]();
+        }
+      }, 500);
     }
-    
-    // Also try with a delay to ensure React app is ready
-    setTimeout(() => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('book-loaded', bookDataWithPath);
-      }
-    }, 2000);
     
   } catch (error) {
     console.error('Error opening book file:', error);
     if (mainWindow && !mainWindow.isDestroyed()) {
-      dialog.showErrorBox('Error Opening File', 
-        `Failed to open book file: ${error.message}\n\nFile: ${filePath}`);
+      dialog.showErrorBox('Error Opening File', `Failed to open book file: ${error.message}`);
     }
   }
 }
@@ -417,7 +351,7 @@ function showAboutDialog() {
     type: 'info',
     title: 'About AbsoluteScenes',
     message: 'AbsoluteScenes Book Writer',
-    detail: `Version: 1.3.12\nA scene-based book writing application\n\nBuilt with Electron and React\n\nCopyright © 2024 AbsoluteScenes`,
+    detail: `Version: 1.0.0\nA scene-based book writing application\n\nBuilt with Electron and React\n\nCopyright © 2024 AbsoluteScenes`,
     buttons: ['OK']
   });
 }
@@ -434,7 +368,14 @@ async function openBook() {
 
     if (!result.canceled && result.filePaths.length > 0) {
       const filePath = result.filePaths[0];
-      await openBookFile(filePath);
+      const content = await fs.readFile(filePath, 'utf8');
+      const bookData = JSON.parse(content);
+      
+      console.log('Book opened successfully, sending to renderer with filePath:', filePath);
+      mainWindow.webContents.send('book-loaded', {
+        ...bookData,
+        filePath: filePath
+      });
     }
   } catch (error) {
     console.error('Error opening book file:', error);
@@ -447,13 +388,18 @@ let activeSaveOperations = new Set();
 
 // Register all IPC handlers
 function registerIpcHandlers() {
+  console.log('Registering IPC handlers...');
+  
   // Handler for save dialog
   ipcMain.handle('save-book-dialog', async (event, bookData, existingFilePath = null) => {
     const operationId = Date.now() + '-' + Math.random();
     
     try {
+      console.log('save-book-dialog handler called, operation:', operationId);
+      
       // Check if another save is in progress
       if (activeSaveOperations.size > 0) {
+        console.log('Another save operation is in progress, rejecting');
         return { success: false, error: 'Another save operation is in progress' };
       }
       
@@ -474,6 +420,7 @@ function registerIpcHandlers() {
 
       if (!result.canceled && result.filePath) {
         await fs.writeFile(result.filePath, JSON.stringify(bookData, null, 2), 'utf8');
+        console.log('File saved successfully:', result.filePath);
         return { success: true, filePath: result.filePath };
       }
       
@@ -491,18 +438,22 @@ function registerIpcHandlers() {
     const operationId = Date.now() + '-' + Math.random();
     
     try {
+      console.log('save-book-to-file handler called with filePath:', filePath, 'operation:', operationId);
+      
       if (!filePath) {
         return { success: false, error: 'No file path provided' };
       }
       
       // Check if another save is in progress
       if (activeSaveOperations.size > 0) {
+        console.log('Another save operation is in progress, rejecting');
         return { success: false, error: 'Another save operation is in progress' };
       }
       
       activeSaveOperations.add(operationId);
       
       await fs.writeFile(filePath, JSON.stringify(bookData, null, 2), 'utf8');
+      console.log('File saved successfully to:', filePath);
       return { success: true, filePath };
     } catch (error) {
       console.error('Error saving book to file:', error);
@@ -517,7 +468,10 @@ function registerIpcHandlers() {
     const operationId = Date.now() + '-' + Math.random();
     
     try {
+      console.log('save-recovered-book handler called, operation:', operationId);
+      
       if (activeSaveOperations.size > 0) {
+        console.log('Another save operation is in progress, rejecting');
         return { success: false, error: 'Another save operation is in progress' };
       }
       
@@ -552,40 +506,72 @@ function registerIpcHandlers() {
 
   // Simple ping handler to verify IPC is ready
   ipcMain.handle('ipc-ready', () => {
+    console.log('IPC ready check called');
     return true;
   });
+  
+  // Test handler for file association debugging
+  ipcMain.handle('test-file-association', async (event, filePath) => {
+    console.log('Test file association called with:', filePath);
+    if (filePath) {
+      await openBookFile(filePath);
+      return { success: true };
+    }
+    return { success: false, error: 'No file path provided' };
+  });
+  
+  console.log('All IPC handlers registered successfully');
 }
 
 app.whenReady().then(() => {
   createWindow();
   
-  // Enhanced file opening from command line
+  // Simple file opening from command line
   const filePath = getFilePathFromArgs(process.argv);
+  console.log('=== APP STARTUP DEBUG ===');
+  console.log('Process arguments:', process.argv);
+  console.log('Extracted file path:', filePath);
   
   if (filePath) {
-    pendingFileToOpen = filePath;
+    console.log('=== FILE ASSOCIATION TRIGGERED ===');
+    console.log('File to open:', filePath);
+    
+    // Send a message to the renderer to confirm file association was triggered
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('file-association-debug', {
+          message: 'File association triggered',
+          filePath: filePath,
+          args: process.argv
+        });
+      }
+      openBookFile(filePath);
+    }, 2000); // Give more time for everything to be ready
+  } else {
+    console.log('No file association - normal startup');
+    // Send debug info even when no file
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('file-association-debug', {
+          message: 'Normal startup - no file association',
+          args: process.argv
+        });
+      }
+    }, 2000);
   }
 });
-
-// Handle command line arguments for direct execution
-// This allows: absolute-scenes file.book
-if (process.argv.length >= 3) {
-  const potentialFile = process.argv[process.argv.length - 1];
-  if (potentialFile && potentialFile.endsWith('.book') && !potentialFile.startsWith('-')) {
-    // If app is already running, this will be handled by second-instance event
-    // If app is not running, this will be handled in app.whenReady()
-  }
-}
 
 // Handle file opening on macOS
 app.on('open-file', (event, filePath) => {
   event.preventDefault();
+  console.log('=== macOS OPEN-FILE EVENT ===');
+  console.log('File path:', filePath);
   
   if (filePath.endsWith('.book')) {
-    pendingFileToOpen = filePath;
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      attemptToOpenPendingFile();
-    }
+    // Give the app time to be ready
+    setTimeout(() => {
+      openBookFile(filePath);
+    }, 1000);
   }
 });
 
