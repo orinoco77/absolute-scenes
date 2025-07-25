@@ -1,6 +1,6 @@
 {
     "name": "absolute-scenes",
-    "version": "1.3.9",
+    "version": "1.3.15",
     "description": "A scene-based book writing application",
     "main": "public/electron.js",
     "homepage": "./",
@@ -14,7 +14,8 @@
         "electron-dev": "cross-env ELECTRON_IS_DEV=true electron .",
         "electron-dev-cmd": "set ELECTRON_IS_DEV=true && electron .",
         "electron-dev-powershell": "$env:ELECTRON_IS_DEV=\"true\"; electron .",
-        "dist": "npx auto-version --patch && npm run build && electron-builder"
+        "dist": "npx auto-version --patch && npm run build && electron-builder",
+        "postinstall": "electron-builder install-app-deps"
     },
     "dependencies": {
         "html2canvas": "^1.4.1",
@@ -50,7 +51,121 @@
         "files": [
             "build/**/*",
             "node_modules/**/*"
-        ]
+        ],
+        "fileAssociations": [
+            {
+                "ext": "book",
+                "name": "Absolute Scenes Book",
+                "description": "Absolute Scenes Book File",
+                "mimeType": "application/x-absolute-scenes-book",
+                "role": "Editor"
+            }
+        ],
+        "protocols": [
+            {
+                "name": "absolute-scenes",
+                "schemes": [
+                    "absolute-scenes"
+                ]
+            }
+        ],
+        "win": {
+            "target": {
+                "target": "nsis",
+                "arch": [
+                    "x64",
+                    "ia32"
+                ]
+            },
+            "artifactName": "${productName} Setup ${version}.${ext}"
+        },
+        "nsis": {
+            "oneClick": false,
+            "perMachine": true,
+            "allowElevation": true,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "Absolute Scenes",
+            "include": "assets/installer.nsh",
+            "runAfterFinish": false
+        },
+        "mac": {
+            "target": [
+                {
+                    "target": "dmg",
+                    "arch": [
+                        "x64",
+                        "arm64"
+                    ]
+                }
+            ],
+            "category": "public.app-category.productivity",
+            "hardenedRuntime": true,
+            "gatekeeperAssess": false,
+            "entitlements": "assets/entitlements.mac.plist",
+            "entitlementsInherit": "assets/entitlements.mac.plist"
+        },
+        "dmg": {
+            "title": "${productName} ${version}",
+            "contents": [
+                {
+                    "x": 130,
+                    "y": 220
+                },
+                {
+                    "x": 410,
+                    "y": 220,
+                    "type": "link",
+                    "path": "/Applications"
+                }
+            ],
+            "window": {
+                "width": 540,
+                "height": 380
+            }
+        },
+        "linux": {
+            "target": [
+                {
+                    "target": "deb",
+                    "arch": [
+                        "x64"
+                    ]
+                },
+                {
+                    "target": "rpm",
+                    "arch": [
+                        "x64"
+                    ]
+                },
+                {
+                    "target": "AppImage",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ],
+            "category": "Office",
+            "desktop": {
+                "Name": "Absolute Scenes",
+                "Comment": "A scene-based book writing application",
+                "Keywords": "writing;book;editor;scenes;",
+                "StartupWMClass": "absolute-scenes"
+            },
+            "executableName": "absolute-scenes"
+        },
+        "deb": {
+            "priority": "optional",
+            "afterInstall": "assets/linux-post-install.sh",
+            "afterRemove": "assets/linux-post-remove.sh"
+        },
+        "rpm": {
+            "fpm": [
+                "--after-install=assets/linux-post-install.sh",
+                "--after-remove=assets/linux-post-remove.sh"
+            ]
+        }
     },
     "browserslist": {
         "production": [
