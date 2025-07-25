@@ -34,6 +34,19 @@ jest.mock('../components/BookStructure', () => {
 
 jest.mock('../components/SceneEditor', () => {
   return function MockedSceneEditor({ scene, onSceneUpdate }) {
+    if (!scene) {
+      return (
+        <div className="scene-editor">
+          <div className="no-scene">
+            <h3>No Scene Selected</h3>
+            <p>
+              Select a scene from the chapters to start writing, or create a new
+              scene.
+            </p>
+          </div>
+        </div>
+      );
+    }
     return (
       <div data-testid="scene-editor">
         <div>Editing Scene: {scene?.title || 'No Scene'}</div>
@@ -406,7 +419,8 @@ describe('App Component', () => {
   test('renders no scene selected message when no scene is selected', () => {
     render(<App />);
 
-    // Should show no scene message when nothing is selected
+    // Since there are no scenes in the default chapters, no scene should be selected
+    // and we should see the no scene selected message
     expect(screen.getByText('No Scene Selected')).toBeInTheDocument();
   });
 

@@ -35,11 +35,7 @@ jest.mock('../CharacterList', () => {
   };
 });
 
-jest.mock('../CharacterThreadVisualization', () => {
-  return function MockedCharacterThreadVisualization() {
-    return <div data-testid="thread-visualization">Thread Visualization</div>;
-  };
-});
+// Note: CharacterThreadVisualization is not used in BookStructure - threads tab uses ThreadsControls
 
 const mockChapters = [
   {
@@ -166,10 +162,16 @@ describe('BookStructure Component', () => {
   test('renders threads tab with controls', () => {
     renderComponent('threads');
     expect(screen.getByText('Thread View')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Analyzing 3 scenes across 2 chapters/)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/2 formal characters/)).toBeInTheDocument();
+
+    // Check that all the stat labels are present
+    expect(screen.getByText('Scenes analyzed:')).toBeInTheDocument();
+    expect(screen.getByText('Chapters:')).toBeInTheDocument();
+    expect(screen.getByText('Formal characters:')).toBeInTheDocument();
+
+    // Check for specific values - there should be one "3" and multiple "2"s
+    expect(screen.getByText('3')).toBeInTheDocument();
+    const allTwos = screen.getAllByText('2');
+    expect(allTwos).toHaveLength(2); // Should be exactly 2 instances (Chapters and Formal characters)
   });
 
   test('shows tab icons correctly', () => {
@@ -200,7 +202,8 @@ describe('BookStructure Component', () => {
         {...mockFunctions}
       />
     );
-    expect(screen.getByText(/0 formal characters/)).toBeInTheDocument();
+    expect(screen.getByText('Formal characters:')).toBeInTheDocument();
+    expect(screen.getByText('0')).toBeInTheDocument();
   });
 
   test('auto-selection logic works when switching to characters tab', () => {
@@ -238,7 +241,15 @@ describe('BookStructure Component', () => {
       />
     );
 
-    expect(screen.getByText(/2 blacklisted names/)).toBeInTheDocument();
+    // Check that all stat labels are present
+    expect(screen.getByText('Chapters:')).toBeInTheDocument();
+    expect(screen.getByText('Formal characters:')).toBeInTheDocument();
+    expect(screen.getByText('Blacklisted names:')).toBeInTheDocument();
+
+    // Check for specific values - should be one "3" and three "2"s
+    expect(screen.getByText('3')).toBeInTheDocument();
+    const allTwos = screen.getAllByText('2');
+    expect(allTwos).toHaveLength(3); // Chapters: 2, Formal characters: 2, Blacklisted names: 2
   });
 
   test('renders threads controls without blacklisted characters', () => {
@@ -252,6 +263,6 @@ describe('BookStructure Component', () => {
       />
     );
 
-    expect(screen.queryByText(/blacklisted names/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Blacklisted names:')).not.toBeInTheDocument();
   });
 });
