@@ -1,3 +1,4 @@
+import BackgroundList from './BackgroundList';
 import CharacterList from './CharacterList';
 import LocationList from './LocationList';
 import SceneList from './SceneList';
@@ -112,6 +113,25 @@ function BookStructure({
   characterDetectionBlacklist,
   onUpdateCharacterDetectionBlacklist,
 
+  // Background props
+  backgroundFolders,
+  currentDocumentId,
+  currentFolderId,
+  onDocumentSelect,
+  onFolderSelect,
+  onDocumentAdd,
+  onFolderAdd,
+  onDocumentDelete,
+  onDocumentUpdate,
+  onFolderDelete,
+  onFolderUpdate,
+  onReorderFolders,
+  onReorderDocumentsInFolder,
+  onMoveDocumentBetweenFolders,
+  backgroundRecycleBin,
+  onRestoreBackgroundFromRecycleBin,
+  onPermanentlyDeleteBackground,
+
   // Location props
   locations,
   currentLocationId,
@@ -147,6 +167,22 @@ function BookStructure({
       if (firstChapterWithScenes) {
         onChapterSelect(firstChapterWithScenes.id);
         onSceneSelect(firstChapterWithScenes.scenes[0].id);
+      }
+    } else if (
+      tabId === 'background' &&
+      !currentDocumentId &&
+      backgroundFolders.length > 0
+    ) {
+      // Find first document in first folder
+      const firstFolderWithDocs = backgroundFolders.find(
+        folder => folder.documents.length > 0
+      );
+      if (firstFolderWithDocs) {
+        onFolderSelect(firstFolderWithDocs.id);
+        onDocumentSelect(firstFolderWithDocs.documents[0].id);
+      } else {
+        // Just select the first folder even if empty
+        onFolderSelect(backgroundFolders[0].id);
       }
     } else if (
       tabId === 'locations' &&
@@ -187,6 +223,35 @@ function BookStructure({
       )
     },
     {
+      id: 'background',
+      label: 'Background',
+      icon: '📋',
+      component: (
+        <BackgroundList
+          folders={backgroundFolders}
+          currentDocumentId={currentDocumentId}
+          currentFolderId={currentFolderId}
+          onDocumentSelect={onDocumentSelect}
+          onFolderSelect={onFolderSelect}
+          onDocumentAdd={onDocumentAdd}
+          onFolderAdd={onFolderAdd}
+          onDocumentDelete={onDocumentDelete}
+          onDocumentUpdate={onDocumentUpdate}
+          onFolderDelete={onFolderDelete}
+          onFolderUpdate={onFolderUpdate}
+          onReorderFolders={onReorderFolders}
+          onReorderDocumentsInFolder={onReorderDocumentsInFolder}
+          onMoveDocumentBetweenFolders={onMoveDocumentBetweenFolders}
+          recycleBin={backgroundRecycleBin}
+          showRecycleBin={showRecycleBin}
+          onToggleRecycleBin={onToggleRecycleBin}
+          onRestoreFromRecycleBin={onRestoreBackgroundFromRecycleBin}
+          onPermanentlyDelete={onPermanentlyDeleteBackground}
+          onEmptyRecycleBin={onEmptyRecycleBin}
+        />
+      )
+    },
+    {
       id: 'characters',
       label: 'Characters',
       icon: '👥',
@@ -205,21 +270,6 @@ function BookStructure({
       )
     },
     {
-      id: 'threads',
-      label: 'Threads',
-      icon: '🧵',
-      component: (
-        <ThreadsControls
-          chapters={chapters}
-          characters={characters}
-          characterDetectionBlacklist={characterDetectionBlacklist}
-          onUpdateCharacterDetectionBlacklist={
-            onUpdateCharacterDetectionBlacklist
-          }
-        />
-      )
-    },
-    {
       id: 'locations',
       label: 'Locations',
       icon: '🌍',
@@ -234,6 +284,21 @@ function BookStructure({
           locationRecycleBin={locationRecycleBin}
           onRestoreFromRecycleBin={onRestoreLocationFromRecycleBin}
           onPermanentlyDelete={onPermanentlyDeleteLocation}
+        />
+      )
+    },
+    {
+      id: 'threads',
+      label: 'Threads',
+      icon: '🧵',
+      component: (
+        <ThreadsControls
+          chapters={chapters}
+          characters={characters}
+          characterDetectionBlacklist={characterDetectionBlacklist}
+          onUpdateCharacterDetectionBlacklist={
+            onUpdateCharacterDetectionBlacklist
+          }
         />
       )
     }

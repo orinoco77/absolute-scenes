@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useCallback, useRef } from 'react';
+import BackgroundEditor from './components/BackgroundEditor';
 import BackupRecovery from './components/BackupRecovery';
 import BookStructure from './components/BookStructure';
 import CharacterEditor from './components/CharacterEditor';
@@ -52,6 +53,13 @@ function App() {
     characters: [],
     characterDetectionBlacklist: [],
     locations: [],
+    backgroundFolders: [
+      {
+        id: 'default-bg',
+        title: 'General Notes',
+        documents: []
+      }
+    ],
     template: {
       fontFamily: 'Times New Roman',
       fontSize: 12,
@@ -99,6 +107,8 @@ function App() {
   const [currentChapterId, setCurrentChapterId] = useState('default');
   const [currentCharacterId, setCurrentCharacterId] = useState(null);
   const [currentLocationId, setCurrentLocationId] = useState(null);
+  const [currentDocumentId, setCurrentDocumentId] = useState(null);
+  const [currentFolderId, setCurrentFolderId] = useState('default-bg');
   const [activeTab, setActiveTab] = useState('manuscript');
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -110,6 +120,7 @@ function App() {
   const [showRecycleBin, setShowRecycleBin] = useState(false);
   const [characterRecycleBin, setCharacterRecycleBin] = useState([]);
   const [locationRecycleBin, setLocationRecycleBin] = useState([]);
+  const [backgroundRecycleBin, setBackgroundRecycleBin] = useState([]);
   const [currentFilePath, setCurrentFilePath] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false); // Flag to prevent marking changes during save
@@ -181,6 +192,28 @@ function App() {
       setCurrentLocationId(book.locations[0].id);
     }
   }, [activeTab, currentLocationId, book.locations]);
+
+  // Auto-select first document if none selected but documents exist
+  useEffect(() => {
+    if (
+      activeTab === 'background' &&
+      !currentDocumentId &&
+      book.backgroundFolders &&
+      book.backgroundFolders.length > 0
+    ) {
+      const firstFolderWithDocs = book.backgroundFolders.find(
+        folder => folder.documents && folder.documents.length > 0
+      );
+      if (firstFolderWithDocs) {
+        console.log(
+          'Auto-selecting first document:',
+          firstFolderWithDocs.documents[0].id
+        );
+        setCurrentFolderId(firstFolderWithDocs.id);
+        setCurrentDocumentId(firstFolderWithDocs.documents[0].id);
+      }
+    }
+  }, [activeTab, currentDocumentId, book.backgroundFolders]);
 
   const markAsChanged = () => {
     if (isSaving) {
@@ -613,6 +646,17 @@ function App() {
         cleanBookData.locations = [];
       }
 
+      // Migrate old format - add background folders if missing
+      if (!cleanBookData.backgroundFolders) {
+        cleanBookData.backgroundFolders = [
+          {
+            id: 'default-bg',
+            title: 'General Notes',
+            documents: []
+          }
+        ];
+      }
+
       console.log('Setting book state...');
       // Set all states in batch
       // Set all states simply and directly
@@ -620,6 +664,11 @@ function App() {
       setCurrentChapterId(cleanBookData.chapters[0]?.id || 'default');
       setCurrentSceneId(cleanBookData.chapters[0]?.scenes[0]?.id || null);
       setCurrentCharacterId(null);
+      setCurrentLocationId(null);
+      setCurrentDocumentId(null);
+      setCurrentFolderId(
+        cleanBookData.backgroundFolders[0]?.id || 'default-bg'
+      );
       setCurrentFilePath(filePath);
       setHasUnsavedChanges(false);
 
@@ -695,6 +744,13 @@ function App() {
       characters: [],
       characterDetectionBlacklist: [],
       locations: [],
+      backgroundFolders: [
+        {
+          id: 'default-bg',
+          title: 'General Notes',
+          documents: []
+        }
+      ],
       template: {
         fontFamily: 'Times New Roman',
         fontSize: 12,
@@ -745,6 +801,8 @@ function App() {
     setCurrentChapterId('default');
     setCurrentCharacterId(null);
     setCurrentLocationId(null);
+    setCurrentDocumentId(null);
+    setCurrentFolderId('default-bg');
     setCurrentFilePath(null);
     setHasUnsavedChanges(false);
   };
@@ -1217,6 +1275,193 @@ function App() {
     }
   };
 
+  // Background document management functions
+  const handleNewFolder = () => {
+    const newFolder = {
+      id: Date.now().toString(),
+      title: `Folder ${book.backgroundFolders.length + 1}`,
+      documents: []
+    };
+
+    setBook(prev => ({
+      ...prev,
+      backgroundFolders: [...prev.backgroundFolders, newFolder],
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    setCurrentFolderId(newFolder.id);
+    markAsChanged();
+  };
+
+  const handleNewDocument = () => {
+    const currentFolder = book.backgroundFolders.find(
+      f => f.id === currentFolderId
+    );
+
+    if (!currentFolder) {
+      alert('Please select a folder first');
+      return;
+    }
+
+    const newDocument = {
+      id: Date.now().toString(),
+      title: `Document ${currentFolder.documents.length + 1}`,
+      content: '',
+      created: new Date().toISOString(),
+      modified: new Date().toISOString()
+    };
+
+    setBook(prev => ({
+      ...prev,
+      backgroundFolders: prev.backgroundFolders.map(folder =>
+        folder.id === currentFolderId
+          ? { ...folder, documents: [...folder.documents, newDocument] }
+          : folder
+      ),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    setCurrentDocumentId(newDocument.id);
+    markAsChanged();
+  };
+
+  const updateDocument = (documentId, updates) => {
+    setBook(prev => ({
+      ...prev,
+      backgroundFolders: prev.backgroundFolders.map(folder => ({
+        ...folder,
+        documents: folder.documents.map(doc =>
+          doc.id === documentId
+            ? { ...doc, ...updates, modified: new Date().toISOString() }
+            : doc
+        )
+      })),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  const updateFolder = (folderId, updates) => {
+    setBook(prev => ({
+      ...prev,
+      backgroundFolders: prev.backgroundFolders.map(folder =>
+        folder.id === folderId ? { ...folder, ...updates } : folder
+      ),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  const moveDocumentToRecycleBin = documentId => {
+    const document = getCurrentDocument();
+    if (!document) return;
+
+    // Find which folder the document belongs to
+    const folder = book.backgroundFolders.find(f =>
+      f.documents.some(d => d.id === documentId)
+    );
+    if (!folder) return;
+
+    // Add to recycle bin with metadata
+    const recycleBinItem = {
+      id: Date.now().toString(),
+      type: 'document',
+      item: document,
+      originalFolderId: folder.id,
+      originalFolderTitle: folder.title,
+      deletedAt: new Date().toISOString()
+    };
+
+    setBackgroundRecycleBin(prev => [...prev, recycleBinItem]);
+
+    // Remove from folders
+    setBook(prev => ({
+      ...prev,
+      backgroundFolders: prev.backgroundFolders.map(folder => ({
+        ...folder,
+        documents: folder.documents.filter(doc => doc.id !== documentId)
+      })),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+
+    // Clear selection if this document was selected
+    if (currentDocumentId === documentId) {
+      setCurrentDocumentId(null);
+    }
+
+    markAsChanged();
+  };
+
+  const handleDeleteFolder = folderId => {
+    if (book.backgroundFolders.length <= 1) {
+      alert('Cannot delete the last folder');
+      return;
+    }
+
+    const folder = book.backgroundFolders.find(f => f.id === folderId);
+    if (folder.documents.length > 0) {
+      if (!window.confirm(`Delete "${folder.title}" and all its documents?`)) {
+        return;
+      }
+    }
+
+    setBook(prev => ({
+      ...prev,
+      backgroundFolders: prev.backgroundFolders.filter(f => f.id !== folderId),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+
+    if (currentFolderId === folderId) {
+      setCurrentFolderId(book.backgroundFolders[0].id);
+      setCurrentDocumentId(null);
+    }
+  };
+
+  const restoreBackgroundFromRecycleBin = recycleBinItemId => {
+    const recycleBinItem = backgroundRecycleBin.find(
+      item => item.id === recycleBinItemId
+    );
+    if (!recycleBinItem) return;
+
+    if (recycleBinItem.type === 'document') {
+      // Find the original folder or use the first folder if not found
+      const targetFolder =
+        book.backgroundFolders.find(
+          f => f.id === recycleBinItem.originalFolderId
+        ) || book.backgroundFolders[0];
+
+      if (targetFolder) {
+        setBook(prev => ({
+          ...prev,
+          backgroundFolders: prev.backgroundFolders.map(folder =>
+            folder.id === targetFolder.id
+              ? {
+                  ...folder,
+                  documents: [...folder.documents, recycleBinItem.item]
+                }
+              : folder
+          ),
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        }));
+        markAsChanged();
+      }
+    }
+
+    // Remove from recycle bin
+    setBackgroundRecycleBin(prev =>
+      prev.filter(item => item.id !== recycleBinItemId)
+    );
+  };
+
+  const permanentlyDeleteBackground = recycleBinItemId => {
+    if (
+      window.confirm('Permanently delete this document? This cannot be undone.')
+    ) {
+      setBackgroundRecycleBin(prev =>
+        prev.filter(item => item.id !== recycleBinItemId)
+      );
+    }
+  };
+
   const handleBookRecovered = (filePath, bookData) => {
     // Load the recovered book
     // Set all states simply and directly
@@ -1246,8 +1491,20 @@ function App() {
     );
   };
 
+  // Find current document
+  const getCurrentDocument = () => {
+    for (const folder of book.backgroundFolders) {
+      const document = folder.documents.find(
+        doc => doc.id === currentDocumentId
+      );
+      if (document) return document;
+    }
+    return null;
+  };
+
   const currentScene = getCurrentScene();
   const currentCharacter = getCurrentCharacter();
+  const currentDocument = getCurrentDocument();
 
   return (
     <div className={`app ${isSaving ? 'saving' : ''}`}>
@@ -1351,6 +1608,23 @@ function App() {
           onUpdateCharacterDetectionBlacklist={
             updateCharacterDetectionBlacklist
           }
+          backgroundFolders={book.backgroundFolders}
+          currentDocumentId={currentDocumentId}
+          currentFolderId={currentFolderId}
+          onDocumentSelect={setCurrentDocumentId}
+          onFolderSelect={setCurrentFolderId}
+          onDocumentAdd={handleNewDocument}
+          onFolderAdd={handleNewFolder}
+          onDocumentDelete={moveDocumentToRecycleBin}
+          onDocumentUpdate={updateDocument}
+          onFolderDelete={handleDeleteFolder}
+          onFolderUpdate={updateFolder}
+          onReorderFolders={() => {}}
+          onReorderDocumentsInFolder={() => {}}
+          onMoveDocumentBetweenFolders={() => {}}
+          backgroundRecycleBin={backgroundRecycleBin}
+          onRestoreBackgroundFromRecycleBin={restoreBackgroundFromRecycleBin}
+          onPermanentlyDeleteBackground={permanentlyDeleteBackground}
           locations={book.locations}
           currentLocationId={currentLocationId}
           onLocationSelect={setCurrentLocationId}
@@ -1423,6 +1697,24 @@ function App() {
                 <p>
                   Select a location from the list to edit its information, or
                   create a new location.
+                </p>
+              </div>
+            </div>
+          )
+        ) : activeTab === 'background' ? (
+          currentDocument ? (
+            <BackgroundEditor
+              document={currentDocument}
+              template={book.template}
+              onDocumentUpdate={updateDocument}
+            />
+          ) : (
+            <div className="background-editor">
+              <div className="no-scene">
+                <h3>No Document Selected</h3>
+                <p>
+                  Select a background document from the folders to start
+                  writing, or create a new document.
                 </p>
               </div>
             </div>

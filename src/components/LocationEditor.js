@@ -61,7 +61,7 @@ const LOCATION_TYPES = [
   'Secret Location'
 ];
 
-function LocationEditor({ location, template, onLocationUpdate }) {
+function LocationEditor({ location, template: _template, onLocationUpdate }) {
   const [showIconDropdown, setShowIconDropdown] = useState(false);
 
   const handleUpdate = (field, value) => {
@@ -147,7 +147,7 @@ function LocationEditor({ location, template, onLocationUpdate }) {
         </div>
       </div>
 
-      <div className="location-editor-textarea">
+      <div className="scene-editor-textarea">
         <div className="editor-toolbar">
           <span>📝 Description</span>
           <span className="format-help">
@@ -158,11 +158,6 @@ function LocationEditor({ location, template, onLocationUpdate }) {
           value={location.description || ''}
           onChange={handleDescriptionChange}
           placeholder="Describe this location in detail. What does it look like? What's the atmosphere? What role does it play in your story?"
-          style={{
-            fontFamily: template?.fontFamily || 'Times New Roman',
-            fontSize: `${(template?.fontSize || 12) + 4}px`,
-            lineHeight: template?.lineHeight || 1.6
-          }}
         />
       </div>
 

@@ -32,6 +32,14 @@ Absolute Scenes is designed specifically for authors who want a structured appro
 - Visual character thread tracking across scenes
 - Organize characters and locations separately from your manuscript
 
+### 📚 **Background Information Panel**
+- Dedicated workspace for world-building and development notes
+- Organize information in folders (General Notes, Characters, Locations, etc.)
+- Editable document titles with double-click functionality
+- Consistent typography with main writing areas
+- Expandable folder structure for easy content organization
+- Auto-save functionality with real-time updates
+
 ### 🗺️ **Story Visualization**
 - **Character Thread Visualization**: See which characters appear in which scenes
 - Track character development across your entire book
@@ -142,11 +150,12 @@ The installer automatically sets up file associations for `.book` files:
 - Drag and drop to reorder content
 - Use the recycle bin to recover deleted content
 
-### 3. **Manage Characters & Locations**
+### 3. **Manage Characters, Locations & Background**
+- Switch to the **"Background"** tab to create world-building notes and development documents
 - Switch to the **"Characters"** tab to create character profiles
 - Switch to the **"Locations"** tab to define story settings
 - Use the **"Threads"** tab to visualize character appearances across scenes
-- Track character relationships and development arcs
+- Organize information in folders and edit document titles by double-clicking
 
 ### 4. **Set Up Professional Formatting**
 - Click the **⚙️ Template Settings** button
@@ -317,6 +326,21 @@ Absolute Scenes uses a structured JSON format (.book files):
       "notes": "Location notes"
     }
   ],
+  "backgroundFolders": [
+    {
+      "id": "folder-id",
+      "title": "General Notes",
+      "documents": [
+        {
+          "id": "document-id",
+          "title": "Document Title",
+          "content": "Background information and notes...",
+          "created": "2024-01-01T00:00:00.000Z",
+          "modified": "2024-01-01T12:00:00.000Z"
+        }
+      ]
+    }
+  ],
   "characterDetectionBlacklist": ["the", "and", "but", "..."],
   "template": {
     "fontFamily": "Palatino Linotype",
@@ -337,7 +361,7 @@ Absolute Scenes uses a structured JSON format (.book files):
   "metadata": {
     "created": "2024-01-01T00:00:00.000Z",
     "modified": "2024-01-01T12:00:00.000Z",
-    "version": "1.3.15"
+    "version": "1.3.18"
   }
 }
 ```
@@ -458,15 +482,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Roadmap**
 
-### **Current Version: v1.3.15**
+### **Current Version: v1.3.18**
 - ✅ Scene-based writing with drag-and-drop organization
-- ✅ Character and location management
+- ✅ Character and location management with dedicated panels
+- ✅ Background information panel with editable document titles
 - ✅ Visual character thread tracking
 - ✅ Professional typography with premium fonts
 - ✅ Print-ready PDF export with proper book formatting
 - ✅ GitHub integration with automatic backup
 - ✅ Professional system-wide installation with command line access
 - ✅ File associations for .book files
+- ✅ Improved UI organization (Locations above Threads)
 
 ### **Upcoming Features (v1.4)**
 - [ ] **Dark Mode**: Eye-friendly writing environment
@@ -483,6 +509,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **Translation Support**: Multi-language interface
 
 ### **Version History**
+- **v1.3.18**: Enhanced background information panel with editable titles, improved folder organization, and UI refinements
 - **v1.3.15**: Enhanced file associations and command line improvements
 - **v1.3.12**: Professional installation system with proper paths
 - **v1.3.0**: Character and location management, visual thread tracking
