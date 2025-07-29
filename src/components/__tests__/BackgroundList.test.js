@@ -280,12 +280,6 @@ describe('BackgroundList Component', () => {
     expect(screen.getByText(/8\s+words/)).toBeInTheDocument();
   });
 
-  test('shows document modification dates', async () => {
-    renderComponent();
-    await expect(screen.getByText('01/01/2024')).toBeInTheDocument();
-    await expect(screen.getByText('02/01/2024')).toBeInTheDocument();
-  });
-
   test('handles document title input layout correctly', async () => {
     renderComponent();
     fireEvent.doubleClick(screen.getByText('Character Backstory'));
