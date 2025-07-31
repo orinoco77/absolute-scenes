@@ -315,50 +315,16 @@ function renderFormattedTextToPDF(
   const shouldIndentFirstLine =
     paragraphStyle === 'indented' && !isFirstParagraph;
 
+  // Convert segments to a unified word list with formatting information
+  const formattedWords = [];
+
   segments.forEach(segment => {
-    // Set font style based on segment type
-    switch (segment.type) {
-      case 'bold':
-        pdf.setFont(pdfFont, 'bold');
-        pdf.setFontSize(fontSize);
-        break;
-      case 'italic':
-        pdf.setFont(pdfFont, 'italic');
-        pdf.setFontSize(fontSize);
-        break;
-      case 'h1':
-        pdf.setFont(pdfFont, 'bold');
-        pdf.setFontSize(fontSize * 1.8); // 1.8x body text size
-        // Headings start on new line
-        if (currentX > x) {
-          currentY += lineHeight;
-          currentX = x;
-          isFirstLineOfParagraph = true;
-        }
-        break;
-      case 'h2':
-        pdf.setFont(pdfFont, 'bold');
-        pdf.setFontSize(fontSize * 1.5); // 1.5x body text size
-        // Headings start on new line
-        if (currentX > x) {
-          currentY += lineHeight;
-          currentX = x;
-          isFirstLineOfParagraph = true;
-        }
-        break;
-      case 'h3':
-        pdf.setFont(pdfFont, 'bold');
-        pdf.setFontSize(fontSize * 1.3); // 1.3x body text size
-        // Headings start on new line
-        if (currentX > x) {
-          currentY += lineHeight;
-          currentX = x;
-          isFirstLineOfParagraph = true;
-        }
-        break;
-      default:
-        pdf.setFont(pdfFont, 'normal');
-        pdf.setFontSize(fontSize);
+    // Handle headings that should start on new lines
+    if (segment.type.startsWith('h')) {
+      // If we're not at the start of a line, add a line break
+      if (formattedWords.length > 0) {
+        formattedWords.push({ text: '\n', type: 'linebreak' });
+      }
     }
 
     // Handle line breaks in the text
@@ -366,135 +332,259 @@ function renderFormattedTextToPDF(
 
     lines.forEach((line, lineIndex) => {
       if (lineIndex > 0) {
-        currentY += lineHeight;
-        currentX = x;
-        isFirstLineOfParagraph = false;
-
-        // Check if we need a new page
-        if (currentY + lineHeight > pageHeight - bottomMargin) {
-          pdf.addPage();
-          if (updateMarginsCallback) {
-            const margins = updateMarginsCallback();
-            if (margins) {
-              x = margins.left;
-              currentX = x;
-              currentMaxWidth = margins.contentWidth;
-            }
-          }
-          currentY = topMargin;
-        }
+        formattedWords.push({ text: '\n', type: 'linebreak' });
       }
 
-      // Split line into words for wrapping and justification
+      // Split line into words
       const words = line.split(' ').filter(word => word.length > 0);
 
-      if (words.length === 0) return;
-
-      // Process words with justification
-      let currentLineWords = [];
-      let currentLineWidth = 0;
-
-      for (let i = 0; i < words.length; i++) {
-        const word = words[i];
-        const wordWidth = pdf.getTextWidth(word);
-        const spaceWidth = pdf.getTextWidth(' ');
-
-        // Determine available width and starting position for this line
-        let availableWidth = currentMaxWidth;
-        let lineStartX = x;
-
-        // Apply indentation only to the first line of the paragraph
-        if (isFirstLineOfParagraph && shouldIndentFirstLine) {
-          const indentAmount = Math.max(
-            24,
-            Math.min(48, currentMaxWidth * 0.03)
-          );
-          availableWidth -= indentAmount;
-          lineStartX += indentAmount;
-        }
-
-        // Check if adding this word would exceed the available line width
-        const wouldExceedWidth =
-          currentLineWords.length > 0 &&
-          currentLineWidth + spaceWidth + wordWidth > availableWidth;
-
-        if (wouldExceedWidth) {
-          // Render current line
-          renderJustifiedLine(
-            pdf,
-            currentLineWords,
-            lineStartX,
-            currentY,
-            availableWidth,
-            textAlign,
-            false
-          );
-
-          // Move to next line
-          currentY += lineHeight;
-          currentX = x;
-          isFirstLineOfParagraph = false;
-
-          // Check if we need a new page
-          if (currentY + lineHeight > pageHeight - bottomMargin) {
-            pdf.addPage();
-            if (updateMarginsCallback) {
-              const margins = updateMarginsCallback();
-              if (margins) {
-                x = margins.left;
-                currentX = x;
-                currentMaxWidth = margins.contentWidth;
-              }
-            }
-            currentY = topMargin;
-          }
-
-          // Start new line with current word
-          currentLineWords = [word];
-          currentLineWidth = wordWidth;
-        } else {
-          // Add word to current line
-          currentLineWords.push(word);
-          currentLineWidth +=
-            (currentLineWords.length > 1 ? spaceWidth : 0) + wordWidth;
-        }
-      }
-
-      // Render any remaining words in the line (last line, no justification)
-      if (currentLineWords.length > 0) {
-        let lineStartX = x;
-        let availableWidth = currentMaxWidth;
-
-        if (isFirstLineOfParagraph && shouldIndentFirstLine) {
-          const indentAmount = Math.max(
-            24,
-            Math.min(48, availableWidth * 0.03)
-          );
-          lineStartX += indentAmount;
-          availableWidth -= indentAmount;
-        }
-
-        renderJustifiedLine(
-          pdf,
-          currentLineWords,
-          lineStartX,
-          currentY,
-          availableWidth,
-          'left',
-          true
-        );
-        currentX = lineStartX + currentLineWidth;
-        isFirstLineOfParagraph = false;
-      }
+      words.forEach((word, wordIndex) => {
+        formattedWords.push({
+          text: word,
+          type: segment.type || 'normal',
+          needsSpace:
+            wordIndex > 0 ||
+            (lineIndex === 0 &&
+              formattedWords.length > 0 &&
+              formattedWords[formattedWords.length - 1].type !== 'linebreak')
+        });
+      });
     });
 
     // For headings, add extra space after
     if (segment.type.startsWith('h')) {
-      currentY += lineHeight * 0.5;
+      formattedWords.push({ text: '\n', type: 'linebreak' });
     }
   });
 
+  // Process the unified word list
+  let currentLineWords = [];
+  let currentLineWidth = 0;
+
+  const processLineBreak = () => {
+    // Render current line if it has content
+    if (currentLineWords.length > 0) {
+      let lineStartX = currentX;
+      let availableWidth = currentMaxWidth;
+
+      // Apply indentation only to the first line of the paragraph
+      if (isFirstLineOfParagraph && shouldIndentFirstLine) {
+        const indentAmount = Math.max(24, Math.min(48, currentMaxWidth * 0.03));
+        availableWidth -= indentAmount;
+        lineStartX += indentAmount;
+      }
+
+      renderMixedFormattedLine(
+        pdf,
+        currentLineWords,
+        lineStartX,
+        currentY,
+        availableWidth,
+        textAlign,
+        false,
+        pdfFont,
+        fontSize
+      );
+
+      currentLineWords = [];
+      currentLineWidth = 0;
+    }
+
+    // Move to next line
+    currentY += lineHeight;
+    currentX = x;
+    isFirstLineOfParagraph = false;
+
+    // Check if we need a new page
+    if (currentY + lineHeight > pageHeight - bottomMargin) {
+      pdf.addPage();
+      if (updateMarginsCallback) {
+        const margins = updateMarginsCallback();
+        if (margins) {
+          x = margins.left;
+          currentX = x;
+          currentMaxWidth = margins.contentWidth;
+        }
+      }
+      currentY = topMargin;
+    }
+  };
+
+  for (let i = 0; i < formattedWords.length; i++) {
+    const wordObj = formattedWords[i];
+
+    if (wordObj.type === 'linebreak') {
+      processLineBreak();
+      continue;
+    }
+
+    // Set font for width calculation
+    const fontStyle = getFontStyle(wordObj.type);
+    const wordFontSize = getFontSize(wordObj.type, fontSize);
+    pdf.setFont(pdfFont, fontStyle);
+    pdf.setFontSize(wordFontSize);
+
+    const word = wordObj.text;
+    const wordWidth = pdf.getTextWidth(word);
+    const spaceWidth = wordObj.needsSpace ? pdf.getTextWidth(' ') : 0;
+
+    // Determine available width for this line
+    let availableWidth = currentMaxWidth;
+    if (isFirstLineOfParagraph && shouldIndentFirstLine) {
+      const indentAmount = Math.max(24, Math.min(48, currentMaxWidth * 0.03));
+      availableWidth -= indentAmount;
+    }
+
+    // Check if adding this word would exceed the available line width
+    const totalWordWidth = spaceWidth + wordWidth;
+    const wouldExceedWidth =
+      currentLineWords.length > 0 &&
+      currentLineWidth + totalWordWidth > availableWidth;
+
+    if (wouldExceedWidth) {
+      // Render current line and start a new one
+      processLineBreak();
+    }
+
+    // Add word to current line
+    currentLineWords.push(wordObj);
+    currentLineWidth += totalWordWidth;
+  }
+
+  // Render any remaining words in the final line
+  if (currentLineWords.length > 0) {
+    let lineStartX = currentX;
+    let availableWidth = currentMaxWidth;
+
+    if (isFirstLineOfParagraph && shouldIndentFirstLine) {
+      const indentAmount = Math.max(24, Math.min(48, availableWidth * 0.03));
+      lineStartX += indentAmount;
+      availableWidth -= indentAmount;
+    }
+
+    renderMixedFormattedLine(
+      pdf,
+      currentLineWords,
+      lineStartX,
+      currentY,
+      availableWidth,
+      'left', // Don't justify the last line
+      true,
+      pdfFont,
+      fontSize
+    );
+  }
+
   return currentY;
+}
+
+// Helper function to get font style from segment type
+function getFontStyle(type) {
+  switch (type) {
+    case 'bold':
+    case 'h1':
+    case 'h2':
+    case 'h3':
+      return 'bold';
+    case 'italic':
+      return 'italic';
+    default:
+      return 'normal';
+  }
+}
+
+// Helper function to get font size from segment type
+function getFontSize(type, baseFontSize) {
+  switch (type) {
+    case 'h1':
+      return baseFontSize * 1.8;
+    case 'h2':
+      return baseFontSize * 1.5;
+    case 'h3':
+      return baseFontSize * 1.3;
+    default:
+      return baseFontSize;
+  }
+}
+
+// Helper function to render a line with mixed formatting
+function renderMixedFormattedLine(
+  pdf,
+  wordObjects,
+  x,
+  y,
+  maxWidth,
+  textAlign,
+  isLastLine,
+  pdfFont,
+  baseFontSize
+) {
+  if (wordObjects.length === 0 || isNaN(x) || isNaN(y) || isNaN(maxWidth)) {
+    console.error('Invalid mixed line parameters:', {
+      words: wordObjects.length,
+      x,
+      y,
+      maxWidth
+    });
+    return;
+  }
+
+  // Calculate total width and prepare for justification
+  let totalWordWidth = 0;
+  let totalSpaces = 0;
+
+  // Set font for each word to measure width accurately
+  wordObjects.forEach(wordObj => {
+    const fontStyle = getFontStyle(wordObj.type);
+    const wordFontSize = getFontSize(wordObj.type, baseFontSize);
+    pdf.setFont(pdfFont, fontStyle);
+    pdf.setFontSize(wordFontSize);
+
+    totalWordWidth += pdf.getTextWidth(wordObj.text);
+    if (wordObj.needsSpace) {
+      totalSpaces++;
+    }
+  });
+
+  // Calculate spacing
+  let spaceWidth = pdf.getTextWidth(' '); // Default space width
+  if (
+    textAlign === 'justified' &&
+    wordObjects.length > 1 &&
+    !isLastLine &&
+    totalSpaces > 0
+  ) {
+    const totalSpaceAvailable = maxWidth - totalWordWidth;
+    spaceWidth = totalSpaceAvailable / totalSpaces;
+  }
+
+  // Render each word with proper formatting
+  let currentX = x;
+  let lastFontStyle = null;
+  let lastFontSize = null;
+
+  wordObjects.forEach(wordObj => {
+    const fontStyle = getFontStyle(wordObj.type);
+    const wordFontSize = getFontSize(wordObj.type, baseFontSize);
+
+    // Only change font if it's different from the last one (optimization)
+    if (fontStyle !== lastFontStyle || wordFontSize !== lastFontSize) {
+      pdf.setFont(pdfFont, fontStyle);
+      pdf.setFontSize(wordFontSize);
+      lastFontStyle = fontStyle;
+      lastFontSize = wordFontSize;
+    }
+
+    // Add space before word if needed
+    if (wordObj.needsSpace) {
+      currentX += spaceWidth;
+    }
+
+    // Render the word
+    if (safeText(pdf, wordObj.text, currentX, y)) {
+      currentX += pdf.getTextWidth(wordObj.text);
+    }
+  });
 }
 
 // Helper function to safely render text and catch coordinate errors
@@ -511,65 +601,6 @@ function safeText(pdf, text, x, y) {
   } catch (error) {
     console.error('PDF text error:', error, { text, x, y });
     return false;
-  }
-}
-
-// Helper function to render a justified line of text
-function renderJustifiedLine(
-  pdf,
-  words,
-  x,
-  y,
-  maxWidth,
-  textAlign,
-  isLastLine
-) {
-  if (words.length === 0 || isNaN(x) || isNaN(y) || isNaN(maxWidth)) {
-    console.error('Invalid line parameters:', {
-      words: words.length,
-      x,
-      y,
-      maxWidth
-    });
-    return;
-  }
-
-  // Calculate total width of words without spaces
-  const totalWordWidth = words.reduce(
-    (total, word) => total + pdf.getTextWidth(word),
-    0
-  );
-  const standardSpaceWidth = pdf.getTextWidth(' ');
-
-  if (textAlign === 'justified' && words.length > 1 && !isLastLine) {
-    // Justified text: distribute extra space evenly between words
-    const totalSpaceAvailable = maxWidth - totalWordWidth;
-    const spacesNeeded = words.length - 1;
-    const spaceWidth =
-      spacesNeeded > 0
-        ? totalSpaceAvailable / spacesNeeded
-        : standardSpaceWidth;
-
-    let currentX = x;
-    words.forEach((word, index) => {
-      if (safeText(pdf, word, currentX, y)) {
-        currentX += pdf.getTextWidth(word);
-        if (index < words.length - 1) {
-          currentX += spaceWidth;
-        }
-      }
-    });
-  } else {
-    // Left-aligned text: use standard spacing
-    let currentX = x;
-    words.forEach((word, index) => {
-      if (safeText(pdf, word, currentX, y)) {
-        currentX += pdf.getTextWidth(word);
-        if (index < words.length - 1) {
-          currentX += standardSpaceWidth;
-        }
-      }
-    });
   }
 }
 
