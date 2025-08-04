@@ -748,7 +748,9 @@ export async function exportToPDF(book, options = {}) {
     };
 
     // Title Page
-    if (book.title || book.author) {
+    const hasTitlePage =
+      (book.title && book.title.trim()) || (book.author && book.author.trim());
+    if (hasTitlePage) {
       currentY = pageHeight / 2 - 100; // Center vertically
 
       if (book.title) {
@@ -820,8 +822,7 @@ export async function exportToPDF(book, options = {}) {
           if (chapterIndex === 0) {
             // First chapter: only add page break if no title page, OR if we need right-hand start
             shouldAddPageBreak =
-              !(book.title || book.author) ||
-              template.chapterHeader.startOnRightPage;
+              !hasTitlePage || template.chapterHeader.startOnRightPage;
           } else {
             // Subsequent chapters: always add page break when page breaks are enabled
             shouldAddPageBreak = true;
@@ -1022,7 +1023,7 @@ export async function exportToPDF(book, options = {}) {
       pdf.setPage(i);
 
       // Skip running headers on title page
-      const isFirstPage = i === 1 && (book.title || book.author);
+      const isFirstPage = i === 1 && hasTitlePage;
 
       // Skip running headers on chapter pages if requested
       const isChapterPage =
@@ -1076,7 +1077,7 @@ export async function exportToPDF(book, options = {}) {
       }
 
       // Add page numbers (skip on title page)
-      if (!(i === 1 && (book.title || book.author))) {
+      if (!(i === 1 && hasTitlePage)) {
         // Make page number font size proportional to body text (70% of body text, min 8pt, max 11pt)
         const pageNumberSize = Math.max(8, Math.min(11, fontSize * 0.7));
         pdf.setFontSize(pageNumberSize);
@@ -1311,7 +1312,9 @@ function generateHTML(book, options = {}) {
   `;
 
   // Title page
-  if (book.title || book.author) {
+  const hasHtmlTitlePage =
+    (book.title && book.title.trim()) || (book.author && book.author.trim());
+  if (hasHtmlTitlePage) {
     content += '<div class="title-page">';
     if (book.title) {
       content += `<div class="title">${book.title}</div>`;
@@ -1575,7 +1578,9 @@ p, div {
 
     // 5. Generate title page
     let titlePageContent = '';
-    if (book.title || book.author) {
+    const hasEpubTitlePage =
+      (book.title && book.title.trim()) || (book.author && book.author.trim());
+    if (hasEpubTitlePage) {
       titlePageContent = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">

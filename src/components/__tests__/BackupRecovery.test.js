@@ -1,5 +1,4 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
 import { saveRecoveredBook } from '../../utils/fileOperations';
 import GitHubService from '../../utils/gitHubService';
 import BackupRecovery from '../BackupRecovery';

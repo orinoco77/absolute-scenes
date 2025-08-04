@@ -1,0 +1,11 @@
+{
+    "jest.rootPath": ".",
+    "jest.jestCommandLine": "/home/ajs/.nvm/versions/node/v24.3.0/bin/npx jest",
+    "jest.nodeEnv": {
+        "PATH": "/home/ajs/.nvm/versions/node/v24.3.0/bin:/home/ajs/.local/bin:/home/ajs/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/ajs/.dotnet/tools:/home/ajs/.local/share/JetBrains/Toolbox/scripts:/home/ajs/.dotnet:/home/ajs/.dotnet/tools"
+    },
+    "terminal.integrated.shellArgs.linux": ["-l"],
+    "terminal.integrated.env.linux": {
+        "PATH": "/home/ajs/.nvm/versions/node/v24.3.0/bin:${env:PATH}"
+    }
+}

@@ -221,6 +221,15 @@ export async function loadCustomFont(fontKey, fontPath, _options = {}) {
  * @return {string} - The jsPDF font name to use
  */
 export function getPdfFont(fontFamily) {
+  // Handle null, undefined, or empty strings
+  if (
+    !fontFamily ||
+    typeof fontFamily !== 'string' ||
+    fontFamily.trim() === ''
+  ) {
+    return 'times'; // Default fallback
+  }
+
   // First, try to find exact match in our font catalog
   const fontKey = Object.keys(BOOK_FONTS).find(key => {
     const font = BOOK_FONTS[key];
@@ -304,6 +313,15 @@ export function getFontRecommendations(genre) {
  * @return {string} - CSS font-family value
  */
 export function getCssFontFamily(fontFamily) {
+  // Handle null, undefined, or empty strings
+  if (
+    !fontFamily ||
+    typeof fontFamily !== 'string' ||
+    fontFamily.trim() === ''
+  ) {
+    return 'serif'; // Default fallback
+  }
+
   const fontKey = Object.keys(BOOK_FONTS).find(key => {
     const font = BOOK_FONTS[key];
     return (

@@ -1,5 +1,4 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
 import GitHubService from '../../utils/gitHubService';
 import GitHubIntegration from '../GitHubIntegration';
 
