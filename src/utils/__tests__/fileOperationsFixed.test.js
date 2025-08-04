@@ -41,9 +41,9 @@ describe('fileOperations (Fixed)', () => {
     });
 
     // Store original methods
-    const originalCreateElement = document.createElement;
-    const originalCreateObjectURL = URL.createObjectURL;
-    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const _originalCreateElement = document.createElement;
+    const _originalCreateObjectURL = URL.createObjectURL;
+    const _originalRevokeObjectURL = URL.revokeObjectURL;
 
     document.createElement = mockCreateElement;
 

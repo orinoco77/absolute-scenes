@@ -218,7 +218,9 @@ describe('fontManager', () => {
       let foundNonRecommended = false;
       recommendations.forEach(rec => {
         if (foundNonRecommended && rec.recommended) {
-          fail('Recommended fonts should come before non-recommended ones');
+          throw new Error(
+            'Recommended fonts should come before non-recommended ones'
+          );
         }
         if (!rec.recommended) {
           foundNonRecommended = true;

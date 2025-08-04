@@ -253,7 +253,7 @@ describe('CharacterList Component', () => {
   });
 
   test('shows empty recycle bin message', () => {
-    const { rerender } = renderComponent({ characterRecycleBin: [] });
+    renderComponent({ characterRecycleBin: [] });
 
     // Simulate showing empty recycle bin
     fireEvent.click(screen.getByText('🗑️ (0)'));
@@ -266,7 +266,7 @@ describe('CharacterList Component', () => {
   test('calls onRestoreFromRecycleBin when restore button is clicked', () => {
     // We need to create a component that shows the recycle bin to test restore functionality
     const TestComponentWithRecycleBin = () => {
-      const [showRecycleBin, setShowRecycleBin] = React.useState(true);
+      const [_showRecycleBin, _setShowRecycleBin] = React.useState(true);
 
       return (
         <CharacterList
@@ -285,7 +285,7 @@ describe('CharacterList Component', () => {
   test('calls onPermanentlyDelete when permanent delete button is clicked', () => {
     // Similar to restore test, we need to show the recycle bin first
     const TestComponentWithRecycleBin = () => {
-      const [showRecycleBin, setShowRecycleBin] = React.useState(true);
+      const [_showRecycleBin, _setShowRecycleBin] = React.useState(true);
 
       return (
         <CharacterList
@@ -303,7 +303,7 @@ describe('CharacterList Component', () => {
 
   test('empty bin button requires confirmation', () => {
     const TestComponentWithRecycleBin = () => {
-      const [showRecycleBin, setShowRecycleBin] = React.useState(true);
+      const [_showRecycleBin, _setShowRecycleBin] = React.useState(true);
 
       return (
         <CharacterList
