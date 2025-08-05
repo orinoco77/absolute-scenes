@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Run linter
+npm run lint:check
+
+# Run tests
+npm test
+
+# Bump patch version for every commit
+echo "Bumping patch version..."
+npx auto-version --patch
+git add package.json
