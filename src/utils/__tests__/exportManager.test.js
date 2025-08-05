@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import jsPDF from 'jspdf';
 import JSZip from 'jszip';
 import {
@@ -148,11 +149,11 @@ describe('exportManager', () => {
     console.log = jest.fn();
     console.warn = jest.fn();
     console.error = jest.fn();
-    
+
     // Reset jsPDF mock and shared instance
     jsPDF.mockClear();
     mockPdf = mockPdfInstance;
-    
+
     // Clear all method calls on the mock and reset implementations
     Object.values(mockPdfInstance).forEach(method => {
       if (jest.isMockFunction(method)) {
@@ -166,7 +167,7 @@ describe('exportManager', () => {
         method.mockReset();
       }
     });
-    
+
     // Restore default return values
     mockPdfInstance.internal.getNumberOfPages.mockReturnValue(1);
     mockPdfInstance.getTextWidth.mockReturnValue(50);
@@ -518,7 +519,7 @@ describe('exportManager', () => {
     beforeEach(() => {
       // Ensure Blob is working for EPUB tests
       global.Blob = jest.fn((content, options) => ({ content, options }));
-      
+
       mockZip = {
         file: jest.fn(),
         folder: jest.fn(() => mockZip),

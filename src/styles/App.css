@@ -2360,7 +2360,7 @@ body {
   border: none;
   border-radius: 4px;
   padding: 1rem;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-size: 16px;
   line-height: 1.6;
   resize: none;
