@@ -1,3 +1,5 @@
+/* eslint-disable testing-library/no-wait-for-side-effects */
+/* eslint-disable testing-library/no-wait-for-multiple-assertions */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import GitHubService from '../../utils/gitHubService';
 import GitHubIntegration from '../GitHubIntegration';

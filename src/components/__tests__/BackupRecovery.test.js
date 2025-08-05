@@ -1,3 +1,4 @@
+/* eslint-disable testing-library/no-wait-for-multiple-assertions */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { saveRecoveredBook } from '../../utils/fileOperations';
 import GitHubService from '../../utils/gitHubService';
