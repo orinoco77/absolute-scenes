@@ -6,6 +6,15 @@ npm run lint:check
 # Run tests
 npm test
 
+# Update README with AI assistance (if claude-code is available)
+if command -v claude-code >/dev/null 2>&1; then
+    echo "Updating README file..."
+    claude-code --non-interactive "Please update the README.md file with current project information, features, and usage instructions based on the codebase"
+    git add README.md
+else
+    echo "claude-code not found, skipping README update"
+fi
+
 # Bump patch version for every commit
 echo "Bumping patch version..."
 npx auto-version --patch

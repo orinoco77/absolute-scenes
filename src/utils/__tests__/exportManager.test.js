@@ -1,12 +1,7 @@
 /* eslint-disable no-unused-vars */
 import jsPDF from 'jspdf';
 import JSZip from 'jszip';
-import {
-  exportToPDF,
-  exportToHTML,
-  exportToEPUB,
-  debugPageSizes
-} from '../exportManager';
+import { exportToPDF, exportToHTML, exportToEPUB } from '../exportManager';
 
 // Mock jsPDF completely to avoid canvas issues
 const mockPdfInstance = {
@@ -648,30 +643,6 @@ describe('exportManager', () => {
 
       await expect(exportToEPUB(mockBook, mockOptions)).rejects.toThrow();
       expect(global.alert).toHaveBeenCalled();
-    });
-  });
-
-  describe('debugPageSizes', () => {
-    it('tests all defined page sizes', () => {
-      debugPageSizes();
-
-      expect(jsPDF).toHaveBeenCalledTimes(7); // Number of page sizes defined
-      expect(console.log).toHaveBeenCalledWith(
-        'Testing page size consistency across formats:'
-      );
-    });
-
-    it('handles page size creation errors', () => {
-      jsPDF.mockImplementationOnce(() => {
-        throw new Error('Failed to create page size');
-      });
-
-      debugPageSizes();
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to create'),
-        'Failed to create page size'
-      );
     });
   });
 

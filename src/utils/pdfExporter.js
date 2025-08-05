@@ -1,0 +1,1144 @@
+import jsPDF from 'jspdf';
+import { getPdfFont } from './fontManager';
+
+// Page size definitions in inches (width x height)
+const PAGE_SIZES = {
+  letter: { width: 8.5, height: 11, name: 'US Letter' },
+  a4: { width: 8.27, height: 11.69, name: 'A4' },
+  digest: { width: 5.5, height: 8.5, name: 'Digest' },
+  trade: { width: 6, height: 9, name: 'Trade Paperback' },
+  'mass-market': { width: 4.25, height: 6.87, name: 'Mass Market' },
+  hardcover: { width: 6.14, height: 9.21, name: 'Hardcover' },
+  'large-print': { width: 7, height: 10, name: 'Large Print' }
+};
+
+// Enhanced font mapping for PDF generation with custom font support
+function mapFontForPDF(fontFamily) {
+  return getPdfFont(fontFamily);
+}
+
+// Utility function to check if a file might be locked (browser environment)
+function checkFileAccess(filename) {
+  // In browser environment, we can't directly check file locks
+  // But we can warn users about common issues
+  console.log(`Preparing to save: ${filename}`);
+
+  // Return a warning if the filename suggests it might conflict
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const lastExportTime = localStorage.getItem('lastExportTime');
+    const now = Date.now();
+
+    // If last export was very recent (< 2 seconds), warn about potential file lock
+    if (lastExportTime && now - parseInt(lastExportTime) < 2000) {
+      console.warn('Recent export detected - file may still be locked');
+      return {
+        warning: true,
+        message:
+          'Previous export was very recent. If the export fails, please close any open PDF viewers and try again.'
+      };
+    }
+
+    // Store current export time
+    localStorage.setItem('lastExportTime', now.toString());
+  }
+
+  return { warning: false };
+}
+
+// Get page dimensions in inches and points
+function getPageDimensions(pageSize) {
+  const size = PAGE_SIZES[pageSize] || PAGE_SIZES['letter'];
+  return {
+    width: size.width * 72, // Convert to points
+    height: size.height * 72, // Convert to points
+    widthInches: size.width,
+    heightInches: size.height,
+    name: size.name
+  };
+}
+
+// Create PDF with consistent format handling across platforms
+function createPDFWithConsistentFormat(pageSize) {
+  const standardFormats = ['letter', 'a4'];
+
+  if (standardFormats.includes(pageSize)) {
+    // Use built-in format for standard sizes with points
+    return new jsPDF({
+      orientation: 'portrait',
+      unit: 'pt',
+      format: pageSize
+    });
+  } else {
+    // For custom formats, use points and convert dimensions
+    const dimensions = getPageDimensions(pageSize);
+    const widthPt = dimensions.widthInches * 72;
+    const heightPt = dimensions.heightInches * 72;
+
+    console.log(
+      `Creating custom PDF format: ${pageSize} = ${widthPt} x ${heightPt} points`
+    );
+
+    try {
+      return new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: [widthPt, heightPt]
+      });
+    } catch (error) {
+      console.warn(
+        `Failed to create custom format ${pageSize}, falling back to letter`,
+        error
+      );
+      // Fallback to letter format if custom format fails
+      return new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'letter'
+      });
+    }
+  }
+}
+
+// Get margins for a specific page (odd/even) - returns values in points for compatibility
+function getPageMargins(template, pageNumber) {
+  const margins = template.pageMargins;
+
+  // Ensure margins exist and have valid values
+  if (!margins) {
+    console.warn('No margins found in template, using defaults');
+    return {
+      top: 72, // 1 inch
+      bottom: 72, // 1 inch
+      left: 90, // 1.25 inches
+      right: 72 // 1 inch
+    };
+  }
+
+  // Convert inches to points (72 points per inch)
+  const pointsPerInch = 72;
+  const topMargin = (margins.top || 1) * pointsPerInch;
+  const bottomMargin = (margins.bottom || 1) * pointsPerInch;
+
+  if (template.mirrorMargins) {
+    // Use inside/outside margins for book binding
+    const insideMargin = (margins.inside || 1.25) * pointsPerInch;
+    const outsideMargin = (margins.outside || 1) * pointsPerInch;
+
+    if (pageNumber % 2 === 1) {
+      // Odd page (right-hand): inside margin on left
+      return {
+        top: topMargin,
+        bottom: bottomMargin,
+        left: insideMargin,
+        right: outsideMargin
+      };
+    } else {
+      // Even page (left-hand): inside margin on right
+      return {
+        top: topMargin,
+        bottom: bottomMargin,
+        left: outsideMargin,
+        right: insideMargin
+      };
+    }
+  } else {
+    // Use regular left/right margins or inside/outside as uniform margins
+    const leftMargin = (margins.left || margins.inside || 1.25) * pointsPerInch;
+    const rightMargin = (margins.right || margins.outside || 1) * pointsPerInch;
+
+    return {
+      top: topMargin,
+      bottom: bottomMargin,
+      left: leftMargin,
+      right: rightMargin
+    };
+  }
+}
+
+// Improved markdown parsing for PDF (returns array of text segments with formatting)
+function parseMarkdownForPDF(text) {
+  if (!text) return [{ type: 'normal', text: '' }];
+
+  const segments = [];
+  const _processedText = text;
+
+  // First, handle headings (they should be on their own lines)
+  const headingMatches = [];
+  const headingRegex = /^(#{1,3})\s+(.*?)$/gm;
+  let headingMatch;
+
+  while ((headingMatch = headingRegex.exec(text)) !== null) {
+    const level = headingMatch[1].length;
+    headingMatches.push({
+      type: level === 1 ? 'h1' : level === 2 ? 'h2' : 'h3',
+      start: headingMatch.index,
+      end: headingMatch.index + headingMatch[0].length,
+      text: headingMatch[2].trim(),
+      fullMatch: headingMatch[0]
+    });
+  }
+
+  // Then handle inline formatting (bold and italic)
+  const inlineMatches = [];
+
+  // Bold text (**text**)
+  const boldRegex = /\*\*(.*?)\*\*/g;
+  let boldMatch;
+  while ((boldMatch = boldRegex.exec(text)) !== null) {
+    inlineMatches.push({
+      type: 'bold',
+      start: boldMatch.index,
+      end: boldMatch.index + boldMatch[0].length,
+      text: boldMatch[1],
+      fullMatch: boldMatch[0]
+    });
+  }
+
+  // Italic text (*text*) - but not if it's part of bold
+  const italicRegex = /(?<!\*)\*([^*\n]+?)\*(?!\*)/g;
+  let italicMatch;
+  while ((italicMatch = italicRegex.exec(text)) !== null) {
+    // Check if this italic is inside a bold
+    const isInsideBold = inlineMatches.some(
+      // eslint-disable-next-line no-loop-func
+      bold =>
+        bold.type === 'bold' &&
+        italicMatch.index >= bold.start &&
+        italicMatch.index + italicMatch[0].length <= bold.end
+    );
+
+    if (!isInsideBold) {
+      inlineMatches.push({
+        type: 'italic',
+        start: italicMatch.index,
+        end: italicMatch.index + italicMatch[0].length,
+        text: italicMatch[1],
+        fullMatch: italicMatch[0]
+      });
+    }
+  }
+
+  // Combine all matches and sort by position
+  const allMatches = [...headingMatches, ...inlineMatches].sort(
+    (a, b) => a.start - b.start
+  );
+
+  // Remove overlapping matches (priority: headings > bold > italic)
+  const filteredMatches = [];
+  allMatches.forEach(match => {
+    const isOverlapping = filteredMatches.some(existing => {
+      return match.start < existing.end && match.end > existing.start;
+    });
+
+    if (!isOverlapping) {
+      filteredMatches.push(match);
+    }
+  });
+
+  // Build segments from the filtered matches
+  let currentPos = 0;
+
+  filteredMatches.forEach(match => {
+    // Add normal text before this match
+    if (currentPos < match.start) {
+      const normalText = text.substring(currentPos, match.start);
+      if (normalText.trim()) {
+        segments.push({ type: 'normal', text: normalText });
+      }
+    }
+
+    // Add the formatted text
+    segments.push({ type: match.type, text: match.text });
+    currentPos = match.end;
+  });
+
+  // Add remaining normal text
+  if (currentPos < text.length) {
+    const remainingText = text.substring(currentPos);
+    if (remainingText.trim()) {
+      segments.push({ type: 'normal', text: remainingText });
+    }
+  }
+
+  // If no segments were created, return the whole text as normal
+  if (segments.length === 0) {
+    segments.push({ type: 'normal', text: text });
+  }
+
+  return segments;
+}
+
+// Improved rendering function for formatted text segments to PDF with proper paragraph styling
+function renderFormattedTextToPDF(
+  pdf,
+  segments,
+  x,
+  y,
+  maxWidth,
+  fontSize,
+  lineHeight,
+  pageHeight,
+  bottomMargin,
+  topMargin,
+  updateMarginsCallback,
+  textAlign = 'justified',
+  isFirstParagraph = false,
+  paragraphStyle = 'indented',
+  pdfFont = 'times'
+) {
+  let currentX = x;
+  let currentY = y;
+  let currentMaxWidth = maxWidth;
+  let isFirstLineOfParagraph = true;
+
+  // Apply first-line indent for indented style (except for first paragraph)
+  const shouldIndentFirstLine =
+    paragraphStyle === 'indented' && !isFirstParagraph;
+
+  // Convert segments to a unified word list with formatting information
+  const formattedWords = [];
+
+  segments.forEach(segment => {
+    // Handle headings that should start on new lines
+    if (segment.type.startsWith('h')) {
+      // If we're not at the start of a line, add a line break
+      if (formattedWords.length > 0) {
+        formattedWords.push({ text: '\n', type: 'linebreak' });
+      }
+    }
+
+    // Handle line breaks in the text
+    const lines = segment.text.split('\n');
+
+    lines.forEach((line, lineIndex) => {
+      if (lineIndex > 0) {
+        formattedWords.push({ text: '\n', type: 'linebreak' });
+      }
+
+      // Split line into words
+      const words = line.split(' ').filter(word => word.length > 0);
+
+      words.forEach((word, wordIndex) => {
+        formattedWords.push({
+          text: word,
+          type: segment.type || 'normal',
+          needsSpace:
+            wordIndex > 0 ||
+            (lineIndex === 0 &&
+              formattedWords.length > 0 &&
+              formattedWords[formattedWords.length - 1].type !== 'linebreak')
+        });
+      });
+    });
+
+    // For headings, add extra space after
+    if (segment.type.startsWith('h')) {
+      formattedWords.push({ text: '\n', type: 'linebreak' });
+    }
+  });
+
+  // Process the unified word list
+  let currentLineWords = [];
+  let currentLineWidth = 0;
+
+  const processLineBreak = () => {
+    // Render current line if it has content
+    if (currentLineWords.length > 0) {
+      let lineStartX = currentX;
+      let availableWidth = currentMaxWidth;
+
+      // Apply indentation only to the first line of the paragraph
+      if (isFirstLineOfParagraph && shouldIndentFirstLine) {
+        const indentAmount = Math.max(24, Math.min(48, currentMaxWidth * 0.03));
+        availableWidth -= indentAmount;
+        lineStartX += indentAmount;
+      }
+
+      renderMixedFormattedLine(
+        pdf,
+        currentLineWords,
+        lineStartX,
+        currentY,
+        availableWidth,
+        textAlign,
+        false,
+        pdfFont,
+        fontSize
+      );
+
+      currentLineWords = [];
+      currentLineWidth = 0;
+    }
+
+    // Move to next line
+    currentY += lineHeight;
+    currentX = x;
+    isFirstLineOfParagraph = false;
+
+    // Check if we need a new page
+    if (currentY + lineHeight > pageHeight - bottomMargin) {
+      pdf.addPage();
+      if (updateMarginsCallback) {
+        const margins = updateMarginsCallback();
+        if (margins) {
+          x = margins.left;
+          currentX = x;
+          currentMaxWidth = margins.contentWidth;
+        }
+      }
+      currentY = topMargin;
+    }
+  };
+
+  for (let i = 0; i < formattedWords.length; i++) {
+    const wordObj = formattedWords[i];
+
+    if (wordObj.type === 'linebreak') {
+      processLineBreak();
+      continue;
+    }
+
+    // Set font for width calculation
+    const fontStyle = getFontStyle(wordObj.type);
+    const wordFontSize = getFontSize(wordObj.type, fontSize);
+    pdf.setFont(pdfFont, fontStyle);
+    pdf.setFontSize(wordFontSize);
+
+    const word = wordObj.text;
+    const wordWidth = pdf.getTextWidth(word);
+    const spaceWidth = wordObj.needsSpace ? pdf.getTextWidth(' ') : 0;
+
+    // Determine available width for this line
+    let availableWidth = currentMaxWidth;
+    if (isFirstLineOfParagraph && shouldIndentFirstLine) {
+      const indentAmount = Math.max(24, Math.min(48, currentMaxWidth * 0.03));
+      availableWidth -= indentAmount;
+    }
+
+    // Check if adding this word would exceed the available line width
+    const totalWordWidth = spaceWidth + wordWidth;
+    const wouldExceedWidth =
+      currentLineWords.length > 0 &&
+      currentLineWidth + totalWordWidth > availableWidth;
+
+    if (wouldExceedWidth) {
+      // Render current line and start a new one
+      processLineBreak();
+    }
+
+    // Add word to current line
+    currentLineWords.push(wordObj);
+    currentLineWidth += totalWordWidth;
+  }
+
+  // Render any remaining words in the final line
+  if (currentLineWords.length > 0) {
+    let lineStartX = currentX;
+    let availableWidth = currentMaxWidth;
+
+    if (isFirstLineOfParagraph && shouldIndentFirstLine) {
+      const indentAmount = Math.max(24, Math.min(48, availableWidth * 0.03));
+      lineStartX += indentAmount;
+      availableWidth -= indentAmount;
+    }
+
+    renderMixedFormattedLine(
+      pdf,
+      currentLineWords,
+      lineStartX,
+      currentY,
+      availableWidth,
+      'left', // Don't justify the last line
+      true,
+      pdfFont,
+      fontSize
+    );
+  }
+
+  return currentY;
+}
+
+// Helper function to get font style from segment type
+function getFontStyle(type) {
+  switch (type) {
+    case 'bold':
+    case 'h1':
+    case 'h2':
+    case 'h3':
+      return 'bold';
+    case 'italic':
+      return 'italic';
+    default:
+      return 'normal';
+  }
+}
+
+// Helper function to get font size from segment type
+function getFontSize(type, baseFontSize) {
+  switch (type) {
+    case 'h1':
+      return baseFontSize * 1.8;
+    case 'h2':
+      return baseFontSize * 1.5;
+    case 'h3':
+      return baseFontSize * 1.3;
+    default:
+      return baseFontSize;
+  }
+}
+
+// Helper function to render a line with mixed formatting
+function renderMixedFormattedLine(
+  pdf,
+  wordObjects,
+  x,
+  y,
+  maxWidth,
+  textAlign,
+  isLastLine,
+  pdfFont,
+  baseFontSize
+) {
+  if (wordObjects.length === 0 || isNaN(x) || isNaN(y) || isNaN(maxWidth)) {
+    console.error('Invalid mixed line parameters:', {
+      words: wordObjects.length,
+      x,
+      y,
+      maxWidth
+    });
+    return;
+  }
+
+  // Calculate total width and prepare for justification
+  let totalWordWidth = 0;
+  let totalSpaces = 0;
+
+  // Set font for each word to measure width accurately
+  wordObjects.forEach(wordObj => {
+    const fontStyle = getFontStyle(wordObj.type);
+    const wordFontSize = getFontSize(wordObj.type, baseFontSize);
+    pdf.setFont(pdfFont, fontStyle);
+    pdf.setFontSize(wordFontSize);
+
+    totalWordWidth += pdf.getTextWidth(wordObj.text);
+    if (wordObj.needsSpace) {
+      totalSpaces++;
+    }
+  });
+
+  // Calculate spacing
+  let spaceWidth = pdf.getTextWidth(' '); // Default space width
+  if (
+    textAlign === 'justified' &&
+    wordObjects.length > 1 &&
+    !isLastLine &&
+    totalSpaces > 0
+  ) {
+    const totalSpaceAvailable = maxWidth - totalWordWidth;
+    spaceWidth = totalSpaceAvailable / totalSpaces;
+  }
+
+  // Render each word with proper formatting
+  let currentX = x;
+  let lastFontStyle = null;
+  let lastFontSize = null;
+
+  wordObjects.forEach(wordObj => {
+    const fontStyle = getFontStyle(wordObj.type);
+    const wordFontSize = getFontSize(wordObj.type, baseFontSize);
+
+    // Only change font if it's different from the last one (optimization)
+    if (fontStyle !== lastFontStyle || wordFontSize !== lastFontSize) {
+      pdf.setFont(pdfFont, fontStyle);
+      pdf.setFontSize(wordFontSize);
+      lastFontStyle = fontStyle;
+      lastFontSize = wordFontSize;
+    }
+
+    // Add space before word if needed
+    if (wordObj.needsSpace) {
+      currentX += spaceWidth;
+    }
+
+    // Render the word
+    if (safeText(pdf, wordObj.text, currentX, y)) {
+      currentX += pdf.getTextWidth(wordObj.text);
+    }
+  });
+}
+
+// Helper function to safely render text and catch coordinate errors
+function safeText(pdf, text, x, y) {
+  // Validate coordinates
+  if (isNaN(x) || isNaN(y) || x < 0 || y < 0 || !text) {
+    console.error('Invalid text coordinates or text:', { text, x, y });
+    return false;
+  }
+
+  try {
+    pdf.text(text, x, y);
+    return true;
+  } catch (error) {
+    console.error('PDF text error:', error, { text, x, y });
+    return false;
+  }
+}
+
+export async function exportToPDF(book, options = {}) {
+  const { template } = options;
+
+  try {
+    // Create PDF with consistent format handling
+    const pdf = createPDFWithConsistentFormat(template.pageSize || 'letter');
+
+    // Get the actual page dimensions in points
+    const actualPageSize = pdf.internal.pageSize;
+    const pageWidth = actualPageSize.width;
+    const pageHeight = actualPageSize.height;
+
+    console.log(
+      `PDF created: ${pageWidth} x ${pageHeight} points (${(pageWidth / 72).toFixed(2)}" × ${(pageHeight / 72).toFixed(2)}")`
+    );
+    console.log(`Platform: ${navigator.platform}`);
+
+    // Verify page size matches expectation
+    const expectedDimensions = getPageDimensions(template.pageSize || 'letter');
+    const expectedWidth = expectedDimensions.width;
+    const expectedHeight = expectedDimensions.height;
+
+    if (expectedWidth && expectedHeight) {
+      const widthDiff = Math.abs(pageWidth - expectedWidth);
+      const heightDiff = Math.abs(pageHeight - expectedHeight);
+
+      if (widthDiff > 5 || heightDiff > 5) {
+        // Allow 5pt tolerance
+        console.error(`Significant page size discrepancy detected:`, {
+          pageSize: template.pageSize,
+          expected: { width: expectedWidth, height: expectedHeight },
+          actual: { width: pageWidth, height: pageHeight },
+          difference: { width: widthDiff, height: heightDiff }
+        });
+      } else {
+        console.log(
+          `✓ Page size verification passed (±${Math.max(widthDiff, heightDiff).toFixed(1)}pt)`
+        );
+      }
+    }
+
+    // Get initial margins for page 1 (now returns values in points directly)
+    let currentPageMargins = getPageMargins(template, 1);
+    let leftMargin = currentPageMargins.left;
+    let rightMargin = currentPageMargins.right;
+    let topMargin = currentPageMargins.top;
+    let bottomMargin = currentPageMargins.bottom;
+    let contentWidth = pageWidth - leftMargin - rightMargin;
+
+    // Validate margins
+    if (
+      isNaN(leftMargin) ||
+      isNaN(rightMargin) ||
+      isNaN(topMargin) ||
+      isNaN(bottomMargin)
+    ) {
+      console.error('Invalid margin calculations:', currentPageMargins);
+      throw new Error('Invalid margin values calculated');
+    }
+
+    console.log('Margin validation:', {
+      left: leftMargin,
+      right: rightMargin,
+      top: topMargin,
+      bottom: bottomMargin,
+      contentWidth
+    });
+
+    // Set font using enhanced font mapping
+    const pdfFont = mapFontForPDF(template.fontFamily);
+    pdf.setFont(pdfFont, 'normal');
+    const fontSize = template.fontSize;
+    const lineHeight = fontSize * template.lineHeight;
+
+    console.log(`Using font: ${template.fontFamily} -> ${pdfFont}`);
+    console.log(`Mirror margins enabled: ${template.mirrorMargins}`);
+    if (template.mirrorMargins) {
+      console.log(
+        `Inside margin: ${template.pageMargins.inside}in, Outside margin: ${template.pageMargins.outside}in`
+      );
+    }
+    console.log(
+      `Page 1 (initial): Left margin = ${leftMargin / 72}in, Right margin = ${rightMargin / 72}in`
+    );
+
+    let currentY = topMargin;
+
+    // Track chapter opening pages and blank pages during generation
+    const chapterOpeningPages = new Set();
+    const blankPages = new Set();
+
+    // Function to mark a page as a chapter opening
+    const markChapterPage = () => {
+      const currentPageNumber = pdf.internal.getNumberOfPages();
+      chapterOpeningPages.add(currentPageNumber);
+    };
+
+    // Function to mark a page as blank
+    const markBlankPage = () => {
+      const currentPageNumber = pdf.internal.getNumberOfPages();
+      blankPages.add(currentPageNumber);
+    };
+
+    // Function to update margins when page changes
+    const updateMarginsForPage = () => {
+      const pageNumber = pdf.internal.getNumberOfPages();
+      currentPageMargins = getPageMargins(template, pageNumber);
+      leftMargin = currentPageMargins.left;
+      rightMargin = currentPageMargins.right;
+      topMargin = currentPageMargins.top;
+      bottomMargin = currentPageMargins.bottom;
+      contentWidth = pageWidth - leftMargin - rightMargin;
+
+      // Validate margins
+      if (
+        isNaN(leftMargin) ||
+        isNaN(rightMargin) ||
+        isNaN(topMargin) ||
+        isNaN(bottomMargin)
+      ) {
+        console.error(
+          'Invalid margin calculations on page',
+          pageNumber,
+          ':',
+          currentPageMargins
+        );
+        return null;
+      }
+
+      console.log(
+        `Page ${pageNumber}: Left margin = ${leftMargin / 72}in, Right margin = ${rightMargin / 72}in`
+      );
+
+      // Return updated margin info for text rendering
+      return {
+        left: leftMargin,
+        right: rightMargin,
+        top: topMargin,
+        bottom: bottomMargin,
+        contentWidth: contentWidth
+      };
+    };
+
+    // Title Page
+    const hasTitlePage =
+      (book.title && book.title.trim()) || (book.author && book.author.trim());
+    if (hasTitlePage) {
+      currentY = pageHeight / 2 - 100; // Center vertically
+
+      if (book.title) {
+        pdf.setFontSize(24);
+        pdf.setFont(pdfFont, 'bold');
+
+        // Center the title
+        const titleWidth = pdf.getTextWidth(book.title);
+        const titleX = (pageWidth - titleWidth) / 2;
+        safeText(pdf, book.title, titleX, currentY);
+        currentY += 48; // 2 line spaces
+      }
+
+      if (book.author) {
+        pdf.setFontSize(18);
+        pdf.setFont(pdfFont, 'normal');
+
+        const authorText = `by ${book.author}`;
+        const authorWidth = pdf.getTextWidth(authorText);
+        const authorX = (pageWidth - authorWidth) / 2;
+        safeText(pdf, authorText, authorX, currentY);
+      }
+
+      // Start new page for content
+      pdf.addPage();
+      updateMarginsForPage();
+      currentY = topMargin;
+
+      // If chapters start on new pages, this page will become blank, so mark it
+      if (template.chapterHeader.pageBreak) {
+        markBlankPage();
+      }
+    }
+
+    // Set content font
+    pdf.setFontSize(fontSize);
+    pdf.setFont(pdfFont, 'normal');
+
+    // Helper function to generate chapter header text
+    const generateChapterHeader = (chapter, chapterNumber) => {
+      const { style, format } = template.chapterHeader;
+
+      switch (style) {
+        case 'numbered':
+          return `Chapter ${chapterNumber}`;
+        case 'titled':
+          return chapter.title;
+        case 'both':
+          return `Chapter ${chapterNumber}: ${chapter.title}`;
+        case 'custom':
+          return format
+            .replace('{number}', chapterNumber.toString())
+            .replace('{title}', chapter.title);
+        default:
+          return `Chapter ${chapterNumber}`;
+      }
+    };
+
+    // Process each chapter
+    book.chapters.forEach((chapter, chapterIndex) => {
+      const chapterNumber = chapterIndex + 1;
+
+      // Add chapter header
+      if (chapter.title || template.chapterHeader.style !== 'none') {
+        // Determine if we need a page break for this chapter
+        let shouldAddPageBreak = false;
+
+        if (template.chapterHeader.pageBreak) {
+          if (chapterIndex === 0) {
+            // First chapter: only add page break if no title page, OR if we need right-hand start
+            shouldAddPageBreak =
+              !hasTitlePage || template.chapterHeader.startOnRightPage;
+          } else {
+            // Subsequent chapters: always add page break when page breaks are enabled
+            shouldAddPageBreak = true;
+          }
+        }
+
+        if (shouldAddPageBreak) {
+          pdf.addPage();
+          updateMarginsForPage();
+          currentY = topMargin;
+
+          // Force chapter to start on right-hand (odd) page if requested
+          if (template.chapterHeader.startOnRightPage) {
+            const currentPageNumber = pdf.internal.getNumberOfPages();
+
+            // If current page is even (left-hand), mark it as blank and add a page for the chapter
+            if (currentPageNumber % 2 === 0) {
+              markBlankPage(); // Mark current page as blank
+              pdf.addPage(); // Add the actual chapter page
+              updateMarginsForPage();
+              currentY = topMargin;
+            }
+          }
+
+          // Now mark the current page as a chapter opening (after all the page logic)
+          markChapterPage();
+        } else {
+          // If chapter starts on the same page, still mark it as a chapter page
+          markChapterPage();
+        }
+
+        // Add line breaks before chapter header (only if page breaks are enabled)
+        if (template.chapterHeader.pageBreak) {
+          const lineBreaksBefore = template.chapterHeader.lineBreaksBefore || 0;
+          for (let i = 0; i < lineBreaksBefore; i++) {
+            currentY += lineHeight;
+            // Check if we need a new page
+            if (
+              currentY + template.chapterHeader.fontSize * 2 >
+              pageHeight - bottomMargin
+            ) {
+              pdf.addPage();
+              updateMarginsForPage();
+              currentY = topMargin;
+              break; // Stop adding line breaks if we hit a new page
+            }
+          }
+        }
+
+        // Check if we need a new page for the chapter header
+        if (
+          currentY + template.chapterHeader.fontSize * 2 >
+          pageHeight - bottomMargin
+        ) {
+          pdf.addPage();
+          updateMarginsForPage();
+          currentY = topMargin;
+        }
+
+        const chapterHeaderText = generateChapterHeader(chapter, chapterNumber);
+
+        pdf.setFont(pdfFont, template.chapterHeader.fontWeight);
+        pdf.setFontSize(template.chapterHeader.fontSize);
+
+        // Split chapter header text to handle long titles
+        const chapterHeaderLines = pdf.splitTextToSize(
+          chapterHeaderText,
+          contentWidth
+        );
+
+        chapterHeaderLines.forEach((line, _lineIndex) => {
+          let headerX = leftMargin;
+          if (template.chapterHeader.alignment === 'center') {
+            const lineWidth = pdf.getTextWidth(line);
+            headerX = leftMargin + (contentWidth - lineWidth) / 2;
+          } else if (template.chapterHeader.alignment === 'right') {
+            const lineWidth = pdf.getTextWidth(line);
+            headerX = leftMargin + contentWidth - lineWidth;
+          }
+
+          safeText(pdf, line, headerX, currentY);
+          currentY += template.chapterHeader.fontSize * 1.2; // Line spacing for chapter headers
+        });
+
+        // Add spacing after chapter header
+        currentY +=
+          template.chapterHeader.fontSize *
+          (template.chapterHeader.spacing - 1.2);
+
+        // Reset to content font
+        pdf.setFont(pdfFont, 'normal');
+        pdf.setFontSize(fontSize);
+      }
+
+      // Process scenes in this chapter
+      chapter.scenes.forEach((scene, sceneIndex) => {
+        // Add scene title if requested
+        if (options.includeSceneTitles && scene.title) {
+          // Check if we need a new page for the scene title
+          if (currentY + lineHeight * 2 > pageHeight - bottomMargin) {
+            pdf.addPage();
+            updateMarginsForPage();
+            currentY = topMargin;
+          }
+
+          pdf.setFont(pdfFont, 'bold');
+          pdf.setFontSize(fontSize + 2);
+
+          const sceneTitleLines = pdf.splitTextToSize(
+            scene.title,
+            contentWidth
+          );
+          sceneTitleLines.forEach(line => {
+            safeText(pdf, line, leftMargin, currentY);
+            currentY += lineHeight * 1.2;
+          });
+
+          currentY += lineHeight * 0.5; // Extra space after title
+          pdf.setFont(pdfFont, 'normal');
+          pdf.setFontSize(fontSize);
+        }
+
+        // Process scene content with markdown support
+        if (scene.content && scene.content.trim()) {
+          // Split on single newlines to create paragraphs (more intuitive for users)
+          const paragraphs = scene.content.split('\n').filter(p => p.trim());
+
+          paragraphs.forEach((paragraph, paragraphIndex) => {
+            const trimmedParagraph = paragraph.trim();
+
+            if (trimmedParagraph) {
+              // Check if we need a new page
+              if (currentY + lineHeight > pageHeight - bottomMargin) {
+                pdf.addPage();
+                updateMarginsForPage();
+                currentY = topMargin;
+              }
+
+              // Parse markdown BEFORE any text processing
+              const segments = parseMarkdownForPDF(trimmedParagraph);
+
+              // Render the formatted text with proper paragraph styling
+              const newY = renderFormattedTextToPDF(
+                pdf,
+                segments,
+                leftMargin,
+                currentY,
+                contentWidth,
+                fontSize,
+                lineHeight,
+                pageHeight,
+                bottomMargin,
+                topMargin,
+                updateMarginsForPage,
+                template.textAlign || 'justified',
+                paragraphIndex === 0, // isFirstParagraph
+                template.paragraphStyle || 'indented', // paragraphStyle
+                pdfFont
+              );
+
+              currentY = newY + lineHeight; // Move to next line
+
+              // Add paragraph spacing for separated style
+              if (template.paragraphStyle === 'separated') {
+                currentY += lineHeight; // Add extra line spacing between paragraphs
+              }
+            }
+          });
+        }
+
+        // Add scene break if requested and not the last scene in this chapter
+        if (
+          options.includeSceneBreaks &&
+          sceneIndex < chapter.scenes.length - 1
+        ) {
+          currentY += lineHeight;
+
+          // Check if we need a new page for scene break
+          if (currentY + lineHeight > pageHeight - bottomMargin) {
+            pdf.addPage();
+            updateMarginsForPage();
+            currentY = topMargin;
+          }
+
+          const sceneBreak = '* * *';
+          const breakWidth = pdf.getTextWidth(sceneBreak);
+          const breakX = (pageWidth - breakWidth) / 2;
+          safeText(pdf, sceneBreak, breakX, currentY);
+          currentY += lineHeight * 1.5;
+        }
+      });
+    });
+
+    // Add page numbers and running headers
+    const pageCount = pdf.internal.getNumberOfPages();
+
+    for (let i = 1; i <= pageCount; i++) {
+      pdf.setPage(i);
+
+      // Skip running headers on title page
+      const isFirstPage = i === 1 && hasTitlePage;
+
+      // Skip running headers on chapter pages if requested
+      const isChapterPage =
+        template.runningHeaders?.skipChapterPages && chapterOpeningPages.has(i);
+
+      // Skip running headers on blank pages
+      const isBlankPage = blankPages.has(i);
+
+      // Add running headers
+      if (
+        template.runningHeaders?.enabled &&
+        !isFirstPage &&
+        !isChapterPage &&
+        !isBlankPage
+      ) {
+        const pageMargins = getPageMargins(template, i);
+        const pageContentWidth =
+          pageWidth - pageMargins.left - pageMargins.right;
+        const isLeftPage = i % 2 === 0;
+
+        // Determine header text
+        const headerText = isLeftPage ? book.author : book.title;
+
+        if (headerText) {
+          // Make running header font size proportional to body text (75% of body text, min 8pt, max 12pt)
+          const runningHeaderSize = Math.max(8, Math.min(12, fontSize * 0.75));
+          pdf.setFontSize(runningHeaderSize);
+          pdf.setFont(pdfFont, 'normal');
+
+          const headerWidth = pdf.getTextWidth(headerText);
+          let headerX;
+
+          if (template.runningHeaders?.alignment === 'center') {
+            // Centered
+            headerX = pageMargins.left + (pageContentWidth - headerWidth) / 2;
+          } else {
+            // Outside edge (default)
+            if (isLeftPage) {
+              // Left page: align to left (outside edge)
+              headerX = pageMargins.left;
+            } else {
+              // Right page: align to right (outside edge)
+              headerX = pageMargins.left + pageContentWidth - headerWidth;
+            }
+          }
+
+          // Position in top margin area
+          const headerY = pageMargins.top / 2;
+          safeText(pdf, headerText, headerX, headerY);
+        }
+      }
+
+      // Add page numbers (skip on title page)
+      if (!(i === 1 && hasTitlePage)) {
+        // Make page number font size proportional to body text (70% of body text, min 8pt, max 11pt)
+        const pageNumberSize = Math.max(8, Math.min(11, fontSize * 0.7));
+        pdf.setFontSize(pageNumberSize);
+        pdf.setFont(pdfFont, 'normal');
+        const pageNumberText = i.toString();
+        const pageNumberWidth = pdf.getTextWidth(pageNumberText);
+
+        // Get margins for this specific page
+        const pageMargins = getPageMargins(template, i);
+        const pageContentWidth =
+          pageWidth - pageMargins.left - pageMargins.right;
+
+        // Center page number within content area and respect bottom margin
+        const pageNumberX =
+          pageMargins.left + (pageContentWidth - pageNumberWidth) / 2;
+        const pageNumberY = pageHeight - pageMargins.bottom + 18; // Position within bottom margin area
+
+        safeText(pdf, pageNumberText, pageNumberX, pageNumberY);
+      }
+    }
+
+    // Save the PDF with proper error handling
+    const filename = `${book.title || 'Book'}.pdf`;
+
+    // Check for potential file access issues
+    const accessCheck = checkFileAccess(filename);
+    if (accessCheck.warning) {
+      console.warn(accessCheck.message);
+      // Could show a warning dialog here if desired
+    }
+
+    console.log(`Attempting to save PDF: ${filename}`);
+
+    pdf.save(filename);
+
+    // Show success message
+    console.log(`✓ PDF exported successfully: ${filename}`);
+
+    // Optional: Show user notification of success
+    if (typeof window !== 'undefined' && window.electron) {
+      // In Electron, we could show a native notification
+      try {
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.send('show-notification', {
+          title: 'Export Complete',
+          body: `PDF saved as ${filename}`
+        });
+      } catch (e) {
+        // Fallback to console if electron APIs not available
+        console.log('PDF export completed successfully');
+      }
+    }
+  } catch (error) {
+    console.error('PDF export failed:', error);
+
+    // Determine the likely cause and show user-friendly message
+    let userMessage = 'Failed to export PDF.';
+
+    if (
+      error.message &&
+      (error.message.includes('permission') || error.message.includes('save'))
+    ) {
+      userMessage = `Cannot save PDF - the file may be open in another application.\n\nPlease close any PDF viewers showing "${book.title || 'Book'}.pdf" and try again.`;
+    } else if (error.message && error.message.includes('access')) {
+      userMessage = `Cannot save PDF - file access denied.\n\nThe file "${book.title || 'Book'}.pdf" may be open in another application or you may not have write permission to the Downloads folder.`;
+    } else if (error.name === 'NotAllowedError') {
+      userMessage =
+        'Cannot save PDF - file access was denied by the browser or system.';
+    } else if (error.message.includes('Invalid')) {
+      userMessage =
+        'PDF generation failed due to invalid content or settings. Please check your book content and template settings.';
+    } else {
+      userMessage = `PDF export failed: ${error.message || 'Unknown error'}`;
+    }
+
+    // Show error to user
+    alert(
+      `Export Failed\n\n${userMessage}\n\n💡 Tip: Close any PDF viewers and try again.`
+    );
+
+    // Re-throw the error so the calling code knows the export failed
+    throw new Error(userMessage);
+  }
+}
