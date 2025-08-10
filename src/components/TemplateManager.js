@@ -141,6 +141,45 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
 
         <div className="modal-content">
           <div className="form-section">
+            <h3>Writing Type</h3>
+
+            <div className="form-group">
+              <label>Content Type</label>
+              <select
+                value={localTemplate.writingType || 'prose'}
+                onChange={e => handleInputChange('writingType', e.target.value)}
+                style={{ marginBottom: '10px' }}
+              >
+                <option value="prose">Prose (Traditional Books)</option>
+                <option value="verse">Verse/Poetry</option>
+              </select>
+              <small>
+                Verse preserves original formatting with line breaks and
+                indentation as written
+              </small>
+            </div>
+
+            {localTemplate.writingType === 'verse' && (
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={localTemplate.verseKeepTogether || false}
+                    onChange={e =>
+                      handleInputChange('verseKeepTogether', e.target.checked)
+                    }
+                  />
+                  Keep verses together (prevent page breaks within verse blocks)
+                </label>
+                <small>
+                  Verse blocks (text separated by blank lines) will not be split
+                  across pages
+                </small>
+              </div>
+            )}
+          </div>
+
+          <div className="form-section">
             <h3>Font Selection</h3>
 
             <div className="form-group">
@@ -400,10 +439,23 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
               onChange={e =>
                 handleInputChange('paragraphStyle', e.target.value)
               }
+              disabled={localTemplate.writingType === 'verse'}
+              style={{
+                opacity: localTemplate.writingType === 'verse' ? 0.5 : 1,
+                cursor:
+                  localTemplate.writingType === 'verse'
+                    ? 'not-allowed'
+                    : 'pointer'
+              }}
             >
               <option value="indented">Indented (Traditional Books)</option>
               <option value="separated">Line Separated (Modern Style)</option>
             </select>
+            {localTemplate.writingType === 'verse' && (
+              <small style={{ color: '#666', fontStyle: 'italic' }}>
+                Not applicable for verse - original formatting is preserved
+              </small>
+            )}
           </div>
 
           <div className="form-group">
@@ -430,13 +482,26 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
             <select
               value={localTemplate.textAlign || 'justified'}
               onChange={e => handleInputChange('textAlign', e.target.value)}
+              disabled={localTemplate.writingType === 'verse'}
+              style={{
+                opacity: localTemplate.writingType === 'verse' ? 0.5 : 1,
+                cursor:
+                  localTemplate.writingType === 'verse'
+                    ? 'not-allowed'
+                    : 'pointer'
+              }}
             >
               <option value="justified">Justified (Professional Books)</option>
               <option value="left">Left Aligned (Casual/Modern)</option>
             </select>
             <small>
-              Justified text creates straight edges on both sides like printed
-              books
+              {localTemplate.writingType === 'verse' ? (
+                <span style={{ color: '#666', fontStyle: 'italic' }}>
+                  Not applicable for verse - original alignment is preserved
+                </span>
+              ) : (
+                'Justified text creates straight edges on both sides like printed books'
+              )}
             </small>
           </div>
 

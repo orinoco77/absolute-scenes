@@ -737,11 +737,19 @@ export async function exportToPDF(book, options = {}) {
         pdf.setFontSize(24);
         pdf.setFont(pdfFont, 'bold');
 
-        // Center the title
-        const titleWidth = pdf.getTextWidth(book.title);
-        const titleX = (pageWidth - titleWidth) / 2;
-        safeText(pdf, book.title, titleX, currentY);
-        currentY += 48; // 2 line spaces
+        // Handle long titles by wrapping them across multiple lines
+        const titleMargin = 72; // 1 inch margin on each side for title
+        const titleMaxWidth = pageWidth - titleMargin * 2;
+        const titleLines = pdf.splitTextToSize(book.title, titleMaxWidth);
+
+        // Center each line of the title
+        titleLines.forEach((line, index) => {
+          const lineWidth = pdf.getTextWidth(line);
+          const lineX = (pageWidth - lineWidth) / 2;
+          safeText(pdf, line, lineX, currentY + index * 36); // 1.5 line spacing for title
+        });
+
+        currentY += titleLines.length * 36 + 24; // Move past title lines plus extra space
       }
 
       if (book.author) {
@@ -927,50 +935,144 @@ export async function exportToPDF(book, options = {}) {
 
         // Process scene content with markdown support
         if (scene.content && scene.content.trim()) {
-          // Split on single newlines to create paragraphs (more intuitive for users)
-          const paragraphs = scene.content.split('\n').filter(p => p.trim());
+          if (template.writingType === 'verse') {
+            // For verse, preserve original formatting
+            const trimmedContent = scene.content.trim();
+            if (trimmedContent) {
+              if (template.verseKeepTogether) {
+                // Split content into verse blocks (separated by blank lines)
+                const verseBlocks = trimmedContent
+                  .split(/\n\s*\n/)
+                  .filter(block => block.trim());
 
-          paragraphs.forEach((paragraph, paragraphIndex) => {
-            const trimmedParagraph = paragraph.trim();
+                verseBlocks.forEach((verseBlock, blockIndex) => {
+                  const blockContent = verseBlock.trim();
+                  if (blockContent) {
+                    // Parse markdown for this block
+                    const segments = parseMarkdownForPDF(blockContent);
 
-            if (trimmedParagraph) {
-              // Check if we need a new page
-              if (currentY + lineHeight > pageHeight - bottomMargin) {
-                pdf.addPage();
-                updateMarginsForPage();
-                currentY = topMargin;
-              }
+                    // Estimate block height by counting lines
+                    const blockLines = blockContent.split('\n');
+                    const estimatedHeight =
+                      blockLines.length * lineHeight + lineHeight; // Extra line for spacing
 
-              // Parse markdown BEFORE any text processing
-              const segments = parseMarkdownForPDF(trimmedParagraph);
+                    // Check if block fits on current page, if not move to next page
+                    if (
+                      currentY + estimatedHeight >
+                      pageHeight - bottomMargin
+                    ) {
+                      pdf.addPage();
+                      updateMarginsForPage();
+                      currentY = topMargin;
+                    }
 
-              // Render the formatted text with proper paragraph styling
-              const newY = renderFormattedTextToPDF(
-                pdf,
-                segments,
-                leftMargin,
-                currentY,
-                contentWidth,
-                fontSize,
-                lineHeight,
-                pageHeight,
-                bottomMargin,
-                topMargin,
-                updateMarginsForPage,
-                template.textAlign || 'justified',
-                paragraphIndex === 0, // isFirstParagraph
-                template.paragraphStyle || 'indented', // paragraphStyle
-                pdfFont
-              );
+                    // Render the verse block
+                    const newY = renderFormattedTextToPDF(
+                      pdf,
+                      segments,
+                      leftMargin,
+                      currentY,
+                      contentWidth,
+                      fontSize,
+                      lineHeight,
+                      pageHeight,
+                      bottomMargin,
+                      topMargin,
+                      updateMarginsForPage,
+                      'left', // Always left-align verse
+                      false, // Never apply first paragraph rules
+                      'separated', // No indentation for verse
+                      pdfFont
+                    );
 
-              currentY = newY + lineHeight; // Move to next line
+                    // Add blank line spacing between verse blocks (except for the last block)
+                    if (blockIndex < verseBlocks.length - 1) {
+                      currentY = newY + lineHeight * 2; // Double line height for blank line separation
+                    } else {
+                      currentY = newY + lineHeight * 0.5; // Regular spacing after last block
+                    }
+                  }
+                });
+              } else {
+                // Original verse rendering without block grouping
+                // Check if we need a new page
+                if (currentY + lineHeight > pageHeight - bottomMargin) {
+                  pdf.addPage();
+                  updateMarginsForPage();
+                  currentY = topMargin;
+                }
 
-              // Add paragraph spacing for separated style
-              if (template.paragraphStyle === 'separated') {
-                currentY += lineHeight; // Add extra line spacing between paragraphs
+                // Parse markdown BEFORE any text processing
+                const segments = parseMarkdownForPDF(trimmedContent);
+
+                // Render verse content with preserved formatting (always left-aligned)
+                const newY = renderFormattedTextToPDF(
+                  pdf,
+                  segments,
+                  leftMargin,
+                  currentY,
+                  contentWidth,
+                  fontSize,
+                  lineHeight,
+                  pageHeight,
+                  bottomMargin,
+                  topMargin,
+                  updateMarginsForPage,
+                  'left', // Always left-align verse
+                  false, // Never apply first paragraph rules
+                  'separated', // No indentation for verse
+                  pdfFont
+                );
+
+                currentY = newY + lineHeight * 0.5; // Add some spacing after verse
               }
             }
-          });
+          } else {
+            // For prose, split on single newlines to create paragraphs (more intuitive for users)
+            const paragraphs = scene.content.split('\n').filter(p => p.trim());
+
+            paragraphs.forEach((paragraph, paragraphIndex) => {
+              const trimmedParagraph = paragraph.trim();
+
+              if (trimmedParagraph) {
+                // Check if we need a new page
+                if (currentY + lineHeight > pageHeight - bottomMargin) {
+                  pdf.addPage();
+                  updateMarginsForPage();
+                  currentY = topMargin;
+                }
+
+                // Parse markdown BEFORE any text processing
+                const segments = parseMarkdownForPDF(trimmedParagraph);
+
+                // Render the formatted text with proper paragraph styling
+                const newY = renderFormattedTextToPDF(
+                  pdf,
+                  segments,
+                  leftMargin,
+                  currentY,
+                  contentWidth,
+                  fontSize,
+                  lineHeight,
+                  pageHeight,
+                  bottomMargin,
+                  topMargin,
+                  updateMarginsForPage,
+                  template.textAlign || 'justified',
+                  paragraphIndex === 0, // isFirstParagraph
+                  template.paragraphStyle || 'indented', // paragraphStyle
+                  pdfFont
+                );
+
+                currentY = newY + lineHeight; // Move to next line
+
+                // Add paragraph spacing for separated style
+                if (template.paragraphStyle === 'separated') {
+                  currentY += lineHeight; // Add extra line spacing between paragraphs
+                }
+              }
+            });
+          }
         }
 
         // Add scene break if requested and not the last scene in this chapter

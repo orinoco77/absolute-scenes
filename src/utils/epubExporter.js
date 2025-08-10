@@ -78,9 +78,11 @@ p {
   orphans: 2;
   widows: 2;
   ${
-    template.paragraphStyle === 'indented'
-      ? 'text-indent: 1.5em;'
-      : 'margin: 1em 0; text-indent: 0;'
+    template.writingType === 'verse'
+      ? 'white-space: pre-wrap; margin: 0; text-indent: 0; text-align: left;'
+      : template.paragraphStyle === 'indented'
+        ? 'text-indent: 1.5em;'
+        : 'margin: 1em 0; text-indent: 0;'
   }
 }
 
@@ -268,17 +270,26 @@ p, div {
         // Note: Scene titles are not included in EPUB format for better reading flow
 
         if (scene.content && scene.content.trim()) {
-          const paragraphs = scene.content.split('\n').filter(p => p.trim());
-          paragraphs.forEach((paragraph, paragraphIndex) => {
-            if (paragraph.trim()) {
-              const formattedParagraph = parseMarkdownToHTML(paragraph.trim());
-              const paragraphClass =
-                template.paragraphStyle === 'indented' && paragraphIndex === 0
-                  ? ' class="first-paragraph"'
-                  : '';
-              chapterContent += `\n  <p${paragraphClass}>${formattedParagraph}</p>`;
-            }
-          });
+          if (template.writingType === 'verse') {
+            // For verse, preserve all formatting including line breaks and whitespace
+            const formattedContent = parseMarkdownToHTML(scene.content);
+            chapterContent += `\n  <p>${formattedContent}</p>`;
+          } else {
+            // For prose, use traditional paragraph handling
+            const paragraphs = scene.content.split('\n').filter(p => p.trim());
+            paragraphs.forEach((paragraph, paragraphIndex) => {
+              if (paragraph.trim()) {
+                const formattedParagraph = parseMarkdownToHTML(
+                  paragraph.trim()
+                );
+                const paragraphClass =
+                  template.paragraphStyle === 'indented' && paragraphIndex === 0
+                    ? ' class="first-paragraph"'
+                    : '';
+                chapterContent += `\n  <p${paragraphClass}>${formattedParagraph}</p>`;
+              }
+            });
+          }
         }
 
         // Add scene break if not the last scene
