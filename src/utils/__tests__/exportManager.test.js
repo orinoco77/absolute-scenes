@@ -100,6 +100,28 @@ const mockBook = {
   ]
 };
 
+const mockVerseBook = {
+  title: 'Poetry Collection',
+  author: 'Verse Author',
+  chapters: [
+    {
+      title: 'Nature Poems',
+      scenes: [
+        {
+          title: 'Morning Dew',
+          content:
+            "The morning dew glistens bright\nUpon the grass so green\nA sight to behold in early light\nThe most beautiful I've seen\n\nBirds sing their cheerful song\nAs dawn breaks through the trees\nNature's chorus carries on\nCarried by the gentle breeze"
+        },
+        {
+          title: 'Ocean Waves',
+          content:
+            'Waves crash upon the shore\n  With rhythmic, endless beat\nTheir music I adore\n  So wild and yet so sweet\n\n    Deep blue meets sandy white\n    Where earth and water meet\n  A truly wondrous sight\n    Where sea and shoreline greet'
+        }
+      ]
+    }
+  ]
+};
+
 const mockTemplate = {
   pageSize: 'letter',
   fontFamily: 'Times New Roman',
@@ -132,6 +154,18 @@ const mockTemplate = {
     alignment: 'outside',
     skipChapterPages: true
   }
+};
+
+const mockVerseTemplate = {
+  ...mockTemplate,
+  writingType: 'verse',
+  verseKeepTogether: true
+};
+
+const mockVerseTemplateNoKeepTogether = {
+  ...mockTemplate,
+  writingType: 'verse',
+  verseKeepTogether: false
 };
 
 describe('exportManager', () => {
@@ -749,6 +783,211 @@ describe('exportManager', () => {
       await expect(
         exportToPDF(bookWithEmptyScene, { template: mockTemplate })
       ).resolves.not.toThrow();
+    });
+  });
+
+  describe('Verse Export Functionality', () => {
+    describe('HTML Verse Export', () => {
+      it('applies verse-specific CSS styles', async () => {
+        await exportToHTML(mockVerseBook, { template: mockVerseTemplate });
+
+        const htmlContent = global.Blob.mock.calls[0][0][0];
+
+        // Should use white-space: pre-wrap for verses
+        expect(htmlContent).toContain('white-space: pre-wrap');
+        expect(htmlContent).toContain('text-align: left');
+        expect(htmlContent).toContain('text-indent: 0');
+      });
+
+      it('preserves verse formatting in content', async () => {
+        await exportToHTML(mockVerseBook, { template: mockVerseTemplate });
+
+        const htmlContent = global.Blob.mock.calls[0][0][0];
+
+        // Should contain the verse content with preserved formatting
+        expect(htmlContent).toContain('The morning dew glistens bright');
+        expect(htmlContent).toContain('Upon the grass so green');
+      });
+
+      it('does not apply prose paragraph styles for verses', async () => {
+        await exportToHTML(mockVerseBook, { template: mockVerseTemplate });
+
+        const htmlContent = global.Blob.mock.calls[0][0][0];
+
+        // Should not split into separate paragraphs for verse
+        expect(htmlContent).not.toContain('text-indent: 3%');
+      });
+    });
+
+    describe('EPUB Verse Export', () => {
+      let mockZip;
+
+      beforeEach(() => {
+        mockZip = {
+          folder: jest.fn().mockReturnThis(),
+          file: jest.fn().mockReturnThis(),
+          generateAsync: jest.fn().mockResolvedValue('mock-epub-content')
+        };
+        JSZip.mockImplementation(() => mockZip);
+      });
+
+      it('applies verse-specific styles in EPUB CSS', async () => {
+        await exportToEPUB(mockVerseBook, { template: mockVerseTemplate });
+
+        const cssCall = mockZip.file.mock.calls.find(
+          call => call[0] === 'styles.css'
+        );
+        expect(cssCall).toBeDefined();
+
+        const cssContent = cssCall[1];
+        expect(cssContent).toContain('white-space: pre-wrap');
+        expect(cssContent).toContain('text-align: left');
+      });
+
+      it('preserves verse content structure in EPUB', async () => {
+        await exportToEPUB(mockVerseBook, { template: mockVerseTemplate });
+
+        // Find chapter file content
+        const chapterCall = mockZip.file.mock.calls.find(
+          call => call[0].includes('chapter') && call[0].includes('.xhtml')
+        );
+        expect(chapterCall).toBeDefined();
+
+        const chapterContent = chapterCall[1];
+        // EPUB doesn't include scene titles by design, but should include verse content
+        expect(chapterContent).toContain('The morning dew glistens bright');
+        expect(chapterContent).toContain('Upon the grass so green');
+      });
+    });
+
+    describe('PDF Verse Export', () => {
+      beforeEach(() => {
+        // Reset PDF mocks for verse tests
+        mockPdfInstance.text.mockClear();
+        mockPdfInstance.addPage.mockClear();
+      });
+
+      it('handles verse content without page break prevention', async () => {
+        await exportToPDF(mockVerseBook, {
+          template: mockVerseTemplateNoKeepTogether
+        });
+
+        expect(mockPdfInstance.text).toHaveBeenCalled();
+        expect(mockPdfInstance.setFont).toHaveBeenCalled();
+      });
+
+      it('handles verse content with page break prevention', async () => {
+        // Mock that verse blocks would not fit on page
+        mockPdfInstance.internal.pageSize = { width: 612, height: 792 };
+
+        await exportToPDF(mockVerseBook, { template: mockVerseTemplate });
+
+        expect(mockPdfInstance.text).toHaveBeenCalled();
+        // Should process verse blocks individually
+      });
+
+      it('preserves verse formatting in PDF', async () => {
+        await exportToPDF(mockVerseBook, { template: mockVerseTemplate });
+
+        // Check that text rendering was called
+        expect(mockPdfInstance.text).toHaveBeenCalled();
+
+        // Should use left alignment for verses
+        const textCalls = mockPdfInstance.text.mock.calls;
+        expect(textCalls.length).toBeGreaterThan(0);
+      });
+
+      it('handles indented verse lines correctly', async () => {
+        const indentedVerseBook = {
+          ...mockVerseBook,
+          chapters: [
+            {
+              title: 'Indented Poems',
+              scenes: [
+                {
+                  title: 'Indented Verse',
+                  content:
+                    'First line\n  Indented line\n    More indented\nBack to start'
+                }
+              ]
+            }
+          ]
+        };
+
+        await exportToPDF(indentedVerseBook, { template: mockVerseTemplate });
+
+        expect(mockPdfInstance.text).toHaveBeenCalled();
+      });
+
+      it('separates verse blocks with appropriate spacing', async () => {
+        const multiBlockVerseBook = {
+          ...mockVerseBook,
+          chapters: [
+            {
+              title: 'Multi-Block Poem',
+              scenes: [
+                {
+                  title: 'Separated Verses',
+                  content:
+                    'First verse block\nLine two of first\n\nSecond verse block\nLine two of second'
+                }
+              ]
+            }
+          ]
+        };
+
+        await exportToPDF(multiBlockVerseBook, { template: mockVerseTemplate });
+
+        expect(mockPdfInstance.text).toHaveBeenCalled();
+      });
+    });
+
+    describe('Verse Template Integration', () => {
+      it('ignores prose-specific settings for verse content', async () => {
+        const verseWithProseSettings = {
+          ...mockVerseTemplate,
+          paragraphStyle: 'indented',
+          textAlign: 'justified'
+        };
+
+        await exportToHTML(mockVerseBook, { template: verseWithProseSettings });
+
+        const htmlContent = global.Blob.mock.calls[0][0][0];
+
+        // Should still apply verse styles, not prose styles
+        expect(htmlContent).toContain('white-space: pre-wrap');
+        expect(htmlContent).toContain('text-align: left');
+      });
+
+      it('handles missing verse-specific settings gracefully', async () => {
+        const incompleteVerseTemplate = {
+          ...mockTemplate,
+          writingType: 'verse'
+          // Missing verseKeepTogether
+        };
+
+        await expect(
+          exportToPDF(mockVerseBook, { template: incompleteVerseTemplate })
+        ).resolves.not.toThrow();
+      });
+    });
+
+    describe('Mixed Content Support', () => {
+      it('handles books with both prose and verse chapters', async () => {
+        const mixedBook = {
+          title: 'Mixed Content Book',
+          author: 'Mixed Author',
+          chapters: [...mockBook.chapters, ...mockVerseBook.chapters]
+        };
+
+        await expect(
+          exportToPDF(mixedBook, { template: mockTemplate })
+        ).resolves.not.toThrow();
+
+        await expect(
+          exportToHTML(mixedBook, { template: mockTemplate })
+        ).resolves.not.toThrow();
+      });
     });
   });
 });

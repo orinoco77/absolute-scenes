@@ -118,11 +118,13 @@ function generateHTML(book, options = {}) {
     }
     p {
       ${
-        template.paragraphStyle === 'indented'
-          ? 'text-indent: 3%; margin: 0;'
-          : 'margin: 1em 0; text-indent: 0;'
+        template.writingType === 'verse'
+          ? 'white-space: pre-wrap; margin: 0; text-indent: 0; text-align: left;'
+          : template.paragraphStyle === 'indented'
+            ? 'text-indent: 3%; margin: 0;'
+            : 'margin: 1em 0; text-indent: 0;'
       }
-      text-align: ${template.textAlign === 'left' ? 'left' : 'justify'};
+      ${template.writingType !== 'verse' ? `text-align: ${template.textAlign === 'left' ? 'left' : 'justify'};` : ''}
     }
     .first-paragraph {
       text-indent: 0 !important;
@@ -196,19 +198,26 @@ function generateHTML(book, options = {}) {
       }
 
       if (scene.content && scene.content.trim()) {
-        const paragraphs = scene.content.split('\n').filter(p => p.trim());
-        paragraphs.forEach((paragraph, paragraphIndex) => {
-          if (paragraph.trim()) {
-            // Convert markdown to HTML
-            const formattedParagraph = parseMarkdownToHTML(paragraph.trim());
-            // Add first-paragraph class to first paragraph in indented style
-            const paragraphClass =
-              template.paragraphStyle === 'indented' && paragraphIndex === 0
-                ? ' class="first-paragraph"'
-                : '';
-            content += `<p${paragraphClass}>${formattedParagraph}</p>`;
-          }
-        });
+        if (template.writingType === 'verse') {
+          // For verse, preserve all formatting including line breaks and whitespace
+          const formattedContent = parseMarkdownToHTML(scene.content);
+          content += `<p>${formattedContent}</p>`;
+        } else {
+          // For prose, use traditional paragraph handling
+          const paragraphs = scene.content.split('\n').filter(p => p.trim());
+          paragraphs.forEach((paragraph, paragraphIndex) => {
+            if (paragraph.trim()) {
+              // Convert markdown to HTML
+              const formattedParagraph = parseMarkdownToHTML(paragraph.trim());
+              // Add first-paragraph class to first paragraph in indented style
+              const paragraphClass =
+                template.paragraphStyle === 'indented' && paragraphIndex === 0
+                  ? ' class="first-paragraph"'
+                  : '';
+              content += `<p${paragraphClass}>${formattedParagraph}</p>`;
+            }
+          });
+        }
       }
 
       // Add scene break if not the last scene in the chapter
