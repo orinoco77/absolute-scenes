@@ -132,6 +132,11 @@ function ExportDialog({ book, onClose, onExport }) {
             <p>
               <strong>Author:</strong> {book.author}
             </p>
+            {book.parts && book.parts.length > 0 && (
+              <p>
+                <strong>Parts:</strong> {book.parts.length}
+              </p>
+            )}
             <p>
               <strong>Page Size:</strong>{' '}
               {(() => {
@@ -191,6 +196,87 @@ function ExportDialog({ book, onClose, onExport }) {
                 0
               )}
             </p>
+            {book.parts && book.parts.length > 0 && (
+              <div
+                style={{
+                  marginTop: '1em',
+                  padding: '0.5em',
+                  backgroundColor: '#f0f9ff',
+                  border: '1px solid #bae6fd',
+                  borderRadius: '0.25rem'
+                }}
+              >
+                <strong>📚 Parts Structure:</strong>
+                <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem' }}>
+                  {book.parts.map((part, __index) => {
+                    const partChapters = part.chapterIds
+                      .map(chapterId =>
+                        book.chapters.find(ch => ch.id === chapterId)
+                      )
+                      .filter(Boolean);
+                    const partWords = partChapters.reduce(
+                      (total, ch) =>
+                        total +
+                        ch.scenes.reduce(
+                          (chTotal, scene) =>
+                            chTotal +
+                            scene.content
+                              .split(/\s+/)
+                              .filter(word => word.length > 0).length,
+                          0
+                        ),
+                      0
+                    );
+                    return (
+                      <li key={part.id} style={{ marginBottom: '0.25rem' }}>
+                        <strong>{part.title}</strong> - {partChapters.length}{' '}
+                        chapters, {partWords.toLocaleString()} words
+                      </li>
+                    );
+                  })}
+                </ul>
+                {(() => {
+                  const assignedChapterIds = new Set();
+                  book.parts.forEach(part => {
+                    part.chapterIds.forEach(chapterId => {
+                      assignedChapterIds.add(chapterId);
+                    });
+                  });
+                  const unassignedChapters = book.chapters.filter(
+                    ch => !assignedChapterIds.has(ch.id)
+                  );
+
+                  if (unassignedChapters.length > 0) {
+                    const unassignedWords = unassignedChapters.reduce(
+                      (total, ch) =>
+                        total +
+                        ch.scenes.reduce(
+                          (chTotal, scene) =>
+                            chTotal +
+                            scene.content
+                              .split(/\s+/)
+                              .filter(word => word.length > 0).length,
+                          0
+                        ),
+                      0
+                    );
+                    return (
+                      <p
+                        style={{
+                          margin: '0.5rem 0 0 0',
+                          fontSize: '0.9em',
+                          color: '#ef6c00'
+                        }}
+                      >
+                        📄 {unassignedChapters.length} unassigned chapters (
+                        {unassignedWords.toLocaleString()} words)
+                      </p>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            )}
           </div>
         </div>
 

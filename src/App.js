@@ -7,6 +7,7 @@ import BookStructure from './components/BookStructure';
 import CharacterEditor from './components/CharacterEditor';
 import CharacterThreadVisualization from './components/CharacterThreadVisualization';
 import ExportDialog from './components/ExportDialog';
+import FrontMatterEditor from './components/FrontMatterEditor';
 import GitHubIntegration from './components/GitHubIntegration';
 import LocationEditor from './components/LocationEditor';
 import SceneEditor from './components/SceneEditor';
@@ -43,6 +44,8 @@ function App() {
   const [book, setBook] = useState({
     title: '',
     author: '',
+    frontMatter: [], // Optional front matter sections
+    parts: [], // Optional parts to organize chapters
     chapters: [
       {
         id: 'default',
@@ -105,10 +108,12 @@ function App() {
 
   const [currentSceneId, setCurrentSceneId] = useState(null);
   const [currentChapterId, setCurrentChapterId] = useState('default');
+  const [currentPartId, setCurrentPartId] = useState(null);
   const [currentCharacterId, setCurrentCharacterId] = useState(null);
   const [currentLocationId, setCurrentLocationId] = useState(null);
   const [currentDocumentId, setCurrentDocumentId] = useState(null);
   const [currentFolderId, setCurrentFolderId] = useState('default-bg');
+  const [currentFrontMatterId, setCurrentFrontMatterId] = useState(null);
   const [activeTab, setActiveTab] = useState('manuscript');
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -214,6 +219,22 @@ function App() {
       }
     }
   }, [activeTab, currentDocumentId, book.backgroundFolders]);
+
+  // Auto-select first front matter item when switching to front matter tab
+  useEffect(() => {
+    if (
+      activeTab === 'frontmatter' &&
+      !currentFrontMatterId &&
+      book.frontMatter &&
+      book.frontMatter.length > 0
+    ) {
+      console.log(
+        'Auto-selecting first front matter item:',
+        book.frontMatter[0].id
+      );
+      setCurrentFrontMatterId(book.frontMatter[0].id);
+    }
+  }, [activeTab, currentFrontMatterId, book.frontMatter]);
 
   const markAsChanged = () => {
     if (isSaving) {
@@ -562,13 +583,29 @@ function App() {
       }
     };
 
+    const handleMenuNewPart = () => {
+      console.log('Menu: New Part');
+      handleNewPart();
+    };
+
+    const handleMenuDeletePart = () => {
+      console.log('Menu: Delete Part');
+      if (currentPartId) {
+        handleDeletePart(currentPartId);
+      } else {
+        alert('Please select a part to delete');
+      }
+    };
+
     const handleMenuDelete = () => {
       console.log('Menu: Delete');
-      // Context-sensitive delete: delete current scene or chapter
+      // Context-sensitive delete: delete current scene, chapter, or part
       if (currentSceneId) {
         handleDeleteScene();
       } else if (currentChapterId && book.chapters.length > 1) {
         handleDeleteChapter(currentChapterId);
+      } else if (currentPartId && book.parts.length > 0) {
+        handleDeletePart(currentPartId);
       }
     };
 
@@ -623,6 +660,16 @@ function App() {
         delete cleanBookData.scenes;
       }
 
+      // Migrate old format - add front matter array if missing
+      if (!cleanBookData.frontMatter) {
+        cleanBookData.frontMatter = [];
+      }
+
+      // Migrate old format - add parts array if missing
+      if (!cleanBookData.parts) {
+        cleanBookData.parts = [];
+      }
+
       // Migrate old format - add GitHub settings if missing
       if (!cleanBookData.github) {
         cleanBookData.github = {
@@ -663,12 +710,16 @@ function App() {
       setBook(cleanBookData);
       setCurrentChapterId(cleanBookData.chapters[0]?.id || 'default');
       setCurrentSceneId(cleanBookData.chapters[0]?.scenes[0]?.id || null);
+      setCurrentPartId(
+        cleanBookData.parts.length > 0 ? cleanBookData.parts[0]?.id : null
+      );
       setCurrentCharacterId(null);
       setCurrentLocationId(null);
       setCurrentDocumentId(null);
       setCurrentFolderId(
         cleanBookData.backgroundFolders[0]?.id || 'default-bg'
       );
+      setCurrentFrontMatterId(null);
       setCurrentFilePath(filePath);
       setHasUnsavedChanges(false);
 
@@ -684,6 +735,8 @@ function App() {
     ipcRenderer.on('menu-delete-scene', handleMenuDeleteScene);
     ipcRenderer.on('menu-new-chapter', handleMenuNewChapter);
     ipcRenderer.on('menu-delete-chapter', handleMenuDeleteChapter);
+    ipcRenderer.on('menu-new-part', handleMenuNewPart);
+    ipcRenderer.on('menu-delete-part', handleMenuDeletePart);
     ipcRenderer.on('menu-delete', handleMenuDelete);
     ipcRenderer.on('menu-toggle-recycle-bin', handleMenuToggleRecycleBin);
     ipcRenderer.on('menu-template-settings', handleMenuTemplateSettings);
@@ -708,6 +761,8 @@ function App() {
       ipcRenderer.removeAllListeners('menu-delete-scene');
       ipcRenderer.removeAllListeners('menu-new-chapter');
       ipcRenderer.removeAllListeners('menu-delete-chapter');
+      ipcRenderer.removeAllListeners('menu-new-part');
+      ipcRenderer.removeAllListeners('menu-delete-part');
       ipcRenderer.removeAllListeners('menu-delete');
       ipcRenderer.removeAllListeners('menu-toggle-recycle-bin');
       ipcRenderer.removeAllListeners('menu-template-settings');
@@ -734,6 +789,8 @@ function App() {
     const newBookData = {
       title: '',
       author: '',
+      frontMatter: [], // Optional front matter sections
+      parts: [], // Optional parts to organize chapters
       chapters: [
         {
           id: 'default',
@@ -799,10 +856,12 @@ function App() {
     setBook(newBookData);
     setCurrentSceneId(null);
     setCurrentChapterId('default');
+    setCurrentPartId(null);
     setCurrentCharacterId(null);
     setCurrentLocationId(null);
     setCurrentDocumentId(null);
     setCurrentFolderId('default-bg');
+    setCurrentFrontMatterId(null);
     setCurrentFilePath(null);
     setHasUnsavedChanges(false);
   };
@@ -850,6 +909,226 @@ function App() {
       metadata: { ...prev.metadata, modified: new Date().toISOString() }
     }));
     setCurrentChapterId(newChapter.id);
+    markAsChanged();
+  };
+
+  // Part management functions
+  const handleNewPart = () => {
+    const newPart = {
+      id: Date.now().toString(),
+      title: `Part ${book.parts.length + 1}`,
+      chapterIds: [] // Array of chapter IDs in this part
+    };
+
+    setBook(prev => ({
+      ...prev,
+      parts: [...prev.parts, newPart],
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    setCurrentPartId(newPart.id);
+    markAsChanged();
+  };
+
+  const updatePart = (partId, updates) => {
+    setBook(prev => ({
+      ...prev,
+      parts: prev.parts.map(part =>
+        part.id === partId ? { ...part, ...updates } : part
+      ),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  const handleDeletePart = partId => {
+    const part = book.parts.find(p => p.id === partId);
+    if (part && part.chapterIds.length > 0) {
+      if (
+        !window.confirm(
+          `Delete "${part.title}"? Chapters will not be deleted, just removed from this part.`
+        )
+      ) {
+        return;
+      }
+    }
+
+    setBook(prev => ({
+      ...prev,
+      parts: prev.parts.filter(p => p.id !== partId),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+
+    if (currentPartId === partId) {
+      setCurrentPartId(book.parts.length > 1 ? book.parts[0].id : null);
+    }
+  };
+
+  const moveChapterToPart = (chapterId, fromPartId, toPartId) => {
+    setBook(prev => ({
+      ...prev,
+      parts: prev.parts.map(part => {
+        if (part.id === fromPartId) {
+          // Remove chapter from source part
+          return {
+            ...part,
+            chapterIds: part.chapterIds.filter(id => id !== chapterId)
+          };
+        } else if (part.id === toPartId) {
+          // Add chapter to target part
+          return {
+            ...part,
+            chapterIds: [...part.chapterIds, chapterId]
+          };
+        }
+        return part;
+      }),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  const addChapterToPart = (chapterId, partId) => {
+    setBook(prev => ({
+      ...prev,
+      parts: prev.parts.map(part =>
+        part.id === partId
+          ? { ...part, chapterIds: [...part.chapterIds, chapterId] }
+          : part
+      ),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  const removeChapterFromPart = (chapterId, partId) => {
+    setBook(prev => ({
+      ...prev,
+      parts: prev.parts.map(part =>
+        part.id === partId
+          ? {
+              ...part,
+              chapterIds: part.chapterIds.filter(id => id !== chapterId)
+            }
+          : part
+      ),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  const reorderParts = (fromIndex, toIndex) => {
+    const newParts = [...book.parts];
+    const [movedPart] = newParts.splice(fromIndex, 1);
+    newParts.splice(toIndex, 0, movedPart);
+
+    setBook(prev => ({
+      ...prev,
+      parts: newParts,
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  // Front Matter Handler Functions
+  const handleAddFrontMatter = frontMatterItem => {
+    console.log('Adding front matter:', frontMatterItem);
+    setBook(prev => ({
+      ...prev,
+      frontMatter: [...prev.frontMatter, frontMatterItem],
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    setCurrentFrontMatterId(frontMatterItem.id);
+    markAsChanged();
+  };
+
+  const handleDeleteFrontMatter = frontMatterId => {
+    console.log('Deleting front matter:', frontMatterId);
+    setBook(prev => ({
+      ...prev,
+      frontMatter: prev.frontMatter.filter(fm => fm.id !== frontMatterId),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+
+    // Clear selection if deleted item was selected
+    if (currentFrontMatterId === frontMatterId) {
+      setCurrentFrontMatterId(null);
+    }
+    markAsChanged();
+  };
+
+  const updateFrontMatter = (frontMatterId, updatedFrontMatter) => {
+    console.log('Updating front matter:', frontMatterId, updatedFrontMatter);
+    setBook(prev => ({
+      ...prev,
+      frontMatter: prev.frontMatter.map(fm =>
+        fm.id === frontMatterId ? updatedFrontMatter : fm
+      ),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  const handleToggleFrontMatter = (frontMatterId, enabled) => {
+    console.log('Toggling front matter:', frontMatterId, enabled);
+    setBook(prev => ({
+      ...prev,
+      frontMatter: prev.frontMatter.map(fm =>
+        fm.id === frontMatterId
+          ? { ...fm, enabled, modified: new Date().toISOString() }
+          : fm
+      ),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  const handleReorderFrontMatter = (fromIndex, toIndex) => {
+    console.log('Reordering front matter:', fromIndex, toIndex);
+    setBook(prev => {
+      const newFrontMatter = [...prev.frontMatter];
+      const [movedItem] = newFrontMatter.splice(fromIndex, 1);
+      newFrontMatter.splice(toIndex, 0, movedItem);
+
+      return {
+        ...prev,
+        frontMatter: newFrontMatter,
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      };
+    });
+    markAsChanged();
+  };
+
+  // Auto-select first front matter item when switching to front matter tab
+  useEffect(() => {
+    if (
+      activeTab === 'frontmatter' &&
+      !currentFrontMatterId &&
+      book.frontMatter &&
+      book.frontMatter.length > 0
+    ) {
+      console.log(
+        'Auto-selecting first front matter item:',
+        book.frontMatter[0].id
+      );
+      setCurrentFrontMatterId(book.frontMatter[0].id);
+    }
+  }, [activeTab, currentFrontMatterId, book.frontMatter]);
+
+  const reorderChaptersInPart = (partId, fromIndex, toIndex) => {
+    setBook(prev => ({
+      ...prev,
+      parts: prev.parts.map(part => {
+        if (part.id === partId) {
+          const newChapterIds = [...part.chapterIds];
+          const [movedChapterId] = newChapterIds.splice(fromIndex, 1);
+          newChapterIds.splice(toIndex, 0, movedChapterId);
+          return { ...part, chapterIds: newChapterIds };
+        }
+        return part;
+      }),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
     markAsChanged();
   };
 
@@ -1463,13 +1742,20 @@ function App() {
   };
 
   const handleBookRecovered = (filePath, bookData) => {
+    // Add migration for front matter if missing
+    if (!bookData.frontMatter) {
+      bookData.frontMatter = [];
+    }
+
     // Load the recovered book
     // Set all states simply and directly
     setBook(bookData);
     setCurrentChapterId(bookData.chapters[0]?.id || 'default');
     setCurrentSceneId(bookData.chapters[0]?.scenes[0]?.id || null);
+    setCurrentPartId(bookData.parts?.length > 0 ? bookData.parts[0]?.id : null);
     setCurrentCharacterId(null);
     setCurrentLocationId(null);
+    setCurrentFrontMatterId(null);
     setCurrentFilePath(filePath);
     setHasUnsavedChanges(false);
   };
@@ -1576,19 +1862,30 @@ function App() {
 
       <div className="app-content">
         <BookStructure
+          parts={book.parts}
           chapters={book.chapters}
           currentSceneId={currentSceneId}
           currentChapterId={currentChapterId}
+          currentPartId={currentPartId}
           onSceneSelect={setCurrentSceneId}
           onChapterSelect={setCurrentChapterId}
+          onPartSelect={setCurrentPartId}
           onSceneAdd={handleNewScene}
           onChapterAdd={handleNewChapter}
+          onPartAdd={handleNewPart}
           onSceneDelete={moveSceneToRecycleBin}
           onChapterDelete={handleDeleteChapter}
+          onPartDelete={handleDeletePart}
           onChapterUpdate={updateChapter}
+          onPartUpdate={updatePart}
           onReorderChapters={reorderChapters}
+          onReorderParts={reorderParts}
+          onReorderChaptersInPart={reorderChaptersInPart}
           onReorderScenesInChapter={reorderScenesInChapter}
           onMoveSceneBetweenChapters={moveSceneBetweenChapters}
+          onMoveChapterToPart={moveChapterToPart}
+          onAddChapterToPart={addChapterToPart}
+          onRemoveChapterFromPart={removeChapterFromPart}
           recycleBin={recycleBin}
           showRecycleBin={showRecycleBin}
           onToggleRecycleBin={() => setShowRecycleBin(!showRecycleBin)}
@@ -1634,6 +1931,15 @@ function App() {
           locationRecycleBin={locationRecycleBin}
           onRestoreLocationFromRecycleBin={restoreLocationFromRecycleBin}
           onPermanentlyDeleteLocation={permanentlyDeleteLocation}
+          frontMatter={book.frontMatter}
+          currentFrontMatterId={currentFrontMatterId}
+          onFrontMatterSelect={setCurrentFrontMatterId}
+          onFrontMatterAdd={handleAddFrontMatter}
+          onFrontMatterDelete={handleDeleteFrontMatter}
+          onFrontMatterUpdate={updateFrontMatter}
+          onFrontMatterToggle={handleToggleFrontMatter}
+          onFrontMatterReorder={handleReorderFrontMatter}
+          authorName={book.author}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
@@ -1718,6 +2024,22 @@ function App() {
                 </p>
               </div>
             </div>
+          )
+        ) : activeTab === 'frontmatter' ? (
+          book.frontMatter.find(fm => fm.id === currentFrontMatterId) ? (
+            <FrontMatterEditor
+              frontMatterItem={book.frontMatter.find(
+                fm => fm.id === currentFrontMatterId
+              )}
+              onFrontMatterUpdate={updateFrontMatter}
+              authorName={book.author}
+            />
+          ) : (
+            <FrontMatterEditor
+              frontMatterItem={null}
+              onFrontMatterUpdate={updateFrontMatter}
+              authorName={book.author}
+            />
           )
         ) : (
           <div className="scene-editor">
