@@ -1,5 +1,6 @@
 import BackgroundList from './BackgroundList';
 import CharacterList from './CharacterList';
+import FrontMatterList from './FrontMatterList';
 import LocationList from './LocationList';
 import SceneList from './SceneList';
 
@@ -77,20 +78,31 @@ function ThreadsControls({
 }
 
 function BookStructure({
-  // Scene/Chapter props
+  // Part/Scene/Chapter props
+  parts,
   chapters,
   currentSceneId,
   currentChapterId,
+  currentPartId,
   onSceneSelect,
   onChapterSelect,
+  onPartSelect,
   onSceneAdd,
   onChapterAdd,
+  onPartAdd,
   onSceneDelete,
   onChapterDelete,
+  onPartDelete,
   onChapterUpdate,
+  onPartUpdate,
   onReorderChapters,
+  onReorderParts,
+  onReorderChaptersInPart,
   onReorderScenesInChapter,
   onMoveSceneBetweenChapters,
+  onMoveChapterToPart,
+  onAddChapterToPart,
+  onRemoveChapterFromPart,
   recycleBin,
   showRecycleBin,
   onToggleRecycleBin,
@@ -143,6 +155,17 @@ function BookStructure({
   onRestoreLocationFromRecycleBin,
   onPermanentlyDeleteLocation,
 
+  // Front Matter props
+  frontMatter,
+  currentFrontMatterId,
+  onFrontMatterSelect,
+  onFrontMatterAdd,
+  onFrontMatterDelete,
+  onFrontMatterUpdate,
+  onFrontMatterToggle,
+  onFrontMatterReorder,
+  authorName = '', // Add author name prop
+
   // Tab props
   activeTab,
   onTabChange
@@ -190,29 +213,64 @@ function BookStructure({
       locations.length > 0
     ) {
       onLocationSelect(locations[0].id);
+    } else if (
+      tabId === 'frontmatter' &&
+      !currentFrontMatterId &&
+      frontMatter.length > 0
+    ) {
+      onFrontMatterSelect(frontMatter[0].id);
     }
   };
 
   const tabs = [
+    {
+      id: 'frontmatter',
+      label: 'Front Matter',
+      icon: '📄',
+      component: (
+        <FrontMatterList
+          frontMatter={frontMatter}
+          currentFrontMatterId={currentFrontMatterId}
+          onFrontMatterSelect={onFrontMatterSelect}
+          onFrontMatterAdd={onFrontMatterAdd}
+          onFrontMatterDelete={onFrontMatterDelete}
+          onFrontMatterUpdate={onFrontMatterUpdate}
+          onFrontMatterToggle={onFrontMatterToggle}
+          onFrontMatterReorder={onFrontMatterReorder}
+          authorName={authorName}
+        />
+      )
+    },
     {
       id: 'manuscript',
       label: 'Manuscript',
       icon: '📖',
       component: (
         <SceneList
+          parts={parts}
           chapters={chapters}
           currentSceneId={currentSceneId}
           currentChapterId={currentChapterId}
+          currentPartId={currentPartId}
           onSceneSelect={onSceneSelect}
           onChapterSelect={onChapterSelect}
+          onPartSelect={onPartSelect}
           onSceneAdd={onSceneAdd}
           onChapterAdd={onChapterAdd}
+          onPartAdd={onPartAdd}
           onSceneDelete={onSceneDelete}
           onChapterDelete={onChapterDelete}
+          onPartDelete={onPartDelete}
           onChapterUpdate={onChapterUpdate}
+          onPartUpdate={onPartUpdate}
           onReorderChapters={onReorderChapters}
+          onReorderParts={onReorderParts}
+          onReorderChaptersInPart={onReorderChaptersInPart}
           onReorderScenesInChapter={onReorderScenesInChapter}
           onMoveSceneBetweenChapters={onMoveSceneBetweenChapters}
+          onMoveChapterToPart={onMoveChapterToPart}
+          onAddChapterToPart={onAddChapterToPart}
+          onRemoveChapterFromPart={onRemoveChapterFromPart}
           recycleBin={recycleBin}
           showRecycleBin={showRecycleBin}
           onToggleRecycleBin={onToggleRecycleBin}

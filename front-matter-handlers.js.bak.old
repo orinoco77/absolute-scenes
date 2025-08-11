@@ -1,0 +1,66 @@
+  // Front Matter Handler Functions
+  const handleAddFrontMatter = (frontMatterItem) => {
+    console.log('Adding front matter:', frontMatterItem);
+    setBook(prev => ({
+      ...prev,
+      frontMatter: [...prev.frontMatter, frontMatterItem],
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    setCurrentFrontMatterId(frontMatterItem.id);
+    markAsChanged();
+  };
+
+  const handleDeleteFrontMatter = (frontMatterId) => {
+    console.log('Deleting front matter:', frontMatterId);
+    setBook(prev => ({
+      ...prev,
+      frontMatter: prev.frontMatter.filter(fm => fm.id !== frontMatterId),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    
+    // Clear selection if deleted item was selected
+    if (currentFrontMatterId === frontMatterId) {
+      setCurrentFrontMatterId(null);
+    }
+    markAsChanged();
+  };
+
+  const updateFrontMatter = (frontMatterId, updatedFrontMatter) => {
+    console.log('Updating front matter:', frontMatterId, updatedFrontMatter);
+    setBook(prev => ({
+      ...prev,
+      frontMatter: prev.frontMatter.map(fm => 
+        fm.id === frontMatterId ? updatedFrontMatter : fm
+      ),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  const handleToggleFrontMatter = (frontMatterId, enabled) => {
+    console.log('Toggling front matter:', frontMatterId, enabled);
+    setBook(prev => ({
+      ...prev,
+      frontMatter: prev.frontMatter.map(fm => 
+        fm.id === frontMatterId ? { ...fm, enabled, modified: new Date().toISOString() } : fm
+      ),
+      metadata: { ...prev.metadata, modified: new Date().toISOString() }
+    }));
+    markAsChanged();
+  };
+
+  const handleReorderFrontMatter = (fromIndex, toIndex) => {
+    console.log('Reordering front matter:', fromIndex, toIndex);
+    setBook(prev => {
+      const newFrontMatter = [...prev.frontMatter];
+      const [movedItem] = newFrontMatter.splice(fromIndex, 1);
+      newFrontMatter.splice(toIndex, 0, movedItem);
+      
+      return {
+        ...prev,
+        frontMatter: newFrontMatter,
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      };
+    });
+    markAsChanged();
+  };

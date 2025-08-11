@@ -341,6 +341,23 @@ function createMenu() {
       ]
     },
 
+    // Part Menu
+    {
+      label: 'Part',
+      submenu: [
+        {
+          label: 'New Part',
+          accelerator: 'CmdOrCtrl+Shift+P',
+          click: () => mainWindow.webContents.send('menu-new-part')
+        },
+        {
+          label: 'Delete Part',
+          accelerator: 'CmdOrCtrl+Shift+Alt+Delete',
+          click: () => mainWindow.webContents.send('menu-delete-part')
+        }
+      ]
+    },
+
     // Scene Menu
     {
       label: 'Scene',
