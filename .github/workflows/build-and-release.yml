@@ -90,8 +90,22 @@ jobs:
           echo "batch" >> "$GNUPGHOME/gpg.conf"
           echo "no-tty" >> "$GNUPGHOME/gpg.conf"
           
+          # Configure gpg-agent for automated signing
+          echo "allow-loopback-pinentry" >> "$GNUPGHOME/gpg-agent.conf"
+          echo "max-cache-ttl 86400" >> "$GNUPGHOME/gpg-agent.conf"
+          echo "default-cache-ttl 86400" >> "$GNUPGHOME/gpg-agent.conf"
+          
+          # Start gpg-agent
+          gpg-agent --daemon || echo "gpg-agent already running"
+          
           # Import GPG private key
           echo "${{ secrets.LINUX_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
+          
+          # Pre-authenticate with passphrase if provided
+          if [ -n "${{ secrets.GPG_PASSPHRASE }}" ]; then
+            echo "Pre-authenticating GPG key..."
+            echo "test" | gpg --batch --yes --passphrase "${{ secrets.GPG_PASSPHRASE }}" --pinentry-mode loopback --sign --armor | head -1 || echo "Pre-auth failed, continuing anyway"
+          fi
           
           # Install signing tools
           sudo apt-get update
@@ -148,7 +162,11 @@ jobs:
             for deb in dist/*.deb; do
               if [ -f "$deb" ]; then
                 echo "Signing $deb..."
-                debsigs --sign=origin -k "$GPG_KEY_ID" "$deb" || echo "⚠️ Failed to sign $(basename $deb)"
+                if [ -n "$GPG_PASSPHRASE" ]; then
+                  echo "$GPG_PASSPHRASE" | debsigs --sign=origin -k "$GPG_KEY_ID" "$deb" || echo "⚠️ Failed to sign $(basename $deb)"
+                else
+                  debsigs --sign=origin -k "$GPG_KEY_ID" "$deb" || echo "⚠️ Failed to sign $(basename $deb)"
+                fi
                 echo "✅ Processed $(basename $deb)"
               fi
             done
@@ -164,7 +182,11 @@ jobs:
                 # Create temporary rpmmacros for signing
                 echo "%_gpg_name $GPG_KEY_ID" > ~/.rpmmacros
                 echo "%_signature gpg" >> ~/.rpmmacros
-                echo "%__gpg_sign_cmd %{__gpg} gpg --force-v3-sigs --batch --verbose --no-armor --no-secmem-warning -u \"%{_gpg_name}\" -sbo %{__signature_filename} --digest-algo sha256 %{__plaintext_filename}" >> ~/.rpmmacros
+                if [ -n "$GPG_PASSPHRASE" ]; then
+                  echo "%__gpg_sign_cmd %{__gpg} gpg --force-v3-sigs --batch --verbose --no-armor --no-secmem-warning --pinentry-mode loopback --passphrase \"$GPG_PASSPHRASE\" -u \"%{_gpg_name}\" -sbo %{__signature_filename} --digest-algo sha256 %{__plaintext_filename}" >> ~/.rpmmacros
+                else
+                  echo "%__gpg_sign_cmd %{__gpg} gpg --force-v3-sigs --batch --verbose --no-armor --no-secmem-warning -u \"%{_gpg_name}\" -sbo %{__signature_filename} --digest-algo sha256 %{__plaintext_filename}" >> ~/.rpmmacros
+                fi
                 rpm --addsign "$rpm" || echo "⚠️ Failed to sign $(basename $rpm)"
                 echo "✅ Processed $(basename $rpm)"
               fi
