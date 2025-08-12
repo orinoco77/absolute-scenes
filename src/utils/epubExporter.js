@@ -4,8 +4,6 @@ import { getCssFontFamily } from './fontManager';
 // EPUB export function
 export async function exportToEPUB(book, options = {}) {
   try {
-    console.log('Starting EPUB export...');
-
     const zip = new JSZip();
     const { template } = options;
 
@@ -367,7 +365,6 @@ ${navItems.join('\n')}
     oebps.file('toc.ncx', tocNcx);
 
     // 9. Generate the EPUB file
-    console.log('Generating EPUB file...');
     const blob = await zip.generateAsync({
       type: 'blob',
       compression: 'DEFLATE',
@@ -402,8 +399,6 @@ ${navItems.join('\n')}
     setTimeout(() => {
       URL.revokeObjectURL(url);
     }, 1000);
-
-    console.log(`✓ EPUB exported successfully: ${filename}`);
   } catch (error) {
     console.error('EPUB export failed:', error);
 

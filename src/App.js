@@ -162,10 +162,6 @@ function App() {
         ch => ch.scenes && ch.scenes.length > 0
       );
       if (firstChapterWithScenes && firstChapterWithScenes.scenes.length > 0) {
-        console.log(
-          'Auto-selecting first scene:',
-          firstChapterWithScenes.scenes[0].id
-        );
         setCurrentChapterId(firstChapterWithScenes.id);
         setCurrentSceneId(firstChapterWithScenes.scenes[0].id);
       }
@@ -180,7 +176,6 @@ function App() {
       book.characters &&
       book.characters.length > 0
     ) {
-      console.log('Auto-selecting first character:', book.characters[0].id);
       setCurrentCharacterId(book.characters[0].id);
     }
   }, [activeTab, currentCharacterId, book.characters]);
@@ -193,7 +188,6 @@ function App() {
       book.locations &&
       book.locations.length > 0
     ) {
-      console.log('Auto-selecting first location:', book.locations[0].id);
       setCurrentLocationId(book.locations[0].id);
     }
   }, [activeTab, currentLocationId, book.locations]);
@@ -210,10 +204,6 @@ function App() {
         folder => folder.documents && folder.documents.length > 0
       );
       if (firstFolderWithDocs) {
-        console.log(
-          'Auto-selecting first document:',
-          firstFolderWithDocs.documents[0].id
-        );
         setCurrentFolderId(firstFolderWithDocs.id);
         setCurrentDocumentId(firstFolderWithDocs.documents[0].id);
       }
@@ -228,10 +218,6 @@ function App() {
       book.frontMatter &&
       book.frontMatter.length > 0
     ) {
-      console.log(
-        'Auto-selecting first front matter item:',
-        book.frontMatter[0].id
-      );
       setCurrentFrontMatterId(book.frontMatter[0].id);
     }
   }, [activeTab, currentFrontMatterId, book.frontMatter]);
@@ -263,7 +249,6 @@ function App() {
   const handleSaveBook = useCallback(async () => {
     // Use ref for immediate check (doesn't wait for state update)
     if (saveOperationRef.current || isSaving) {
-      console.log('Save already in progress, skipping...');
       return;
     }
 
@@ -271,8 +256,6 @@ function App() {
     saveOperationRef.current = true;
     setIsSaving(true);
     setCurrentOperation('Saving book...');
-
-    console.log('=== SAVE OPERATION STARTED ===');
 
     try {
       let saveResult;
@@ -289,12 +272,10 @@ function App() {
 
       if (currentFilePath) {
         // Quick save to existing file
-        console.log('Performing quick save to:', currentFilePath);
         setCurrentOperation('Saving to file...');
         saveResult = await saveBookToFile(bookDataToSave, currentFilePath);
       } else {
         // Save As dialog for new files
-        console.log('Performing Save As...');
         setCurrentOperation('Choose save location...');
         saveResult = await saveBook(bookDataToSave);
         savedFilePath = saveResult.filePath;
@@ -308,24 +289,15 @@ function App() {
         setCurrentFilePath(savedFilePath);
         setHasUnsavedChanges(false);
 
-        console.log('=== SAVE OPERATION COMPLETED ===');
-
         // Handle GitHub sync separately and non-blocking
         if (bookDataToSave.github?.repository) {
           setCurrentOperation('Syncing to GitHub...');
-          console.log('🔄 GitHub auto-sync triggered:', {
-            repository: bookDataToSave.github.repository,
-            hasRepository: !!bookDataToSave.github.repository,
-            filePath: savedFilePath
-          });
           // Don't await this - let it run in background
           handleGitHubSync(savedFilePath, now, bookDataToSave);
         } else {
-          console.log('❌ GitHub auto-sync skipped - no repository configured');
         }
       } else if (saveResult.canceled) {
         // User canceled - this is normal, don't show error
-        console.log('Save canceled by user');
       } else {
         // Actual error occurred
         console.error('Save failed:', saveResult.error);
@@ -339,7 +311,6 @@ function App() {
       saveOperationRef.current = false;
       setIsSaving(false);
       setCurrentOperation(null);
-      console.log('=== SAVE OPERATION CLEANUP ===');
     }
   }, [book, currentFilePath, isSaving]);
 
@@ -364,25 +335,12 @@ function App() {
     async (filePath, saveTime, bookData = null) => {
       const dataToSync = bookData || book; // Use passed data or fallback to current state
 
-      console.log('🔄 Starting GitHub sync with data:', {
-        repository: dataToSync.github?.repository,
-        filePath,
-        bookTitle: dataToSync.title
-      });
-
       try {
         const GitHubService = (await import('./utils/gitHubService')).default;
 
-        console.log('🔍 Checking GitHub authentication...');
         const isAuth = GitHubService.isAuthenticated();
-        console.log('🔍 Auth check result:', {
-          isAuthenticated: isAuth,
-          hasToken: !!GitHubService.token,
-          hasUserInfo: !!GitHubService.userInfo
-        });
 
         if (isAuth) {
-          console.log('✅ GitHub authenticated, proceeding with sync');
           const commitMessage = `Auto-save: ${new Date().toLocaleString()}`;
 
           // Generate filename
@@ -402,12 +360,6 @@ function App() {
                 .replace(/^-|-$/g, '') + '.book';
           }
 
-          console.log('📤 Syncing to GitHub:', {
-            repository: dataToSync.github.repository,
-            filename,
-            commitMessage
-          });
-
           await GitHubService.saveBookToRepository(
             dataToSync.github.repository,
             dataToSync,
@@ -415,15 +367,12 @@ function App() {
             filename
           );
           updateGitHubSyncStatus({ lastSyncTime: saveTime });
-          console.log('✅ Book automatically synced to GitHub successfully');
         } else {
-          console.warn('❌ GitHub sync failed - not authenticated');
           alert(
             'GitHub auto-sync failed: Not authenticated. Please check your GitHub connection in settings.'
           );
         }
       } catch (error) {
-        console.error('❌ GitHub sync failed with error:', error);
         console.warn('GitHub sync failed:', error.message);
         // Show user-friendly error for auto-sync failures
         alert(
@@ -442,19 +391,12 @@ function App() {
     const handleKeyDown = e => {
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 's') {
-          console.log('Ctrl+S pressed, save state:', {
-            isSaving,
-            saveOperationRef: saveOperationRef.current,
-            hasUnsavedChanges
-          });
-
           e.preventDefault();
           e.stopPropagation();
 
           if (!saveOperationRef.current && !isSaving) {
             debouncedSave();
           } else {
-            console.log('Ignoring Ctrl+S - save in progress');
           }
         }
       }
@@ -472,27 +414,20 @@ function App() {
       return;
     }
 
-    console.log('Setting up IPC event listeners...');
-
     // Create stable handlers
     const handleMenuNewBook = () => {
-      console.log('Menu: New Book');
       handleNewBook();
     };
 
     const handleMenuSaveBook = () => {
-      console.log('Menu: Save Book triggered');
       if (!saveOperationRef.current && !isSaving) {
         handleSaveBook();
       } else {
-        console.log('Ignoring menu save - save in progress');
       }
     };
 
     const handleMenuSaveAs = async () => {
-      console.log('Menu: Save As triggered');
       if (saveOperationRef.current || isSaving) {
-        console.log('Save already in progress, skipping Save As...');
         return;
       }
 
@@ -500,8 +435,6 @@ function App() {
       saveOperationRef.current = true;
       setIsSaving(true);
       setCurrentOperation('Save As...');
-
-      console.log('=== SAVE AS OPERATION STARTED ===');
 
       try {
         // Ensure we have clean book data before saving
@@ -514,7 +447,6 @@ function App() {
         };
 
         // Always show save dialog for Save As
-        console.log('Performing Save As...');
         setCurrentOperation('Choose save location...');
         const saveResult = await saveBook(bookDataToSave);
 
@@ -526,17 +458,13 @@ function App() {
           setCurrentFilePath(saveResult.filePath);
           setHasUnsavedChanges(false);
 
-          console.log('=== SAVE AS OPERATION COMPLETED ===');
-
           // Handle GitHub sync separately and non-blocking
           if (bookDataToSave.github?.repository) {
             setCurrentOperation('Syncing to GitHub...');
-            console.log('🔄 GitHub auto-sync triggered from Save As');
             handleGitHubSync(saveResult.filePath, now, bookDataToSave);
           }
         } else if (saveResult.canceled) {
           // User canceled - this is normal, don't show error
-          console.log('Save As canceled by user');
         } else {
           // Actual error occurred
           console.error('Save As failed:', saveResult.error);
@@ -550,32 +478,26 @@ function App() {
         saveOperationRef.current = false;
         setIsSaving(false);
         setCurrentOperation(null);
-        console.log('=== SAVE AS OPERATION CLEANUP ===');
       }
     };
 
     const handleMenuExportBook = () => {
-      console.log('Menu: Export Book');
       setShowExportDialog(true);
     };
 
     const handleMenuNewScene = () => {
-      console.log('Menu: New Scene');
       handleNewScene();
     };
 
     const handleMenuDeleteScene = () => {
-      console.log('Menu: Delete Scene');
       handleDeleteScene();
     };
 
     const handleMenuNewChapter = () => {
-      console.log('Menu: New Chapter');
       handleNewChapter();
     };
 
     const handleMenuDeleteChapter = () => {
-      console.log('Menu: Delete Chapter');
       if (currentChapterId) {
         handleDeleteChapter(currentChapterId);
       } else {
@@ -584,12 +506,10 @@ function App() {
     };
 
     const handleMenuNewPart = () => {
-      console.log('Menu: New Part');
       handleNewPart();
     };
 
     const handleMenuDeletePart = () => {
-      console.log('Menu: Delete Part');
       if (currentPartId) {
         handleDeletePart(currentPartId);
       } else {
@@ -598,7 +518,6 @@ function App() {
     };
 
     const handleMenuDelete = () => {
-      console.log('Menu: Delete');
       // Context-sensitive delete: delete current scene, chapter, or part
       if (currentSceneId) {
         handleDeleteScene();
@@ -610,46 +529,33 @@ function App() {
     };
 
     const handleMenuToggleRecycleBin = () => {
-      console.log('Menu: Toggle Recycle Bin');
       setShowRecycleBin(!showRecycleBin);
     };
 
     const handleMenuTemplateSettings = () => {
-      console.log('Menu: Template Settings');
       setShowTemplateManager(true);
     };
 
     const handleMenuGitHubIntegration = () => {
-      console.log('Menu: GitHub Integration');
       setShowGitHubIntegration(true);
     };
 
     const handleMenuBackupRecovery = () => {
-      console.log('Menu: Backup Recovery');
       setShowBackupRecovery(true);
     };
 
     const handleMenuEmptyRecycleBin = () => {
-      console.log('Menu: Empty Recycle Bin');
       emptyRecycleBin();
     };
 
     const handleBookLoaded = (event, bookData) => {
-      console.log('=== BOOK LOADED EVENT RECEIVED ===');
-      console.log('Event:', event);
-      console.log('Book data:', bookData);
-      console.log('File path from book data:', bookData.filePath);
-
       // Extract and remove filePath from book data (it's metadata, not content)
       const filePath = bookData.filePath || null;
       const cleanBookData = { ...bookData };
       delete cleanBookData.filePath;
 
-      console.log('Clean book data (without filePath):', cleanBookData);
-
       // Migrate old format to new chapter format if needed
       if (cleanBookData.scenes && !cleanBookData.chapters) {
-        console.log('Migrating old format: scenes to chapters');
         cleanBookData.chapters = [
           {
             id: 'default',
@@ -704,8 +610,6 @@ function App() {
         ];
       }
 
-      console.log('Setting book state...');
-      // Set all states in batch
       // Set all states simply and directly
       setBook(cleanBookData);
       setCurrentChapterId(cleanBookData.chapters[0]?.id || 'default');
@@ -722,8 +626,6 @@ function App() {
       setCurrentFrontMatterId(null);
       setCurrentFilePath(filePath);
       setHasUnsavedChanges(false);
-
-      console.log('Book loaded successfully via file association!');
     };
 
     // Register all IPC event listeners
@@ -745,14 +647,10 @@ function App() {
     ipcRenderer.on('menu-empty-recycle-bin', handleMenuEmptyRecycleBin);
     ipcRenderer.on('book-loaded', handleBookLoaded);
 
-    console.log('IPC event listeners registered successfully');
-
     // Set IPC ready flag for file association handling
     window.ipcReady = true;
-    console.log('IPC marked as ready');
 
     return () => {
-      console.log('Cleaning up IPC event listeners...');
       ipcRenderer.removeAllListeners('menu-new-book');
       ipcRenderer.removeAllListeners('menu-save-book');
       ipcRenderer.removeAllListeners('menu-save-as');
@@ -1032,7 +930,6 @@ function App() {
 
   // Front Matter Handler Functions
   const handleAddFrontMatter = frontMatterItem => {
-    console.log('Adding front matter:', frontMatterItem);
     setBook(prev => ({
       ...prev,
       frontMatter: [...prev.frontMatter, frontMatterItem],
@@ -1043,7 +940,6 @@ function App() {
   };
 
   const handleDeleteFrontMatter = frontMatterId => {
-    console.log('Deleting front matter:', frontMatterId);
     setBook(prev => ({
       ...prev,
       frontMatter: prev.frontMatter.filter(fm => fm.id !== frontMatterId),
@@ -1058,7 +954,6 @@ function App() {
   };
 
   const updateFrontMatter = (frontMatterId, updatedFrontMatter) => {
-    console.log('Updating front matter:', frontMatterId, updatedFrontMatter);
     setBook(prev => ({
       ...prev,
       frontMatter: prev.frontMatter.map(fm =>
@@ -1070,7 +965,6 @@ function App() {
   };
 
   const handleToggleFrontMatter = (frontMatterId, enabled) => {
-    console.log('Toggling front matter:', frontMatterId, enabled);
     setBook(prev => ({
       ...prev,
       frontMatter: prev.frontMatter.map(fm =>
@@ -1084,7 +978,6 @@ function App() {
   };
 
   const handleReorderFrontMatter = (fromIndex, toIndex) => {
-    console.log('Reordering front matter:', fromIndex, toIndex);
     setBook(prev => {
       const newFrontMatter = [...prev.frontMatter];
       const [movedItem] = newFrontMatter.splice(fromIndex, 1);
@@ -1107,10 +1000,6 @@ function App() {
       book.frontMatter &&
       book.frontMatter.length > 0
     ) {
-      console.log(
-        'Auto-selecting first front matter item:',
-        book.frontMatter[0].id
-      );
       setCurrentFrontMatterId(book.frontMatter[0].id);
     }
   }, [activeTab, currentFrontMatterId, book.frontMatter]);
@@ -2063,8 +1952,8 @@ function App() {
         <ExportDialog
           book={book}
           onClose={() => setShowExportDialog(false)}
-          onExport={_format => {
-            // TODO: Implement export functionality
+          onExport={() => {
+            // Export is handled internally by ExportDialog
           }}
         />
       )}
