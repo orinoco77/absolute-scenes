@@ -57,6 +57,7 @@ jobs:
         CI: false
 
     - name: List build outputs
+      shell: bash
       run: |
         echo "Build outputs in dist/:"
         ls -la dist/ || echo "No dist directory"
