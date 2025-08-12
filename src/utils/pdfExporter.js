@@ -448,7 +448,7 @@ function renderFormattedTextToPDF(
       lineStartX,
       currentY,
       availableWidth,
-      'left', // Don't justify the last line
+      textAlign === 'center' ? 'center' : 'left', // Preserve center alignment, but don't justify the last line
       true,
       pdfFont,
       fontSize
@@ -538,8 +538,19 @@ function renderMixedFormattedLine(
     spaceWidth = totalSpaceAvailable / totalSpaces;
   }
 
+  // Calculate starting position based on text alignment
+  let startX = x;
+  if (textAlign === 'center') {
+    const totalContentWidth = totalWordWidth + totalSpaces * spaceWidth;
+    // Only center if content fits within the available width, otherwise left-align
+    if (totalContentWidth <= maxWidth) {
+      startX = x + (maxWidth - totalContentWidth) / 2;
+    }
+    // If content is too wide, keep startX = x (left-aligned)
+  }
+
   // Render each word with proper formatting
-  let currentX = x;
+  let currentX = startX;
   let lastFontStyle = null;
   let lastFontSize = null;
 
@@ -671,10 +682,9 @@ export async function exportToPDF(book, options = {}) {
 
     let currentY = topMargin;
 
-    // Track chapter opening pages, blank pages, and front matter pages during generation
+    // Track chapter opening pages and blank pages during generation
     const chapterOpeningPages = new Set();
     const blankPages = new Set();
-    const frontMatterPages = new Set();
 
     // Function to mark a page as a chapter opening
     const markChapterPage = () => {
@@ -686,12 +696,6 @@ export async function exportToPDF(book, options = {}) {
     const markBlankPage = () => {
       const currentPageNumber = pdf.internal.getNumberOfPages();
       blankPages.add(currentPageNumber);
-    };
-
-    // Function to mark a page as front matter
-    const markFrontMatterPage = () => {
-      const currentPageNumber = pdf.internal.getNumberOfPages();
-      frontMatterPages.add(currentPageNumber);
     };
 
     // Function to update margins when page changes
@@ -769,244 +773,65 @@ export async function exportToPDF(book, options = {}) {
         safeText(pdf, authorText, authorX, currentY);
       }
 
-      // Start new page for content only if there's no front matter following
-      // If there's front matter, it will handle its own page breaks
-      if (!(book.frontMatter && book.frontMatter.length > 0)) {
+      // Start new page for content
+      pdf.addPage();
+      updateMarginsForPage();
+      currentY = topMargin;
+
+      // If chapters start on new pages, this page will become blank, so mark it
+      if (template.chapterHeader.pageBreak) {
+        markBlankPage();
+      }
+    }
+
+    // Set content font
+    pdf.setFontSize(fontSize);
+    pdf.setFont(pdfFont, 'normal');
+
+    // Front Matter Processing
+    if (book.frontMatter && book.frontMatter.length > 0) {
+      book.frontMatter.forEach(frontMatterItem => {
+        if (!frontMatterItem.content || !frontMatterItem.content.trim()) {
+          return; // Skip empty front matter items
+        }
+
+        // Start new page for each front matter item
         pdf.addPage();
         updateMarginsForPage();
         currentY = topMargin;
 
-        // If chapters start on new pages, this page will become blank, so mark it
-        if (template.chapterHeader.pageBreak) {
-          markBlankPage();
-        }
-      }
-    }
-
-    // Process Front Matter
-    if (book.frontMatter && book.frontMatter.length > 0) {
-      console.log('Processing front matter sections:', book.frontMatter.length);
-
-      // Filter and sort enabled front matter
-      const enabledFrontMatter = book.frontMatter.filter(
-        fm => fm.enabled !== false
-      );
-
-      enabledFrontMatter.forEach((frontMatterItem, index) => {
-        console.log(
-          `Processing front matter: ${frontMatterItem.type} - ${frontMatterItem.title}`
-        );
-
-        // Determine if we need a new page for this front matter section
-        const needsNewPage = index > 0 || book.title || book.author;
-
-        if (needsNewPage) {
-          // Add a new page for this front matter section
-          pdf.addPage();
+        // Force front matter to start on right-hand (odd) page
+        const currentPageNumber = pdf.internal.getNumberOfPages();
+        if (currentPageNumber % 2 === 0) {
+          markBlankPage(); // Mark current page as blank
+          pdf.addPage(); // Add the actual front matter page
           updateMarginsForPage();
           currentY = topMargin;
-
-          // Force ALL front matter sections to start on right-hand (odd) pages
-          // This is a standard publishing convention for front matter, including prologues
-          const currentPageNumber = pdf.internal.getNumberOfPages();
-
-          // If current page is even (left-hand), mark it as blank and add a page for the front matter
-          if (currentPageNumber % 2 === 0) {
-            markBlankPage(); // Mark current page as blank
-            pdf.addPage(); // Add the actual front matter page
-            updateMarginsForPage();
-            currentY = topMargin;
-          }
         }
 
-        // Always mark the current page as front matter (regardless of whether we added a new page)
+        // Mark this as front matter page
+        const markFrontMatterPage = () => {
+          const pageNumber = pdf.internal.getNumberOfPages();
+          blankPages.delete(pageNumber); // Remove from blank pages if it was marked as such
+        };
         markFrontMatterPage();
 
-        // Add front matter title (only for prologue, which uses chapter header styling)
-        if (frontMatterItem.title && frontMatterItem.type === 'prologue') {
-          // Mark prologue pages as chapter opening pages for header/numbering purposes
-          markChapterPage();
+        if (frontMatterItem.type === 'copyright') {
+          // For copyright pages, preserve exact line breaks including blank lines and use center alignment
+          const lines = frontMatterItem.content.split('\n');
 
-          // Add line breaks before prologue header (same as chapters)
-          const lineBreaksBefore = template.chapterHeader.lineBreaksBefore || 0;
-          for (let i = 0; i < lineBreaksBefore; i++) {
-            currentY += lineHeight;
-            // Check if we need a new page
-            if (
-              currentY + template.chapterHeader.fontSize * 2 >
-              pageHeight - bottomMargin
-            ) {
-              pdf.addPage();
-              updateMarginsForPage();
-              currentY = topMargin;
-              break; // Stop adding line breaks if we hit a new page
-            }
-          }
+          lines.forEach((line, _lineIndex) => {
+            if (line.trim()) {
+              // For copyright, use PDF's built-in text splitting and center each resulting line
+              pdf.setFont(pdfFont, 'normal');
+              pdf.setFontSize(fontSize);
 
-          // Check if we need a new page for the prologue header
-          if (
-            currentY + template.chapterHeader.fontSize * 2 >
-            pageHeight - bottomMargin
-          ) {
-            pdf.addPage();
-            updateMarginsForPage();
-            currentY = topMargin;
-          }
-
-          // Use the same header configuration as chapters for prologues
-          const prologueHeaderText = frontMatterItem.title;
-
-          pdf.setFont(pdfFont, template.chapterHeader.fontWeight);
-          pdf.setFontSize(template.chapterHeader.fontSize);
-
-          // Split prologue header text to handle long titles
-          const prologueHeaderLines = pdf.splitTextToSize(
-            prologueHeaderText,
-            contentWidth
-          );
-
-          prologueHeaderLines.forEach((line, _lineIndex) => {
-            let headerX = leftMargin;
-            if (template.chapterHeader.alignment === 'center') {
-              const lineWidth = pdf.getTextWidth(line);
-              headerX = leftMargin + (contentWidth - lineWidth) / 2;
-            } else if (template.chapterHeader.alignment === 'right') {
-              const lineWidth = pdf.getTextWidth(line);
-              headerX = leftMargin + contentWidth - lineWidth;
-            }
-
-            safeText(pdf, line, headerX, currentY);
-            currentY += template.chapterHeader.fontSize * 1.2; // Line spacing for headers
-          });
-
-          // Add spacing after prologue header
-          currentY +=
-            template.chapterHeader.fontSize *
-            (template.chapterHeader.spacing - 1.2);
-        }
-
-        // Reset to content font
-        pdf.setFontSize(fontSize);
-        pdf.setFont(pdfFont, 'normal');
-
-        // Handle different front matter types
-        if (frontMatterItem.type === 'map' && frontMatterItem.imageData) {
-          // Handle map/image content
-          try {
-            // Add the image to the PDF
-            const imgData = frontMatterItem.imageData;
-
-            // Calculate image dimensions to fit on page
-            const maxWidth = contentWidth * 0.8; // Use 80% of content width
-            const maxHeight = (pageHeight - currentY - bottomMargin) * 0.8; // Use 80% of remaining height
-
-            // Center the image
-            const imgX = leftMargin + (contentWidth - maxWidth) / 2;
-
-            pdf.addImage(imgData, 'JPEG', imgX, currentY, maxWidth, maxHeight);
-            currentY += maxHeight + 24; // Move past image with some spacing
-
-            // Add description if available
-            if (frontMatterItem.content && frontMatterItem.content.trim()) {
-              currentY += 12; // Extra space before description
-
-              const segments = parseMarkdownForPDF(
-                frontMatterItem.content.trim()
+              const wrappedLines = pdf.splitTextToSize(
+                line.trim(),
+                contentWidth
               );
-              currentY = renderFormattedTextToPDF(
-                pdf,
-                segments,
-                leftMargin,
-                currentY,
-                contentWidth,
-                fontSize,
-                lineHeight,
-                pageHeight,
-                bottomMargin,
-                topMargin,
-                updateMarginsForPage,
-                'center', // Center align descriptions for maps
-                true, // This is treated as first paragraph
-                'separated', // Use separated style for map descriptions
-                pdfFont
-              );
-            }
-          } catch (error) {
-            console.warn('Failed to add image to PDF:', error);
-            // Fallback to text-only if image fails
-            if (frontMatterItem.content && frontMatterItem.content.trim()) {
-              const segments = parseMarkdownForPDF(
-                frontMatterItem.content.trim()
-              );
-              currentY = renderFormattedTextToPDF(
-                pdf,
-                segments,
-                leftMargin,
-                currentY,
-                contentWidth,
-                fontSize,
-                lineHeight,
-                pageHeight,
-                bottomMargin,
-                topMargin,
-                updateMarginsForPage,
-                template.textAlign || 'justified',
-                true,
-                template.paragraphStyle || 'indented',
-                pdfFont
-              );
-            }
-          }
-        } else if (frontMatterItem.content && frontMatterItem.content.trim()) {
-          // Handle text content
-          if (frontMatterItem.type === 'copyright') {
-            // For copyright pages, preserve exact line breaks including blank lines
-            const lines = frontMatterItem.content.split('\n');
 
-            lines.forEach((line, lineIndex) => {
-              // Check if we need a new page
-              if (currentY + lineHeight > pageHeight - bottomMargin) {
-                pdf.addPage();
-                updateMarginsForPage();
-                currentY = topMargin;
-                markFrontMatterPage(); // Mark continuation pages as front matter too
-              }
-
-              if (line.trim()) {
-                // Process non-empty lines
-                const segments = parseMarkdownForPDF(line.trim());
-
-                currentY = renderFormattedTextToPDF(
-                  pdf,
-                  segments,
-                  leftMargin,
-                  currentY,
-                  contentWidth,
-                  fontSize,
-                  lineHeight,
-                  pageHeight,
-                  bottomMargin,
-                  topMargin,
-                  updateMarginsForPage,
-                  'center', // Copyright pages always use center alignment
-                  lineIndex === 0, // isFirstParagraph
-                  'separated', // Copyright pages always use separated style
-                  pdfFont
-                );
-              }
-
-              // Always advance to next line (preserves blank lines)
-              currentY += lineHeight;
-            });
-          } else {
-            // For other front matter types, use the original logic (filter out blank lines)
-            const paragraphs = frontMatterItem.content
-              .split('\n')
-              .filter(p => p.trim());
-
-            paragraphs.forEach((paragraph, paragraphIndex) => {
-              const trimmedParagraph = paragraph.trim();
-              if (trimmedParagraph) {
+              wrappedLines.forEach(wrappedLine => {
                 // Check if we need a new page
                 if (currentY + lineHeight > pageHeight - bottomMargin) {
                   pdf.addPage();
@@ -1015,48 +840,174 @@ export async function exportToPDF(book, options = {}) {
                   markFrontMatterPage(); // Mark continuation pages as front matter too
                 }
 
-                const segments = parseMarkdownForPDF(trimmedParagraph);
+                // Center each wrapped line
+                const lineWidth = pdf.getTextWidth(wrappedLine);
+                const centerX = leftMargin + (contentWidth - lineWidth) / 2;
 
-                // Use template setting for non-copyright front matter
-                const textAlignment = template.textAlign || 'justified';
+                safeText(pdf, wrappedLine, centerX, currentY);
+                currentY += lineHeight;
+              });
+            } else {
+              // Handle blank lines - advance to next line
+              if (currentY + lineHeight > pageHeight - bottomMargin) {
+                pdf.addPage();
+                updateMarginsForPage();
+                currentY = topMargin;
+                markFrontMatterPage(); // Mark continuation pages as front matter too
+              }
+              currentY += lineHeight;
+            }
+          });
+        } else {
+          // Handle other front matter types (e.g., prologue) with heading support
 
-                currentY = renderFormattedTextToPDF(
+          // Add heading for non-copyright front matter items (like prologue)
+          if (frontMatterItem.title && frontMatterItem.type !== 'copyright') {
+            // Add line breaks before front matter header (similar to chapter headers)
+            const lineBreaksBefore =
+              template.chapterHeader.lineBreaksBefore || 0;
+            for (let i = 0; i < lineBreaksBefore; i++) {
+              currentY += lineHeight;
+              // Check if we need a new page
+              if (
+                currentY + template.chapterHeader.fontSize * 2 >
+                pageHeight - bottomMargin
+              ) {
+                pdf.addPage();
+                updateMarginsForPage();
+                currentY = topMargin;
+                markFrontMatterPage();
+                break; // Stop adding line breaks if we hit a new page
+              }
+            }
+
+            // Check if we need a new page for the front matter header
+            if (
+              currentY + template.chapterHeader.fontSize * 2 >
+              pageHeight - bottomMargin
+            ) {
+              pdf.addPage();
+              updateMarginsForPage();
+              currentY = topMargin;
+              markFrontMatterPage();
+            }
+
+            // Render front matter header (e.g., "Prologue")
+            pdf.setFont(pdfFont, template.chapterHeader.fontWeight);
+            pdf.setFontSize(template.chapterHeader.fontSize);
+
+            const frontMatterHeaderLines = pdf.splitTextToSize(
+              frontMatterItem.title,
+              contentWidth
+            );
+
+            frontMatterHeaderLines.forEach((line, _lineIndex) => {
+              let headerX = leftMargin;
+              if (template.chapterHeader.alignment === 'center') {
+                const lineWidth = pdf.getTextWidth(line);
+                headerX = leftMargin + (contentWidth - lineWidth) / 2;
+              } else if (template.chapterHeader.alignment === 'right') {
+                const lineWidth = pdf.getTextWidth(line);
+                headerX = leftMargin + contentWidth - lineWidth;
+              }
+
+              safeText(pdf, line, headerX, currentY);
+              currentY += template.chapterHeader.fontSize * 1.2; // Line spacing for headers
+            });
+
+            // Add spacing after front matter header
+            currentY +=
+              template.chapterHeader.fontSize *
+              (template.chapterHeader.spacing - 1.2);
+
+            // Reset to content font
+            pdf.setFont(pdfFont, 'normal');
+            pdf.setFontSize(fontSize);
+          }
+
+          const paragraphs = frontMatterItem.content
+            .split('\n')
+            .filter(p => p.trim());
+
+          paragraphs.forEach((paragraph, paragraphIndex) => {
+            if (paragraph.trim()) {
+              const words = paragraph.trim().split(/\s+/);
+              let currentLineWords = [];
+              const _isFirstParagraph = paragraphIndex === 0;
+
+              words.forEach((word, wordIndex) => {
+                const wordObj = {
+                  text: word,
+                  type: 'normal',
+                  needsSpace: wordIndex > 0
+                };
+
+                const testLine = [...currentLineWords, wordObj]
+                  .map(w => w.text)
+                  .join(' ');
+                const testWidth = pdf.getTextWidth(testLine);
+
+                if (testWidth <= contentWidth) {
+                  currentLineWords.push(wordObj);
+                } else {
+                  // Render current line
+                  if (currentLineWords.length > 0) {
+                    if (currentY + lineHeight > pageHeight - bottomMargin) {
+                      pdf.addPage();
+                      updateMarginsForPage();
+                      currentY = topMargin;
+                      markFrontMatterPage();
+                    }
+
+                    const lineStartX = leftMargin;
+                    renderMixedFormattedLine(
+                      pdf,
+                      currentLineWords,
+                      lineStartX,
+                      currentY,
+                      contentWidth,
+                      'left',
+                      false,
+                      pdfFont,
+                      fontSize
+                    );
+                    currentY += lineHeight;
+                  }
+                  currentLineWords = [wordObj];
+                }
+              });
+
+              // Render remaining words in the last line of paragraph
+              if (currentLineWords.length > 0) {
+                if (currentY + lineHeight > pageHeight - bottomMargin) {
+                  pdf.addPage();
+                  updateMarginsForPage();
+                  currentY = topMargin;
+                  markFrontMatterPage();
+                }
+
+                const lineStartX = leftMargin;
+                renderMixedFormattedLine(
                   pdf,
-                  segments,
-                  leftMargin,
+                  currentLineWords,
+                  lineStartX,
                   currentY,
                   contentWidth,
-                  fontSize,
-                  lineHeight,
-                  pageHeight,
-                  bottomMargin,
-                  topMargin,
-                  updateMarginsForPage,
-                  textAlignment,
-                  paragraphIndex === 0, // isFirstParagraph
-                  template.paragraphStyle || 'indented',
-                  pdfFont
+                  'left',
+                  true,
+                  pdfFont,
+                  fontSize
                 );
-
-                currentY += lineHeight; // Move to next line
-
-                // Add paragraph spacing for separated style
-                if (template.paragraphStyle === 'separated') {
-                  currentY += lineHeight;
-                }
+                currentY += lineHeight;
               }
-            });
-          }
+
+              // Add paragraph spacing
+              currentY += lineHeight * 0.5;
+            }
+          });
         }
       });
-
-      // No need to add page break after front matter - the chapter logic will handle page breaks appropriately
-      // This prevents double blank pages when both front matter ends and chapters begin with page breaks
     }
-
-    // Set content font
-    pdf.setFontSize(fontSize);
-    pdf.setFont(pdfFont, 'normal');
 
     // Helper function to generate chapter header text
     const generateChapterHeader = (chapter, chapterNumber) => {
@@ -1078,17 +1029,105 @@ export async function exportToPDF(book, options = {}) {
       }
     };
 
-    // Process each chapter
-    book.chapters.forEach((chapter, chapterIndex) => {
-      const chapterNumber = chapterIndex + 1;
+    // Process chapters - with parts support if book has parts
+    if (book.parts && book.parts.length > 0) {
+      // Process chapters organized by parts
+      let globalChapterIndex = 0;
 
+      book.parts.forEach((part, _partIndex) => {
+        // Get chapters for this part
+        const partChapters = part.chapterIds
+          .map(chapterId => book.chapters.find(ch => ch.id === chapterId))
+          .filter(Boolean);
+
+        if (partChapters.length > 0) {
+          // Add part page (always on odd page, followed by blank page)
+          pdf.addPage();
+          updateMarginsForPage();
+          currentY = topMargin;
+
+          // Force part to start on right-hand (odd) page
+          const currentPageNumber = pdf.internal.getNumberOfPages();
+          if (currentPageNumber % 2 === 0) {
+            markBlankPage(); // Mark current page as blank
+            pdf.addPage(); // Add the actual part page
+            updateMarginsForPage();
+            currentY = topMargin;
+          }
+
+          // Position part title 1/3 to 1/2 way down the page (approximately 40%)
+          currentY = topMargin + (pageHeight - topMargin - bottomMargin) * 0.4;
+
+          // Render part title with larger font size
+          pdf.setFont(pdfFont, 'bold');
+          const partFontSize = template.chapterHeader.fontSize * 1.8; // Significantly larger than chapter headers
+          pdf.setFontSize(partFontSize);
+
+          const partLines = pdf.splitTextToSize(part.title, contentWidth);
+          const partLineHeight = partFontSize * 1.3; // Generous line spacing for part titles
+
+          partLines.forEach((line, _lineIndex) => {
+            const lineWidth = pdf.getTextWidth(line);
+            const centerX = leftMargin + (contentWidth - lineWidth) / 2;
+            safeText(pdf, line, centerX, currentY);
+            currentY += partLineHeight;
+          });
+
+          // Add blank page after part page so first chapter starts on odd page
+          pdf.addPage();
+          updateMarginsForPage();
+          markBlankPage();
+
+          // Process chapters in this part
+          partChapters.forEach((chapter, localChapterIndex) => {
+            const chapterNumber = globalChapterIndex + localChapterIndex + 1;
+            processChapter(
+              chapter,
+              chapterNumber,
+              globalChapterIndex + localChapterIndex === 0
+            );
+          });
+
+          globalChapterIndex += partChapters.length;
+        }
+      });
+
+      // Process any unassigned chapters (chapters not in any part)
+      const assignedChapterIds = new Set();
+      book.parts.forEach(part => {
+        part.chapterIds.forEach(chapterId => {
+          assignedChapterIds.add(chapterId);
+        });
+      });
+
+      const unassignedChapters = book.chapters.filter(
+        ch => !assignedChapterIds.has(ch.id)
+      );
+      unassignedChapters.forEach((chapter, localChapterIndex) => {
+        const chapterNumber = globalChapterIndex + localChapterIndex + 1;
+        processChapter(
+          chapter,
+          chapterNumber,
+          globalChapterIndex + localChapterIndex === 0
+        );
+      });
+    } else {
+      // Process chapters directly (no parts)
+      book.chapters.forEach((chapter, chapterIndex) => {
+        const chapterNumber = chapterIndex + 1;
+        processChapter(chapter, chapterNumber, chapterIndex === 0);
+      });
+    }
+
+    // Helper function to process a single chapter
+    function processChapter(chapter, chapterNumber, isFirstChapterOverall) {
       // Add chapter header
       if (chapter.title || template.chapterHeader.style !== 'none') {
         // Determine if we need a page break for this chapter
         let shouldAddPageBreak = false;
 
         if (template.chapterHeader.pageBreak) {
-          if (chapterIndex === 0) {
+          if (isFirstChapterOverall) {
             // First chapter: only add page break if no title page, OR if we need right-hand start
             shouldAddPageBreak =
               !hasTitlePage || template.chapterHeader.startOnRightPage;
@@ -1377,7 +1416,7 @@ export async function exportToPDF(book, options = {}) {
           currentY += lineHeight * 1.5;
         }
       });
-    });
+    }
 
     // Add page numbers and running headers
     const pageCount = pdf.internal.getNumberOfPages();
@@ -1395,16 +1434,12 @@ export async function exportToPDF(book, options = {}) {
       // Skip running headers on blank pages
       const isBlankPage = blankPages.has(i);
 
-      // Skip running headers on front matter pages
-      const isFrontMatterPage = frontMatterPages.has(i);
-
       // Add running headers
       if (
         template.runningHeaders?.enabled &&
         !isFirstPage &&
         !isChapterPage &&
-        !isBlankPage &&
-        !isFrontMatterPage
+        !isBlankPage
       ) {
         const pageMargins = getPageMargins(template, i);
         const pageContentWidth =
@@ -1443,8 +1478,8 @@ export async function exportToPDF(book, options = {}) {
         }
       }
 
-      // Add page numbers (skip on title page, front matter pages, and blank pages)
-      if (!(i === 1 && hasTitlePage) && !isFrontMatterPage && !isBlankPage) {
+      // Add page numbers (skip on title page)
+      if (!(i === 1 && hasTitlePage)) {
         // Make page number font size proportional to body text (70% of body text, min 8pt, max 11pt)
         const pageNumberSize = Math.max(8, Math.min(11, fontSize * 0.7));
         pdf.setFontSize(pageNumberSize);
