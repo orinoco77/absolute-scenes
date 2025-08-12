@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # v1.0.0, v2.3.4, etc.
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -54,7 +54,7 @@ jobs:
         $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json -Encoding UTF8
         Write-Host "✅ package.json updated for Windows signing"
 
-    # ---------- MACOS CERTIFICATE SETUP (Option 1) ----------
+    # ---------- MACOS CERTIFICATE SETUP ----------
     - name: Setup macOS Code Signing
       if: matrix.platform == 'mac'
       run: |
@@ -89,6 +89,12 @@ jobs:
         ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
         APPLE_ID: ${{ secrets.APPLE_ID }}
         APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+
+    # ---------- DEBUG: SHOW BUILD OUTPUT ----------
+    - name: List dist contents before upload
+      run: |
+        echo "📦 Contents of dist/:"
+        ls -l dist || echo "No dist directory found"
 
     # ---------- UPLOAD ARTIFACTS ----------
     - name: Upload build artifacts
@@ -139,15 +145,17 @@ jobs:
         path: ./artifacts/release-windows
 
     - name: Show downloaded files
-      run: ls -R ./artifacts
+      run: |
+        echo "📂 Final artifacts structure:"
+        ls -R ./artifacts
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          ./artifacts/release-linux/*
-          ./artifacts/release-mac/*
-          ./artifacts/release-windows/*
+          ./artifacts/release-linux/**
+          ./artifacts/release-mac/**
+          ./artifacts/release-windows/**
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
