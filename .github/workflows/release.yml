@@ -47,6 +47,20 @@ jobs:
         New-Item -ItemType Directory -Force -Path "cert"
         [IO.File]::WriteAllBytes($certPath, $certBytes)
         echo "Certificate saved to $certPath"
+        
+        # Create a simple certificate password file for testing
+        "${{ secrets.WINDOWS_CERT_PASSWORD }}" | Out-File -FilePath "cert\password.txt" -Encoding ASCII -NoNewline
+        
+        # Try to verify the certificate with the password
+        try {
+          $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+          $cert.Import($certPath, "${{ secrets.WINDOWS_CERT_PASSWORD }}", "DefaultKeySet")
+          Write-Host "✅ Certificate imports successfully with provided password"
+          Write-Host "Certificate Subject: $($cert.Subject)"
+          $cert.Dispose()
+        } catch {
+          Write-Host "❌ Certificate import failed: $($_.Exception.Message)"
+        }
 
     - name: Setup macOS Code Signing
       if: matrix.os == 'macos-latest'
@@ -71,15 +85,23 @@ jobs:
     - name: Run build
       run: npm run build
 
+    - name: Update package.json with certificate password
+      if: matrix.os == 'windows-latest'
+      run: |
+        echo const fs = require('fs'); > update-package.js
+        echo const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8')); >> update-package.js
+        echo packageJson.build.win.certificatePassword = '${{ secrets.WINDOWS_CERT_PASSWORD }}'; >> update-package.js
+        echo fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 4)); >> update-package.js
+        echo console.log('Updated package.json with certificate password'); >> update-package.js
+        node update-package.js
+        del update-package.js
+        
     - name: Run dist (Windows with signing)
       if: matrix.os == 'windows-latest'
       run: npm run dist
       env:
-        CSC_LINK: cert/windows-cert.p12
-        CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
-        CI: false
         
     - name: Run dist (macOS/Linux)
       if: matrix.os != 'windows-latest'
