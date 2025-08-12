@@ -41,11 +41,30 @@ jobs:
         # Install Python setuptools (sometimes needed)
         python3 -m pip install setuptools || echo "setuptools install failed, continuing..."
 
+    - name: Check and handle missing icons (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        # List common icon locations to debug
+        echo "Checking for icons..."
+        ls -la public/ 2>/dev/null | grep -i icon || echo "No icons in public/"
+        ls -la assets/ 2>/dev/null | grep -i icon || echo "No icons in assets/"
+        ls -la build/ 2>/dev/null | grep -i icon || echo "No icons in build/"
+        
+        # Check electron-builder config
+        if grep -q '"icon"' package.json; then
+          echo "Icon configuration found in package.json"
+          grep -A 5 -B 5 '"icon"' package.json
+        else
+          echo "No icon configuration found"
+        fi
+
     - name: Run build
       run: npm run build
 
-    - name: Run dist
-      run: npm run dist
+    - name: Run dist with fallback
+      run: |
+        # Try normal dist first, fallback to simpler targets if it fails
+        npm run dist || npm run dist -- --mac zip
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
