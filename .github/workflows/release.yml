@@ -3,177 +3,146 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # Triggers on version tags like v1.0.0
-  workflow_dispatch: # Allows manual triggering
+      - 'v*' # v1.0.0, v2.3.4, etc.
+  workflow_dispatch:
 
 permissions:
   contents: write
-  discussions: write
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: ubuntu-latest
             platform: linux
-          - os: windows-latest
-            platform: windows
           - os: macos-latest
             platform: mac
+          - os: windows-latest
+            platform: windows
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Setup Windows Code Signing
-      if: matrix.os == 'windows-latest'
-      shell: powershell
-      run: |
-        # Decode base64 certificate and save to file
-        $certBytes = [Convert]::FromBase64String("${{ secrets.WINDOWS_CERT_FILE }}")
-        $certPath = "cert\windows-cert.p12"
-        New-Item -ItemType Directory -Force -Path "cert"
-        [IO.File]::WriteAllBytes($certPath, $certBytes)
-        echo "Certificate saved to $certPath"
-        
-        # Create a simple certificate password file for testing
-        "${{ secrets.WINDOWS_CERT_PASSWORD }}" | Out-File -FilePath "cert\password.txt" -Encoding ASCII -NoNewline
-        
-        # Try to verify the certificate with the password
-        try {
-          $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
-          $cert.Import($certPath, "${{ secrets.WINDOWS_CERT_PASSWORD }}", "DefaultKeySet")
-          Write-Host "✅ Certificate imports successfully with provided password"
-          Write-Host "Certificate Subject: $($cert.Subject)"
-          $cert.Dispose()
-        } catch {
-          Write-Host "❌ Certificate import failed: $($_.Exception.Message)"
-        }
+      # ---------- WINDOWS CERTIFICATE SETUP ----------
+      - name: Setup Windows Code Signing
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          # Decode base64 certificate and save to file
+          $certBytes = [Convert]::FromBase64String("${{ secrets.WINDOWS_CERT_FILE }}")
+          New-Item -ItemType Directory -Force -Path "cert" | Out-Null
+          [IO.File]::WriteAllBytes("cert/windows-cert.p12", $certBytes)
+          Write-Host "✅ Windows certificate saved"
 
-    - name: Setup macOS Code Signing
-      if: matrix.os == 'macos-latest'
-      run: |
-        # Import certificate to keychain if provided
-        if [ ! -z "${{ secrets.MACOS_CERT_FILE }}" ]; then
-          echo "Setting up macOS code signing..."
-          # You can add macOS certificate setup here if needed
-          echo "macOS signing configured"
-        else
-          echo "No macOS certificate provided, building unsigned"
-        fi
+          # Patch package.json for Electron Builder
+          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          if (-not $pkg.build.win) { $pkg.build | Add-Member -MemberType NoteProperty -Name win -Value @{} }
+          $pkg.build.win.certificateFile = "cert/windows-cert.p12"
+          $pkg.build.win.certificatePassword = "${{ secrets.WINDOWS_CERT_PASSWORD }}"
+          $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json -Encoding UTF8
+          Write-Host "✅ package.json updated for Windows signing"
 
-    - name: Install platform-specific dependencies (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        # Install dmg-license explicitly
-        npm install dmg-license --save-dev || echo "dmg-license install failed, continuing..."
-        # Install Python setuptools (sometimes needed)
-        python3 -m pip install setuptools || echo "setuptools install failed, continuing..."
+      # ---------- MACOS CERTIFICATE SETUP (optional) ----------
+      - name: Setup macOS Code Signing
+        if: matrix.platform == 'mac' && secrets.MACOS_CERT_FILE != ''
+        run: |
+          echo "Setting up macOS signing..."
+          echo "${{ secrets.MACOS_CERT_FILE }}" | base64 --decode > macos-cert.p12
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import macos-cert.p12 -k build.keychain -P "${{ secrets.MACOS_CERT_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+          echo "✅ macOS certificate imported"
 
-    - name: Run build
-      run: npm run build
+      # ---------- PLATFORM-SPECIFIC DEPENDENCIES ----------
+      - name: Install macOS-specific dependencies
+        if: matrix.platform == 'mac'
+        run: |
+          npm install dmg-license --save-dev || echo "Skipping dmg-license"
+          python3 -m pip install setuptools || echo "Skipping setuptools"
 
-    - name: Update package.json with certificate password
-      if: matrix.os == 'windows-latest'
-      run: |
-        echo const fs = require('fs'); > update-package.js
-        echo const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8')); >> update-package.js
-        echo packageJson.build.win.certificatePassword = '${{ secrets.WINDOWS_CERT_PASSWORD }}'; >> update-package.js
-        echo fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 4)); >> update-package.js
-        echo console.log('Updated package.json with certificate password'); >> update-package.js
-        node update-package.js
-        del update-package.js
-        
-    - name: Run dist (Windows with signing)
-      if: matrix.os == 'windows-latest'
-      run: npm run dist
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
-        
-    - name: Run dist (macOS/Linux)
-      if: matrix.os != 'windows-latest'
-      run: npm run dist
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
-        CI: false
-        APPLE_ID: ${{ secrets.APPLE_ID }}
-        APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      # ---------- BUILD ----------
+      - name: Run build
+        run: npm run build
 
-    - name: List build outputs
-      shell: bash
-      run: |
-        echo "Build outputs in dist/:"
-        ls -la dist/ || echo "No dist directory"
-        echo "Looking for installer files:"
-        find dist/ -name "*.dmg" -o -name "*.zip" -o -name "*Setup*.exe" -o -name "*.msi" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.tar.gz" -o -name "*.snap" 2>/dev/null || echo "No installer files found"
+      - name: Package app (dist)
+        run: npm run dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: release-${{ matrix.platform }}
-        path: |
-          dist/*.dmg
-          dist/*.zip
-          dist/*Setup*.exe
-          dist/*.msi
-          dist/*.deb
-          dist/*.rpm
-          dist/*.AppImage
-          dist/*.tar.gz
-          dist/*.snap
-        retention-days: 5
+      # ---------- UPLOAD ARTIFACTS ----------
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*Setup*.exe
+            dist/*.msi
+            dist/*.deb
+            dist/*.rpm
+            dist/*.AppImage
+            dist/*.tar.gz
+            dist/*.snap
+          retention-days: 5
 
-    - name: Cleanup certificates
-      if: always()
-      shell: bash
-      run: |
-        # Remove certificate files for security
-        rm -rf cert/ 2>/dev/null || echo "No cert directory to clean"
-        echo "Certificate files cleaned up"
+      # ---------- CLEANUP CERTS ----------
+      - name: Cleanup certificates
+        if: always()
+        run: rm -rf cert macos-cert.p12 || true
 
   release:
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
-    
+
     steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: ./artifacts
+      # Download each platform’s artifacts into proper folders
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-linux
+          path: ./artifacts/release-linux
 
-    - name: Display structure of downloaded files
-      run: ls -la ./artifacts
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-mac
+          path: ./artifacts/release-mac
 
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: |
-          ./artifacts/release-linux/*.AppImage
-          ./artifacts/release-linux/*.deb
-          ./artifacts/release-linux/*.rpm
-          ./artifacts/release-linux/*.tar.gz
-          ./artifacts/release-linux/*.snap
-          ./artifacts/release-windows/*.exe
-          ./artifacts/release-windows/*.msi
-          ./artifacts/release-mac/*.dmg
-          ./artifacts/release-mac/*.zip
-        generate_release_notes: true
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-windows
+          path: ./artifacts/release-windows
+
+      - name: Show downloaded files
+        run: ls -R ./artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./artifacts/release-linux/*
+            ./artifacts/release-mac/*
+            ./artifacts/release-windows/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
