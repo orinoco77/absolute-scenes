@@ -33,10 +33,10 @@ function SceneList({
   onEmptyRecycleBin
 }) {
   const [expandedChapters, setExpandedChapters] = useState(
-    new Set(chapters.map(ch => ch.id))
+    new Set((chapters || []).map(ch => ch.id))
   );
   const [expandedParts, setExpandedParts] = useState(
-    new Set(parts.map(part => part.id))
+    new Set((parts || []).map(part => part.id))
   );
   const [editingChapter, setEditingChapter] = useState(null);
   const [editingPart, setEditingPart] = useState(null);
@@ -48,28 +48,32 @@ function SceneList({
 
   // Update expanded chapters when chapters change
   React.useEffect(() => {
-    setExpandedChapters(prev => {
-      const newExpanded = new Set(prev);
-      chapters.forEach(chapter => {
-        if (!newExpanded.has(chapter.id)) {
-          newExpanded.add(chapter.id); // Auto-expand new chapters
-        }
+    if (chapters) {
+      setExpandedChapters(prev => {
+        const newExpanded = new Set(prev);
+        chapters.forEach(chapter => {
+          if (!newExpanded.has(chapter.id)) {
+            newExpanded.add(chapter.id); // Auto-expand new chapters
+          }
+        });
+        return newExpanded;
       });
-      return newExpanded;
-    });
+    }
   }, [chapters]);
 
   // Update expanded parts when parts change
   React.useEffect(() => {
-    setExpandedParts(prev => {
-      const newExpanded = new Set(prev);
-      parts.forEach(part => {
-        if (!newExpanded.has(part.id)) {
-          newExpanded.add(part.id); // Auto-expand new parts
-        }
+    if (parts) {
+      setExpandedParts(prev => {
+        const newExpanded = new Set(prev);
+        parts.forEach(part => {
+          if (!newExpanded.has(part.id)) {
+            newExpanded.add(part.id); // Auto-expand new parts
+          }
+        });
+        return newExpanded;
       });
-      return newExpanded;
-    });
+    }
   }, [parts]);
 
   // Close move menus when clicking outside
@@ -163,6 +167,7 @@ function SceneList({
 
   // Helper function to get chapters for a specific part
   const getChaptersInPart = partId => {
+    if (!parts || !chapters) return [];
     const part = parts.find(p => p.id === partId);
     if (!part) return [];
     return part.chapterIds
@@ -172,6 +177,7 @@ function SceneList({
 
   // Helper function to get unassigned chapters (not in any part)
   const getUnassignedChapters = () => {
+    if (!chapters) return [];
     if (!usingParts) return chapters;
 
     const assignedChapterIds = new Set();
@@ -186,7 +192,7 @@ function SceneList({
 
   // Helper function to find which part a chapter belongs to
   const getPartForChapter = chapterId => {
-    return parts.find(part => part.chapterIds.includes(chapterId));
+    return parts?.find(part => part.chapterIds.includes(chapterId));
   };
 
   // Drag and drop handlers
@@ -273,8 +279,8 @@ function SceneList({
 
     if (draggedItem.type === 'part' && target.type === 'part') {
       // Reorder parts
-      const fromIndex = parts.findIndex(p => p.id === draggedItem.id);
-      const toIndex = parts.findIndex(p => p.id === target.id);
+      const fromIndex = parts?.findIndex(p => p.id === draggedItem.id) ?? -1;
+      const toIndex = parts?.findIndex(p => p.id === target.id) ?? -1;
       if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
         onReorderParts(fromIndex, toIndex);
       }
@@ -286,7 +292,7 @@ function SceneList({
       if (draggedPartId === targetPartId) {
         if (usingParts && draggedPartId) {
           // Reorder chapters within a part
-          const part = parts.find(p => p.id === draggedPartId);
+          const part = parts?.find(p => p.id === draggedPartId);
           if (part) {
             const fromIndex = part.chapterIds.findIndex(
               id => id === draggedItem.id
@@ -298,8 +304,9 @@ function SceneList({
           }
         } else {
           // Reorder chapters globally (when not using parts or both unassigned)
-          const fromIndex = chapters.findIndex(ch => ch.id === draggedItem.id);
-          const toIndex = chapters.findIndex(ch => ch.id === target.id);
+          const fromIndex =
+            chapters?.findIndex(ch => ch.id === draggedItem.id) ?? -1;
+          const toIndex = chapters?.findIndex(ch => ch.id === target.id) ?? -1;
           if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
             onReorderChapters(fromIndex, toIndex);
           }
@@ -318,7 +325,7 @@ function SceneList({
     } else if (draggedItem.type === 'scene' && target.type === 'scene') {
       // Only allow reordering scenes within the same chapter
       if (draggedItem.chapterId === target.chapterId) {
-        const chapter = chapters.find(ch => ch.id === draggedItem.chapterId);
+        const chapter = chapters?.find(ch => ch.id === draggedItem.chapterId);
         if (chapter) {
           const fromIndex = chapter.scenes.findIndex(
             s => s.id === draggedItem.id
@@ -711,7 +718,7 @@ function SceneList({
             <small>
               Adding scenes to:{' '}
               <strong>
-                {chapters.find(ch => ch.id === currentChapterId)?.title ||
+                {chapters?.find(ch => ch.id === currentChapterId)?.title ||
                   'Unknown Chapter'}
               </strong>
             </small>
@@ -748,7 +755,7 @@ function SceneList({
             className="primary-btn"
             title={
               currentChapterId
-                ? `Add Scene to ${chapters.find(ch => ch.id === currentChapterId)?.title || 'Current Chapter'}`
+                ? `Add Scene to ${chapters?.find(ch => ch.id === currentChapterId)?.title || 'Current Chapter'}`
                 : 'Select a chapter first'
             }
             disabled={!currentChapterId}
@@ -769,7 +776,7 @@ function SceneList({
         {usingParts ? (
           // Parts-based view
           <>
-            {parts.map((part, __partIndex) => {
+            {(parts || []).map((part, __partIndex) => {
               const isPartExpanded = expandedParts.has(part.id);
               const isCurrentPart = part.id === currentPartId;
               const partChapters = getChaptersInPart(part.id);
@@ -916,7 +923,7 @@ function SceneList({
           </>
         ) : (
           // Simple chapters-only view
-          chapters.map((chapter, chapterIndex) =>
+          (chapters || []).map((chapter, chapterIndex) =>
             renderChapter(chapter, chapterIndex, null)
           )
         )}
