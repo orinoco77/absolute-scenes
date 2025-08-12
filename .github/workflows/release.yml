@@ -52,15 +52,31 @@ jobs:
       run: npm run dist
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+        # Disable auto-publishing to avoid conflicts
+        CI: false
+
+    - name: List build outputs
+      run: |
+        echo "Build outputs in dist/:"
+        ls -la dist/ || echo "No dist directory"
+        echo "Looking for installer files:"
+        find dist/ -name "*.dmg" -o -name "*.zip" -o -name "*Setup*.exe" -o -name "*.msi" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.tar.gz" -o -name "*.snap" 2>/dev/null || echo "No installer files found"
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: release-${{ matrix.platform }}
         path: |
-          dist/**
-          build/**
-          out/**
+          dist/*.dmg
+          dist/*.zip
+          dist/*Setup*.exe
+          dist/*.msi
+          dist/*.deb
+          dist/*.rpm
+          dist/*.AppImage
+          dist/*.tar.gz
+          dist/*.snap
         retention-days: 5
 
   release:
@@ -81,9 +97,15 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          ./artifacts/release-linux/**
-          ./artifacts/release-windows/**
-          ./artifacts/release-mac/**
+          ./artifacts/release-linux/*.AppImage
+          ./artifacts/release-linux/*.deb
+          ./artifacts/release-linux/*.rpm
+          ./artifacts/release-linux/*.tar.gz
+          ./artifacts/release-linux/*.snap
+          ./artifacts/release-windows/*.exe
+          ./artifacts/release-windows/*.msi
+          ./artifacts/release-mac/*.dmg
+          ./artifacts/release-mac/*.zip
         generate_release_notes: true
         draft: false
         prerelease: false
