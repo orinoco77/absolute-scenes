@@ -33,6 +33,14 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Install platform-specific dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        # Install dmg-license explicitly
+        npm install dmg-license --save-dev || echo "dmg-license install failed, continuing..."
+        # Install Python setuptools (sometimes needed)
+        python3 -m pip install setuptools || echo "setuptools install failed, continuing..."
+
     - name: Run build
       run: npm run build
 
