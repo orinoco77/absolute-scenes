@@ -73,25 +73,13 @@ jobs:
 
     - name: Run dist (Windows with signing)
       if: matrix.os == 'windows-latest'
-      shell: powershell
-      run: |
-        # Debug certificate info
-        Write-Host "Certificate file exists: $(Test-Path 'cert\windows-cert.p12')"
-        Write-Host "Certificate file size: $((Get-Item 'cert\windows-cert.p12').Length) bytes"
-        Write-Host "Password length: $('${{ secrets.WINDOWS_CERT_PASSWORD }}'.Length) characters"
-        
-        # Set environment variables and run build
-        $env:CSC_LINK = "cert\windows-cert.p12"
-        $env:CSC_KEY_PASSWORD = "${{ secrets.WINDOWS_CERT_PASSWORD }}"
-        $env:GH_TOKEN = "${{ secrets.GITHUB_TOKEN }}"
-        $env:ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES = "true"
-        $env:CI = "false"
-        
-        # Verify environment variables are set
-        Write-Host "CSC_LINK set to: $env:CSC_LINK"
-        Write-Host "CSC_KEY_PASSWORD is set: $($env:CSC_KEY_PASSWORD -ne $null)"
-        
-        npm run dist
+      run: npm run dist
+      env:
+        CSC_LINK: cert/windows-cert.p12
+        CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+        CI: false
         
     - name: Run dist (macOS/Linux)
       if: matrix.os != 'windows-latest'
