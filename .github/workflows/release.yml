@@ -110,6 +110,7 @@ jobs:
     # ---------- CLEANUP CERTS ----------
     - name: Cleanup certificates
       if: always()
+      shell: bash
       run: rm -rf cert macos-cert.p12 || true
 
   release:
