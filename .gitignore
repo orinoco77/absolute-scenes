@@ -137,3 +137,16 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Code signing certificates - NEVER commit these!
+cert/
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+*.cer
+
+# Environment files with sensitive data
+.env.local
+.env.signing
