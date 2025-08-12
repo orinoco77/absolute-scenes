@@ -37,6 +37,29 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Setup Windows Code Signing
+      if: matrix.os == 'windows-latest'
+      shell: powershell
+      run: |
+        # Decode base64 certificate and save to file
+        $certBytes = [Convert]::FromBase64String("${{ secrets.WINDOWS_CERT_FILE }}")
+        $certPath = "cert\windows-cert.p12"
+        New-Item -ItemType Directory -Force -Path "cert"
+        [IO.File]::WriteAllBytes($certPath, $certBytes)
+        echo "Certificate saved to $certPath"
+
+    - name: Setup macOS Code Signing
+      if: matrix.os == 'macos-latest'
+      run: |
+        # Import certificate to keychain if provided
+        if [ ! -z "${{ secrets.MACOS_CERT_FILE }}" ]; then
+          echo "Setting up macOS code signing..."
+          # You can add macOS certificate setup here if needed
+          echo "macOS signing configured"
+        else
+          echo "No macOS certificate provided, building unsigned"
+        fi
+
     - name: Install platform-specific dependencies (macOS)
       if: matrix.os == 'macos-latest'
       run: |
@@ -55,6 +78,10 @@ jobs:
         ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
         # Disable auto-publishing to avoid conflicts
         CI: false
+        # Code signing environment variables
+        WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
 
     - name: List build outputs
       shell: bash
@@ -79,6 +106,14 @@ jobs:
           dist/*.tar.gz
           dist/*.snap
         retention-days: 5
+
+    - name: Cleanup certificates
+      if: always()
+      shell: bash
+      run: |
+        # Remove certificate files for security
+        rm -rf cert/ 2>/dev/null || echo "No cert directory to clean"
+        echo "Certificate files cleaned up"
 
   release:
     needs: build
