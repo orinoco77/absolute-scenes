@@ -81,13 +81,12 @@ jobs:
           echo "${{ secrets.LINUX_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
           # Install signing tools
           sudo apt-get update
-          # Install dpkg-sig from universe repository
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository universe -y
-          sudo apt-get update
-          sudo apt-get install -y dpkg-sig
-          # Install rpm from alien package or build tools
-          sudo apt-get install -y rpm || echo "RPM install failed, will skip RPM signing"
+          sudo apt-get install -y build-essential debhelper devscripts rpm
+          
+          # Install debsigs (alternative to dpkg-sig)
+          wget -q http://archive.ubuntu.com/ubuntu/pool/universe/d/debsigs/debsigs_0.1.18_all.deb
+          sudo dpkg -i debsigs_0.1.18_all.deb || sudo apt-get install -f -y
+          
           echo "✅ Linux signing tools installed"
         else
           echo "ℹ️ No Linux GPG key provided. Building unsigned packages."
@@ -127,16 +126,16 @@ jobs:
           echo "Using GPG key: $GPG_KEY_ID"
           
           # Sign DEB packages
-          if command -v dpkg-sig >/dev/null 2>&1; then
+          if command -v debsigs >/dev/null 2>&1; then
             for deb in dist/*.deb; do
               if [ -f "$deb" ]; then
                 echo "Signing $deb..."
-                dpkg-sig --sign builder -k "$GPG_KEY_ID" "$deb" || echo "⚠️ Failed to sign $(basename $deb)"
+                debsigs --sign=origin -k "$GPG_KEY_ID" "$deb" || echo "⚠️ Failed to sign $(basename $deb)"
                 echo "✅ Processed $(basename $deb)"
               fi
             done
           else
-            echo "⚠️ dpkg-sig not available, skipping DEB signing"
+            echo "⚠️ debsigs not available, skipping DEB signing"
           fi
           
           # Sign RPM packages
