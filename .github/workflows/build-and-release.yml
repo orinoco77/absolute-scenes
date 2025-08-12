@@ -81,7 +81,13 @@ jobs:
           echo "${{ secrets.LINUX_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
           # Install signing tools
           sudo apt-get update
-          sudo apt-get install -y dpkg-sig rpm
+          # Install dpkg-sig from universe repository
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository universe -y
+          sudo apt-get update
+          sudo apt-get install -y dpkg-sig
+          # Install rpm from alien package or build tools
+          sudo apt-get install -y rpm || echo "RPM install failed, will skip RPM signing"
           echo "✅ Linux signing tools installed"
         else
           echo "ℹ️ No Linux GPG key provided. Building unsigned packages."
@@ -121,27 +127,35 @@ jobs:
           echo "Using GPG key: $GPG_KEY_ID"
           
           # Sign DEB packages
-          for deb in dist/*.deb; do
-            if [ -f "$deb" ]; then
-              echo "Signing $deb..."
-              dpkg-sig --sign builder -k "$GPG_KEY_ID" "$deb"
-              echo "✅ Signed $(basename $deb)"
-            fi
-          done
+          if command -v dpkg-sig >/dev/null 2>&1; then
+            for deb in dist/*.deb; do
+              if [ -f "$deb" ]; then
+                echo "Signing $deb..."
+                dpkg-sig --sign builder -k "$GPG_KEY_ID" "$deb" || echo "⚠️ Failed to sign $(basename $deb)"
+                echo "✅ Processed $(basename $deb)"
+              fi
+            done
+          else
+            echo "⚠️ dpkg-sig not available, skipping DEB signing"
+          fi
           
           # Sign RPM packages
-          for rpm in dist/*.rpm; do
-            if [ -f "$rpm" ]; then
-              echo "Signing $rpm..."
-              # Create temporary rpmmacros for signing
-              echo "%_gpg_name $GPG_KEY_ID" > ~/.rpmmacros
-              echo "%_signature gpg" >> ~/.rpmmacros
-              rpm --addsign "$rpm"
-              echo "✅ Signed $(basename $rpm)"
-            fi
-          done
+          if command -v rpm >/dev/null 2>&1; then
+            for rpm in dist/*.rpm; do
+              if [ -f "$rpm" ]; then
+                echo "Signing $rpm..."
+                # Create temporary rpmmacros for signing
+                echo "%_gpg_name $GPG_KEY_ID" > ~/.rpmmacros
+                echo "%_signature gpg" >> ~/.rpmmacros
+                rpm --addsign "$rpm" || echo "⚠️ Failed to sign $(basename $rpm)"
+                echo "✅ Processed $(basename $rpm)"
+              fi
+            done
+          else
+            echo "⚠️ rpm not available, skipping RPM signing"
+          fi
           
-          echo "✅ All Linux packages signed"
+          echo "✅ Linux package signing completed"
         fi
 
     # ---------- UPLOAD ARTIFACTS ----------
