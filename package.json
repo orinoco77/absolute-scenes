@@ -1,6 +1,6 @@
 {
     "name": "absolute-scenes",
-    "version": "1.3.40",
+    "version": "1.3.41",
     "description": "A scene-based book writing application",
     "main": "public/electron.js",
     "homepage": "./",
@@ -97,7 +97,10 @@
                     "ia32"
                 ]
             },
-            "artifactName": "${productName} Setup ${version}.${ext}"
+            "artifactName": "${productName} Setup ${version}.${ext}",
+            "certificateFile": "cert/windows-cert.p12",
+            "certificatePassword": "scenes",
+            "publisherName": "Adam Short"
         },
         "nsis": {
             "oneClick": false,
@@ -108,7 +111,12 @@
             "createStartMenuShortcut": true,
             "shortcutName": "Absolute Scenes",
             "include": "assets/installer.nsh",
-            "runAfterFinish": false
+            "runAfterFinish": false,
+            "displayLanguageSelector": true,
+            "installerLanguages": [
+                "en_US"
+            ],
+            "warningsAsErrors": false
         },
         "mac": {
             "icon": "assets/icon.png",
@@ -122,10 +130,11 @@
                 }
             ],
             "category": "public.app-category.productivity",
-            "hardenedRuntime": true,
+            "hardenedRuntime": false,
             "gatekeeperAssess": false,
             "entitlements": "assets/entitlements.mac.plist",
-            "entitlementsInherit": "assets/entitlements.mac.plist"
+            "entitlementsInherit": "assets/entitlements.mac.plist",
+            "identity": null
         },
         "dmg": {
             "title": "${productName} ${version}",
