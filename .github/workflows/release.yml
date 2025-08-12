@@ -23,41 +23,42 @@ jobs:
             platform: windows
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: npm
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+    - name: Install dependencies
+      run: npm ci
 
-      # ---------- WINDOWS CERTIFICATE SETUP ----------
-      - name: Setup Windows Code Signing
-        if: matrix.platform == 'windows'
-        shell: pwsh
-        run: |
-          # Decode base64 certificate and save to file
-          $certBytes = [Convert]::FromBase64String("${{ secrets.WINDOWS_CERT_FILE }}")
-          New-Item -ItemType Directory -Force -Path "cert" | Out-Null
-          [IO.File]::WriteAllBytes("cert/windows-cert.p12", $certBytes)
-          Write-Host "✅ Windows certificate saved"
+    # ---------- WINDOWS CERTIFICATE SETUP ----------
+    - name: Setup Windows Code Signing
+      if: matrix.platform == 'windows'
+      shell: pwsh
+      run: |
+        # Decode base64 certificate and save to file
+        $certBytes = [Convert]::FromBase64String("${{ secrets.WINDOWS_CERT_FILE }}")
+        New-Item -ItemType Directory -Force -Path "cert" | Out-Null
+        [IO.File]::WriteAllBytes("cert/windows-cert.p12", $certBytes)
+        Write-Host "✅ Windows certificate saved"
 
-          # Patch package.json for Electron Builder
-          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
-          if (-not $pkg.build.win) { $pkg.build | Add-Member -MemberType NoteProperty -Name win -Value @{} }
-          $pkg.build.win.certificateFile = "cert/windows-cert.p12"
-          $pkg.build.win.certificatePassword = "${{ secrets.WINDOWS_CERT_PASSWORD }}"
-          $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json -Encoding UTF8
-          Write-Host "✅ package.json updated for Windows signing"
+        # Patch package.json for Electron Builder
+        $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+        if (-not $pkg.build.win) { $pkg.build | Add-Member -MemberType NoteProperty -Name win -Value @{} }
+        $pkg.build.win.certificateFile = "cert/windows-cert.p12"
+        $pkg.build.win.certificatePassword = "${{ secrets.WINDOWS_CERT_PASSWORD }}"
+        $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json -Encoding UTF8
+        Write-Host "✅ package.json updated for Windows signing"
 
-      # ---------- MACOS CERTIFICATE SETUP (optional) ----------
-      - name: Setup macOS Code Signing
-        if: matrix.platform == 'mac' && secrets.MACOS_CERT_FILE != ''
-        run: |
+    # ---------- MACOS CERTIFICATE SETUP (Option 1) ----------
+    - name: Setup macOS Code Signing
+      if: matrix.platform == 'mac'
+      run: |
+        if [ -n "${{ secrets.MACOS_CERT_FILE }}" ]; then
           echo "Setting up macOS signing..."
           echo "${{ secrets.MACOS_CERT_FILE }}" | base64 --decode > macos-cert.p12
           security create-keychain -p "" build.keychain
@@ -66,47 +67,50 @@ jobs:
           security import macos-cert.p12 -k build.keychain -P "${{ secrets.MACOS_CERT_PASSWORD }}" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
           echo "✅ macOS certificate imported"
+        else
+          echo "ℹ️ No macOS certificate provided. Building unsigned."
+        fi
 
-      # ---------- PLATFORM-SPECIFIC DEPENDENCIES ----------
-      - name: Install macOS-specific dependencies
-        if: matrix.platform == 'mac'
-        run: |
-          npm install dmg-license --save-dev || echo "Skipping dmg-license"
-          python3 -m pip install setuptools || echo "Skipping setuptools"
+    # ---------- PLATFORM-SPECIFIC DEPENDENCIES ----------
+    - name: Install macOS-specific dependencies
+      if: matrix.platform == 'mac'
+      run: |
+        npm install dmg-license --save-dev || echo "Skipping dmg-license"
+        python3 -m pip install setuptools || echo "Skipping setuptools"
 
-      # ---------- BUILD ----------
-      - name: Run build
-        run: npm run build
+    # ---------- BUILD ----------
+    - name: Run build
+      run: npm run build
 
-      - name: Package app (dist)
-        run: npm run dist
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+    - name: Package app (dist)
+      run: npm run dist
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
 
-      # ---------- UPLOAD ARTIFACTS ----------
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-${{ matrix.platform }}
-          path: |
-            dist/*.dmg
-            dist/*.zip
-            dist/*Setup*.exe
-            dist/*.msi
-            dist/*.deb
-            dist/*.rpm
-            dist/*.AppImage
-            dist/*.tar.gz
-            dist/*.snap
-          retention-days: 5
+    # ---------- UPLOAD ARTIFACTS ----------
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-${{ matrix.platform }}
+        path: |
+          dist/*.dmg
+          dist/*.zip
+          dist/*Setup*.exe
+          dist/*.msi
+          dist/*.deb
+          dist/*.rpm
+          dist/*.AppImage
+          dist/*.tar.gz
+          dist/*.snap
+        retention-days: 5
 
-      # ---------- CLEANUP CERTS ----------
-      - name: Cleanup certificates
-        if: always()
-        run: rm -rf cert macos-cert.p12 || true
+    # ---------- CLEANUP CERTS ----------
+    - name: Cleanup certificates
+      if: always()
+      run: rm -rf cert macos-cert.p12 || true
 
   release:
     needs: build
@@ -114,35 +118,35 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
 
     steps:
-      # Download each platform’s artifacts into proper folders
-      - name: Download Linux artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-linux
-          path: ./artifacts/release-linux
+    # Download each platform’s artifacts into proper folders
+    - name: Download Linux artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: release-linux
+        path: ./artifacts/release-linux
 
-      - name: Download macOS artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-mac
-          path: ./artifacts/release-mac
+    - name: Download macOS artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: release-mac
+        path: ./artifacts/release-mac
 
-      - name: Download Windows artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-windows
-          path: ./artifacts/release-windows
+    - name: Download Windows artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: release-windows
+        path: ./artifacts/release-windows
 
-      - name: Show downloaded files
-        run: ls -R ./artifacts
+    - name: Show downloaded files
+      run: ls -R ./artifacts
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ./artifacts/release-linux/*
-            ./artifacts/release-mac/*
-            ./artifacts/release-windows/*
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          ./artifacts/release-linux/*
+          ./artifacts/release-mac/*
+          ./artifacts/release-windows/*
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
