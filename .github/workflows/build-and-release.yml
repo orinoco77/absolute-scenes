@@ -71,6 +71,22 @@ jobs:
           echo "ℹ️ No macOS certificate provided. Building unsigned."
         fi
 
+    # ---------- LINUX GPG SETUP ----------
+    - name: Setup Linux Package Signing
+      if: matrix.platform == 'linux'
+      run: |
+        if [ -n "${{ secrets.LINUX_GPG_PRIVATE_KEY }}" ]; then
+          echo "Setting up Linux package signing..."
+          # Import GPG private key
+          echo "${{ secrets.LINUX_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
+          # Install signing tools
+          sudo apt-get update
+          sudo apt-get install -y dpkg-sig rpm
+          echo "✅ Linux signing tools installed"
+        else
+          echo "ℹ️ No Linux GPG key provided. Building unsigned packages."
+        fi
+
     # ---------- PLATFORM-SPECIFIC DEPENDENCIES ----------
     - name: Install macOS-specific dependencies
       if: matrix.platform == 'mac'
@@ -89,6 +105,44 @@ jobs:
         ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
         APPLE_ID: ${{ secrets.APPLE_ID }}
         APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+
+    # ---------- LINUX PACKAGE SIGNING ----------
+    - name: Sign Linux packages
+      if: matrix.platform == 'linux' && env.LINUX_GPG_PRIVATE_KEY
+      env:
+        LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      run: |
+        if [ -n "$LINUX_GPG_PRIVATE_KEY" ]; then
+          echo "Signing Linux packages..."
+          
+          # Get GPG key ID (first key in keyring)
+          GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec:' | cut -d: -f5 | head -1)
+          echo "Using GPG key: $GPG_KEY_ID"
+          
+          # Sign DEB packages
+          for deb in dist/*.deb; do
+            if [ -f "$deb" ]; then
+              echo "Signing $deb..."
+              dpkg-sig --sign builder -k "$GPG_KEY_ID" "$deb"
+              echo "✅ Signed $(basename $deb)"
+            fi
+          done
+          
+          # Sign RPM packages
+          for rpm in dist/*.rpm; do
+            if [ -f "$rpm" ]; then
+              echo "Signing $rpm..."
+              # Create temporary rpmmacros for signing
+              echo "%_gpg_name $GPG_KEY_ID" > ~/.rpmmacros
+              echo "%_signature gpg" >> ~/.rpmmacros
+              rpm --addsign "$rpm"
+              echo "✅ Signed $(basename $rpm)"
+            fi
+          done
+          
+          echo "✅ All Linux packages signed"
+        fi
 
     # ---------- UPLOAD ARTIFACTS ----------
     - name: Upload build artifacts
