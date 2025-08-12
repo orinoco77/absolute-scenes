@@ -18,10 +18,9 @@ function mapFontForPDF(fontFamily) {
 }
 
 // Utility function to check if a file might be locked (browser environment)
-function checkFileAccess(filename) {
+function checkFileAccess(_filename) {
   // In browser environment, we can't directly check file locks
   // But we can warn users about common issues
-  console.log(`Preparing to save: ${filename}`);
 
   // Return a warning if the filename suggests it might conflict
   if (typeof window !== 'undefined' && window.localStorage) {
@@ -73,10 +72,6 @@ function createPDFWithConsistentFormat(pageSize) {
     const dimensions = getPageDimensions(pageSize);
     const widthPt = dimensions.widthInches * 72;
     const heightPt = dimensions.heightInches * 72;
-
-    console.log(
-      `Creating custom PDF format: ${pageSize} = ${widthPt} x ${heightPt} points`
-    );
 
     try {
       return new jsPDF({
@@ -607,11 +602,6 @@ export async function exportToPDF(book, options = {}) {
     const pageWidth = actualPageSize.width;
     const pageHeight = actualPageSize.height;
 
-    console.log(
-      `PDF created: ${pageWidth} x ${pageHeight} points (${(pageWidth / 72).toFixed(2)}" × ${(pageHeight / 72).toFixed(2)}")`
-    );
-    console.log(`Platform: ${navigator.platform}`);
-
     // Verify page size matches expectation
     const expectedDimensions = getPageDimensions(template.pageSize || 'letter');
     const expectedWidth = expectedDimensions.width;
@@ -630,9 +620,6 @@ export async function exportToPDF(book, options = {}) {
           difference: { width: widthDiff, height: heightDiff }
         });
       } else {
-        console.log(
-          `✓ Page size verification passed (±${Math.max(widthDiff, heightDiff).toFixed(1)}pt)`
-        );
       }
     }
 
@@ -655,30 +642,11 @@ export async function exportToPDF(book, options = {}) {
       throw new Error('Invalid margin values calculated');
     }
 
-    console.log('Margin validation:', {
-      left: leftMargin,
-      right: rightMargin,
-      top: topMargin,
-      bottom: bottomMargin,
-      contentWidth
-    });
-
     // Set font using enhanced font mapping
     const pdfFont = mapFontForPDF(template.fontFamily);
     pdf.setFont(pdfFont, 'normal');
     const fontSize = template.fontSize;
     const lineHeight = fontSize * template.lineHeight;
-
-    console.log(`Using font: ${template.fontFamily} -> ${pdfFont}`);
-    console.log(`Mirror margins enabled: ${template.mirrorMargins}`);
-    if (template.mirrorMargins) {
-      console.log(
-        `Inside margin: ${template.pageMargins.inside}in, Outside margin: ${template.pageMargins.outside}in`
-      );
-    }
-    console.log(
-      `Page 1 (initial): Left margin = ${leftMargin / 72}in, Right margin = ${rightMargin / 72}in`
-    );
 
     let currentY = topMargin;
 
@@ -723,10 +691,6 @@ export async function exportToPDF(book, options = {}) {
         );
         return null;
       }
-
-      console.log(
-        `Page ${pageNumber}: Left margin = ${leftMargin / 72}in, Right margin = ${rightMargin / 72}in`
-      );
 
       // Return updated margin info for text rendering
       return {
@@ -1511,12 +1475,7 @@ export async function exportToPDF(book, options = {}) {
       // Could show a warning dialog here if desired
     }
 
-    console.log(`Attempting to save PDF: ${filename}`);
-
     pdf.save(filename);
-
-    // Show success message
-    console.log(`✓ PDF exported successfully: ${filename}`);
 
     // Optional: Show user notification of success
     if (typeof window !== 'undefined' && window.electron) {
@@ -1528,8 +1487,7 @@ export async function exportToPDF(book, options = {}) {
           body: `PDF saved as ${filename}`
         });
       } catch (e) {
-        // Fallback to console if electron APIs not available
-        console.log('PDF export completed successfully');
+        // Fallback silently if electron APIs not available
       }
     }
   } catch (error) {
