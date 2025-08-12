@@ -77,8 +77,22 @@ jobs:
       run: |
         if [ -n "${{ secrets.LINUX_GPG_PRIVATE_KEY }}" ]; then
           echo "Setting up Linux package signing..."
+          
+          # Configure GPG for non-interactive use
+          export GPG_TTY=""
+          export GNUPGHOME="$HOME/.gnupg"
+          mkdir -p "$GNUPGHOME"
+          chmod 700 "$GNUPGHOME"
+          
+          # Configure GPG to not use a TTY
+          echo "use-agent" >> "$GNUPGHOME/gpg.conf"
+          echo "pinentry-mode loopback" >> "$GNUPGHOME/gpg.conf"
+          echo "batch" >> "$GNUPGHOME/gpg.conf"
+          echo "no-tty" >> "$GNUPGHOME/gpg.conf"
+          
           # Import GPG private key
           echo "${{ secrets.LINUX_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
+          
           # Install signing tools
           sudo apt-get update
           sudo apt-get install -y build-essential debhelper devscripts rpm
@@ -121,6 +135,10 @@ jobs:
         if [ -n "$LINUX_GPG_PRIVATE_KEY" ]; then
           echo "Signing Linux packages..."
           
+          # Configure GPG environment for this step
+          export GPG_TTY=""
+          export GNUPGHOME="$HOME/.gnupg"
+          
           # Get GPG key ID (first key in keyring)
           GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec:' | cut -d: -f5 | head -1)
           echo "Using GPG key: $GPG_KEY_ID"
@@ -146,6 +164,7 @@ jobs:
                 # Create temporary rpmmacros for signing
                 echo "%_gpg_name $GPG_KEY_ID" > ~/.rpmmacros
                 echo "%_signature gpg" >> ~/.rpmmacros
+                echo "%__gpg_sign_cmd %{__gpg} gpg --force-v3-sigs --batch --verbose --no-armor --no-secmem-warning -u \"%{_gpg_name}\" -sbo %{__signature_filename} --digest-algo sha256 %{__plaintext_filename}" >> ~/.rpmmacros
                 rpm --addsign "$rpm" || echo "⚠️ Failed to sign $(basename $rpm)"
                 echo "✅ Processed $(basename $rpm)"
               fi
