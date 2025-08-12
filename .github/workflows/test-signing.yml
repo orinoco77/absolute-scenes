@@ -1,0 +1,61 @@
+name: Test Signing (Manual)
+
+on:
+  workflow_dispatch: # Only runs when manually triggered
+
+jobs:
+  test-signing:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Setup certificate
+      shell: powershell
+      run: |
+        # Decode and save certificate
+        $certBytes = [Convert]::FromBase64String("${{ secrets.WINDOWS_CERT_FILE }}")
+        New-Item -ItemType Directory -Force -Path "cert"
+        [IO.File]::WriteAllBytes("cert\windows-cert.p12", $certBytes)
+        
+        # Test certificate import
+        try {
+          $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+          $cert.Import("cert\windows-cert.p12", "${{ secrets.WINDOWS_CERT_PASSWORD }}", "DefaultKeySet")
+          Write-Host "✅ Certificate imports successfully!"
+          Write-Host "Subject: $($cert.Subject)"
+          Write-Host "Valid from: $($cert.NotBefore) to $($cert.NotAfter)"
+          $cert.Dispose()
+        } catch {
+          Write-Host "❌ Certificate import failed: $($_.Exception.Message)"
+          exit 1
+        }
+
+    - name: Test signing without full build
+      shell: powershell
+      run: |
+        # Just test if electron-builder can see the certificate
+        $env:CSC_LINK = "cert\windows-cert.p12"
+        $env:CSC_KEY_PASSWORD = "${{ secrets.WINDOWS_CERT_PASSWORD }}"
+        
+        Write-Host "Testing electron-builder certificate detection..."
+        npx electron-builder --help | findstr /i sign
+        
+        Write-Host "Environment check:"
+        Write-Host "CSC_LINK: $env:CSC_LINK"
+        Write-Host "CSC_KEY_PASSWORD length: $($env:CSC_KEY_PASSWORD.Length)"
+        
+        # Create a minimal test
+        Write-Host "Creating minimal test executable..."
+        echo "console.log('test')" > test.js
+        node test.js
