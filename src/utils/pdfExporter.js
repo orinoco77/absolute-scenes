@@ -781,6 +781,20 @@ export async function exportToPDF(book, options = {}) {
         markFrontMatterPage();
 
         if (frontMatterItem.type === 'copyright') {
+          // Add line breaks before copyright page content (same as chapter headers)
+          const lineBreaksBefore = template.chapterHeader.lineBreaksBefore || 0;
+          for (let i = 0; i < lineBreaksBefore; i++) {
+            currentY += lineHeight;
+            // Check if we need a new page
+            if (currentY + lineHeight > pageHeight - bottomMargin) {
+              pdf.addPage();
+              updateMarginsForPage();
+              currentY = topMargin;
+              markFrontMatterPage();
+              break; // Stop adding line breaks if we hit a new page
+            }
+          }
+
           // For copyright pages, preserve exact line breaks including blank lines and use center alignment
           const lines = frontMatterItem.content.split('\n');
 
@@ -889,60 +903,30 @@ export async function exportToPDF(book, options = {}) {
             pdf.setFontSize(fontSize);
           }
 
-          const paragraphs = frontMatterItem.content
-            .split('\n')
-            .filter(p => p.trim());
+          // Use chapter-style formatting for prologue, original formatting for other front matter
+          if (frontMatterItem.type === 'prologue') {
+            // Use the same paragraph processing as chapters for prologue
+            // First handle forced line breaks (preserve them as blank paragraphs)
+            const contentWithForcedBreaks = frontMatterItem.content.replace(
+              /\n<!--FORCED_BREAK-->\n/g,
+              '\n__FORCED_BREAK_PLACEHOLDER__\n'
+            );
+            const paragraphs = contentWithForcedBreaks
+              .split('\n')
+              .filter(p => p.trim());
 
-          paragraphs.forEach((paragraph, paragraphIndex) => {
-            if (paragraph.trim()) {
-              const words = paragraph.trim().split(/\s+/);
-              let currentLineWords = [];
-              const _isFirstParagraph = paragraphIndex === 0;
+            paragraphs.forEach((paragraph, paragraphIndex) => {
+              const trimmedParagraph = paragraph.trim();
 
-              words.forEach((word, wordIndex) => {
-                const wordObj = {
-                  text: word,
-                  type: 'normal',
-                  needsSpace: wordIndex > 0
-                };
+              // Handle forced line breaks as blank lines
+              if (trimmedParagraph === '__FORCED_BREAK_PLACEHOLDER__') {
+                // Add a blank line for forced breaks
+                currentY += lineHeight;
+                return;
+              }
 
-                const testLine = [...currentLineWords, wordObj]
-                  .map(w => w.text)
-                  .join(' ');
-                const testWidth = pdf.getTextWidth(testLine);
-
-                if (testWidth <= contentWidth) {
-                  currentLineWords.push(wordObj);
-                } else {
-                  // Render current line
-                  if (currentLineWords.length > 0) {
-                    if (currentY + lineHeight > pageHeight - bottomMargin) {
-                      pdf.addPage();
-                      updateMarginsForPage();
-                      currentY = topMargin;
-                      markFrontMatterPage();
-                    }
-
-                    const lineStartX = leftMargin;
-                    renderMixedFormattedLine(
-                      pdf,
-                      currentLineWords,
-                      lineStartX,
-                      currentY,
-                      contentWidth,
-                      'left',
-                      false,
-                      pdfFont,
-                      fontSize
-                    );
-                    currentY += lineHeight;
-                  }
-                  currentLineWords = [wordObj];
-                }
-              });
-
-              // Render remaining words in the last line of paragraph
-              if (currentLineWords.length > 0) {
+              if (trimmedParagraph) {
+                // Check if we need a new page
                 if (currentY + lineHeight > pageHeight - bottomMargin) {
                   pdf.addPage();
                   updateMarginsForPage();
@@ -950,25 +934,129 @@ export async function exportToPDF(book, options = {}) {
                   markFrontMatterPage();
                 }
 
-                const lineStartX = leftMargin;
-                renderMixedFormattedLine(
+                // Parse markdown BEFORE any text processing
+                const segments = parseMarkdownForPDF(trimmedParagraph);
+
+                // Render the formatted text with proper paragraph styling (same as chapters)
+                const newY = renderFormattedTextToPDF(
                   pdf,
-                  currentLineWords,
-                  lineStartX,
+                  segments,
+                  leftMargin,
                   currentY,
                   contentWidth,
-                  'left',
-                  true,
-                  pdfFont,
-                  fontSize
+                  fontSize,
+                  lineHeight,
+                  pageHeight,
+                  bottomMargin,
+                  topMargin,
+                  () => {
+                    updateMarginsForPage();
+                    markFrontMatterPage(); // Mark continuation pages as front matter too
+                    return {
+                      left: leftMargin,
+                      right: rightMargin,
+                      top: topMargin,
+                      bottom: bottomMargin,
+                      contentWidth: contentWidth
+                    };
+                  },
+                  template.textAlign || 'justified',
+                  paragraphIndex === 0, // isFirstParagraph
+                  template.paragraphStyle || 'indented', // paragraphStyle
+                  pdfFont
                 );
-                currentY += lineHeight;
-              }
 
-              // Add paragraph spacing
-              currentY += lineHeight * 0.5;
-            }
-          });
+                currentY = newY + lineHeight; // Move to next line
+
+                // Add paragraph spacing for separated style
+                if (template.paragraphStyle === 'separated') {
+                  currentY += lineHeight; // Add extra line spacing between paragraphs
+                }
+              }
+            });
+          } else {
+            // Keep original formatting for other front matter types
+            const paragraphs = frontMatterItem.content
+              .split('\n')
+              .filter(p => p.trim());
+
+            paragraphs.forEach((paragraph, paragraphIndex) => {
+              if (paragraph.trim()) {
+                const words = paragraph.trim().split(/\s+/);
+                let currentLineWords = [];
+                const _isFirstParagraph = paragraphIndex === 0;
+
+                words.forEach((word, wordIndex) => {
+                  const wordObj = {
+                    text: word,
+                    type: 'normal',
+                    needsSpace: wordIndex > 0
+                  };
+
+                  const testLine = [...currentLineWords, wordObj]
+                    .map(w => w.text)
+                    .join(' ');
+                  const testWidth = pdf.getTextWidth(testLine);
+
+                  if (testWidth <= contentWidth) {
+                    currentLineWords.push(wordObj);
+                  } else {
+                    // Render current line
+                    if (currentLineWords.length > 0) {
+                      if (currentY + lineHeight > pageHeight - bottomMargin) {
+                        pdf.addPage();
+                        updateMarginsForPage();
+                        currentY = topMargin;
+                        markFrontMatterPage();
+                      }
+
+                      const lineStartX = leftMargin;
+                      renderMixedFormattedLine(
+                        pdf,
+                        currentLineWords,
+                        lineStartX,
+                        currentY,
+                        contentWidth,
+                        'left',
+                        false,
+                        pdfFont,
+                        fontSize
+                      );
+                      currentY += lineHeight;
+                    }
+                    currentLineWords = [wordObj];
+                  }
+                });
+
+                // Render remaining words in the last line of paragraph
+                if (currentLineWords.length > 0) {
+                  if (currentY + lineHeight > pageHeight - bottomMargin) {
+                    pdf.addPage();
+                    updateMarginsForPage();
+                    currentY = topMargin;
+                    markFrontMatterPage();
+                  }
+
+                  const lineStartX = leftMargin;
+                  renderMixedFormattedLine(
+                    pdf,
+                    currentLineWords,
+                    lineStartX,
+                    currentY,
+                    contentWidth,
+                    'left',
+                    true,
+                    pdfFont,
+                    fontSize
+                  );
+                  currentY += lineHeight;
+                }
+
+                // Add paragraph spacing
+                currentY += lineHeight * 0.5;
+              }
+            });
+          }
         }
       });
     }
@@ -1221,7 +1309,12 @@ export async function exportToPDF(book, options = {}) {
         if (scene.content && scene.content.trim()) {
           if (template.writingType === 'verse') {
             // For verse, preserve original formatting
-            const trimmedContent = scene.content.trim();
+            // Handle forced line breaks (preserve them as actual line breaks)
+            const contentWithForcedBreaks = scene.content.replace(
+              /\n<!--FORCED_BREAK-->\n/g,
+              '\n\n'
+            );
+            const trimmedContent = contentWithForcedBreaks.trim();
             if (trimmedContent) {
               if (template.verseKeepTogether) {
                 // Split content into verse blocks (separated by blank lines)
@@ -1313,10 +1406,24 @@ export async function exportToPDF(book, options = {}) {
             }
           } else {
             // For prose, split on single newlines to create paragraphs (more intuitive for users)
-            const paragraphs = scene.content.split('\n').filter(p => p.trim());
+            // First handle forced line breaks (preserve them as blank paragraphs)
+            const contentWithForcedBreaks = scene.content.replace(
+              /\n<!--FORCED_BREAK-->\n/g,
+              '\n__FORCED_BREAK_PLACEHOLDER__\n'
+            );
+            const paragraphs = contentWithForcedBreaks
+              .split('\n')
+              .filter(p => p.trim());
 
             paragraphs.forEach((paragraph, paragraphIndex) => {
               const trimmedParagraph = paragraph.trim();
+
+              // Handle forced line breaks as blank lines
+              if (trimmedParagraph === '__FORCED_BREAK_PLACEHOLDER__') {
+                // Add a blank line for forced breaks
+                currentY += lineHeight;
+                return;
+              }
 
               if (trimmedParagraph) {
                 // Check if we need a new page
