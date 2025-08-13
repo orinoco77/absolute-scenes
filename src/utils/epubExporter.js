@@ -188,6 +188,23 @@ p, div {
       );
     };
 
+    // Verse-specific HTML processing for EPUB - preserves all whitespace
+    const parseVerseToHTML = text => {
+      if (!text) return '';
+
+      return (
+        text
+          // Escape HTML characters but preserve formatting
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          // Still allow basic markdown formatting in verse
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      );
+      // DON'T convert newlines to <br> - let CSS white-space: pre-wrap handle them
+    };
+
     // 1. Create mimetype file (must be first, uncompressed)
     zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
 
@@ -275,9 +292,7 @@ p, div {
               /\n<!--FORCED_BREAK-->\n/g,
               '\n\n'
             );
-            const formattedContent = parseMarkdownToHTML(
-              contentWithForcedBreaks
-            );
+            const formattedContent = parseVerseToHTML(contentWithForcedBreaks);
             chapterContent += `\n  <p>${formattedContent}</p>`;
           } else {
             // For prose, use traditional paragraph handling

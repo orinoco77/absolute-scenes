@@ -19,6 +19,23 @@ function parseMarkdownToHTML(text) {
   );
 }
 
+// Verse-specific HTML processing - preserves all whitespace and formatting
+function parseVerseToHTML(text) {
+  if (!text) return '';
+
+  return (
+    text
+      // Escape HTML characters but preserve formatting
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      // Still allow basic markdown formatting in verse
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+  );
+  // DON'T convert newlines to <br> - let CSS white-space: pre-wrap handle them
+}
+
 export async function exportToHTML(book, options = {}) {
   try {
     const htmlContent = generateHTML(book, options);
@@ -200,12 +217,13 @@ function generateHTML(book, options = {}) {
       if (scene.content && scene.content.trim()) {
         if (template.writingType === 'verse') {
           // For verse, preserve all formatting including line breaks and whitespace
+          console.log('VERSE MODE: Processing verse content');
           // Handle forced line breaks (preserve them as actual line breaks)
           const contentWithForcedBreaks = scene.content.replace(
             /\n<!--FORCED_BREAK-->\n/g,
             '\n\n'
           );
-          const formattedContent = parseMarkdownToHTML(contentWithForcedBreaks);
+          const formattedContent = parseVerseToHTML(contentWithForcedBreaks);
           content += `<p>${formattedContent}</p>`;
         } else {
           // For prose, use traditional paragraph handling

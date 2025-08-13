@@ -1,0 +1,26 @@
+# Set default line ending behavior for all text files
+* text=auto eol=lf
+
+# Explicitly specify line endings for specific file types
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.book text eol=lf
+
+# Binary files should not have line ending conversions
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+
+# Ensure package-lock.json uses LF line endings
+package-lock.json text eol=lf

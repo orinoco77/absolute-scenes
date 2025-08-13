@@ -17,6 +17,13 @@ import { saveBook, saveBookToFile } from './utils/fileOperations';
 import { initializeFontSystem } from './utils/fontManager';
 import './styles/App.css';
 
+// Utility function to normalize content for cross-platform consistency
+const normalizeContent = content => {
+  if (typeof content !== 'string') return content;
+  // Normalize line endings to LF and ensure consistent encoding
+  return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+};
+
 // Check if we're in Electron environment
 const isElectron = () => {
   // Check if window.require exists (only in Electron with nodeIntegration)
@@ -1211,13 +1218,26 @@ function App() {
   };
 
   const updateScene = (sceneId, updates) => {
+    // Normalize content if it's being updated
+    const normalizedUpdates = { ...updates };
+    if (normalizedUpdates.content) {
+      normalizedUpdates.content = normalizeContent(normalizedUpdates.content);
+    }
+    if (normalizedUpdates.notes) {
+      normalizedUpdates.notes = normalizeContent(normalizedUpdates.notes);
+    }
+
     setBook(prev => ({
       ...prev,
       chapters: prev.chapters.map(chapter => ({
         ...chapter,
         scenes: chapter.scenes.map(scene =>
           scene.id === sceneId
-            ? { ...scene, ...updates, modified: new Date().toISOString() }
+            ? {
+                ...scene,
+                ...normalizedUpdates,
+                modified: new Date().toISOString()
+              }
             : scene
         )
       })),
@@ -1643,9 +1663,44 @@ function App() {
       bookData.frontMatter = [];
     }
 
+    // Normalize all text content in the book for cross-platform consistency
+    const normalizeBookContent = book => {
+      return {
+        ...book,
+        chapters:
+          book.chapters?.map(chapter => ({
+            ...chapter,
+            scenes:
+              chapter.scenes?.map(scene => ({
+                ...scene,
+                content: normalizeContent(scene.content),
+                notes: normalizeContent(scene.notes)
+              })) || []
+          })) || [],
+        frontMatter:
+          book.frontMatter?.map(item => ({
+            ...item,
+            content: normalizeContent(item.content)
+          })) || [],
+        characters:
+          book.characters?.map(char => ({
+            ...char,
+            description: normalizeContent(char.description),
+            notes: normalizeContent(char.notes)
+          })) || [],
+        locations:
+          book.locations?.map(loc => ({
+            ...loc,
+            description: normalizeContent(loc.description)
+          })) || []
+      };
+    };
+
+    const normalizedBookData = normalizeBookContent(bookData);
+
     // Load the recovered book
     // Set all states simply and directly
-    setBook(bookData);
+    setBook(normalizedBookData);
     setCurrentChapterId(bookData.chapters[0]?.id || 'default');
     setCurrentSceneId(bookData.chapters[0]?.scenes[0]?.id || null);
     setCurrentPartId(bookData.parts?.length > 0 ? bookData.parts[0]?.id : null);

@@ -40,7 +40,7 @@ module.exports = {
   // Additional rules for code quality (no formatting rules - Prettier handles those)
   rules: {
     // Prettier integration
-    'prettier/prettier': ['error', { endOfLine: 'auto' }],
+    'prettier/prettier': 'error',
     // General JavaScript rules (logic, not formatting)
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-debugger': 'warn',

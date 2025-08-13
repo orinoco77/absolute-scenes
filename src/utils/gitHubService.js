@@ -403,8 +403,11 @@ class GitHubService {
     }
 
     try {
-      // Prepare file content
-      const fileContent = JSON.stringify(bookData, null, 2);
+      // Prepare file content with normalized line endings (always use LF)
+      const rawContent = JSON.stringify(bookData, null, 2);
+      const fileContent = rawContent
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n');
       const fileName = filename;
 
       // Get current file (if exists) to get SHA for update
@@ -440,7 +443,11 @@ class GitHubService {
       // Create or update file
       const updateData = {
         message: commitMessage,
-        content: btoa(unescape(encodeURIComponent(fileContent))), // Base64 encode UTF-8
+        content: btoa(
+          new TextEncoder()
+            .encode(fileContent)
+            .reduce((data, byte) => data + String.fromCharCode(byte), '')
+        ), // Proper UTF-8 to Base64
         branch: 'main'
       };
 
@@ -633,8 +640,17 @@ class GitHubService {
 
       const fileData = await response.json();
 
-      // Decode base64 content
-      const content = atob(fileData.content.replace(/\s/g, ''));
+      // Decode base64 content with proper UTF-8 handling
+      const base64Content = fileData.content.replace(/\s/g, '');
+      const binaryString = atob(base64Content);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const rawContent = new TextDecoder('utf-8').decode(bytes);
+
+      // Normalize line endings to LF (consistent across platforms)
+      const content = rawContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
       // Parse and return book data
       try {
