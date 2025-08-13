@@ -135,7 +135,7 @@ describe('fileOperations (Fixed)', () => {
 
       expect(global.Blob).toHaveBeenCalledWith(
         [JSON.stringify(bookData, null, 2)],
-        { type: 'application/json' }
+        { type: 'application/json;charset=utf-8' }
       );
     });
 

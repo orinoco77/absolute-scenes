@@ -149,8 +149,12 @@ async function ensureIpcReady() {
 // Browser fallback for saving files
 function browserFallbackSave(bookData) {
   try {
-    const dataStr = JSON.stringify(bookData, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
+    const rawData = JSON.stringify(bookData, null, 2);
+    // Normalize line endings to LF for consistency across platforms
+    const dataStr = rawData.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const blob = new Blob([dataStr], {
+      type: 'application/json;charset=utf-8'
+    });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement('a');
