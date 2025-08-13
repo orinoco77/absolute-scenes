@@ -151,6 +151,129 @@ class GitHubService {
   }
 
   /**
+   * Get repository contributors for collaboration detection
+   */
+  async getRepositoryContributors(repository) {
+    if (!this.isAuthenticated()) {
+      throw new Error('Not authenticated with GitHub');
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/${repository}/contributors`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            Accept: 'application/vnd.github.v3+json',
+            'User-Agent': 'AbsoluteScenes-BookWriter'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Repository not found or no access permissions');
+        }
+        throw new Error(`GitHub API error: ${response.status}`);
+      }
+
+      const contributors = await response.json();
+
+      // Filter out bots and get user details for each contributor
+      const realContributors = contributors.filter(
+        contrib => contrib.type === 'User'
+      );
+
+      // Get detailed user info for each contributor (to get real names)
+      const detailedContributors = await Promise.all(
+        realContributors.map(async contrib => {
+          try {
+            const userResponse = await fetch(
+              `https://api.github.com/users/${contrib.login}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${this.token}`,
+                  Accept: 'application/vnd.github.v3+json',
+                  'User-Agent': 'AbsoluteScenes-BookWriter'
+                }
+              }
+            );
+
+            if (userResponse.ok) {
+              const userInfo = await userResponse.json();
+              return {
+                login: contrib.login,
+                name: userInfo.name,
+                contributions: contrib.contributions
+              };
+            }
+          } catch (error) {
+            console.warn(
+              `Could not fetch details for ${contrib.login}:`,
+              error
+            );
+          }
+
+          // Fallback to basic info
+          return {
+            login: contrib.login,
+            name: null,
+            contributions: contrib.contributions
+          };
+        })
+      );
+
+      return detailedContributors;
+    } catch (error) {
+      console.error('Failed to get repository contributors:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user's repositories for selection
+   */
+  async getUserRepositories() {
+    if (!this.isAuthenticated()) {
+      throw new Error('Not authenticated with GitHub');
+    }
+
+    try {
+      const response = await fetch(
+        'https://api.github.com/user/repos?sort=updated&per_page=100',
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            Accept: 'application/vnd.github.v3+json',
+            'User-Agent': 'AbsoluteScenes-BookWriter'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status}`);
+      }
+
+      const repos = await response.json();
+
+      // Return relevant repo info
+      return repos.map(repo => ({
+        name: repo.name,
+        full_name: repo.full_name,
+        description: repo.description,
+        private: repo.private,
+        updated_at: repo.updated_at,
+        owner: repo.owner.login,
+        clone_url: repo.clone_url,
+        html_url: repo.html_url
+      }));
+    } catch (error) {
+      console.error('Failed to get user repositories:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get user information
    */
   async getUserInfo() {
@@ -394,7 +517,7 @@ class GitHubService {
   /**
    * Get all repositories for backup recovery
    */
-  async getUserRepositories() {
+  async getUserRepositoriesForRecovery() {
     if (!this.token) {
       throw new Error('Not authenticated');
     }

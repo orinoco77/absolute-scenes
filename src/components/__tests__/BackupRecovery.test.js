@@ -39,7 +39,7 @@ describe('BackupRecovery', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     GitHubService.loadStoredAuth = jest.fn();
-    GitHubService.getUserRepositories = jest.fn();
+    GitHubService.getUserRepositoriesForRecovery = jest.fn();
     GitHubService.downloadBookFromRepository = jest.fn();
     saveRecoveredBook.mockImplementation(() => ({
       success: true,
@@ -96,17 +96,19 @@ describe('BackupRecovery', () => {
     });
 
     it('loads repositories on mount', async () => {
-      GitHubService.getUserRepositories.mockResolvedValue(mockRepositories);
+      GitHubService.getUserRepositoriesForRecovery.mockResolvedValue(
+        mockRepositories
+      );
 
       render(<BackupRecovery {...mockProps} />);
 
       await waitFor(() => {
-        expect(GitHubService.getUserRepositories).toHaveBeenCalled();
+        expect(GitHubService.getUserRepositoriesForRecovery).toHaveBeenCalled();
       });
     });
 
     it('displays loading message while fetching repositories', async () => {
-      GitHubService.getUserRepositories.mockImplementation(
+      GitHubService.getUserRepositoriesForRecovery.mockImplementation(
         () =>
           new Promise(resolve =>
             setTimeout(() => resolve(mockRepositories), 100)
@@ -130,7 +132,9 @@ describe('BackupRecovery', () => {
     });
 
     it('displays repositories when loaded successfully', async () => {
-      GitHubService.getUserRepositories.mockResolvedValue(mockRepositories);
+      GitHubService.getUserRepositoriesForRecovery.mockResolvedValue(
+        mockRepositories
+      );
 
       render(<BackupRecovery {...mockProps} />);
 
@@ -146,7 +150,7 @@ describe('BackupRecovery', () => {
     });
 
     it('displays no backups found message when no repositories', async () => {
-      GitHubService.getUserRepositories.mockResolvedValue([]);
+      GitHubService.getUserRepositoriesForRecovery.mockResolvedValue([]);
 
       render(<BackupRecovery {...mockProps} />);
 
@@ -162,7 +166,7 @@ describe('BackupRecovery', () => {
 
     it('displays error message when repository loading fails', async () => {
       const errorMessage = 'Network error';
-      GitHubService.getUserRepositories.mockRejectedValue(
+      GitHubService.getUserRepositoriesForRecovery.mockRejectedValue(
         new Error(errorMessage)
       );
 
@@ -175,7 +179,9 @@ describe('BackupRecovery', () => {
     });
 
     it('formats dates correctly', async () => {
-      GitHubService.getUserRepositories.mockResolvedValue(mockRepositories);
+      GitHubService.getUserRepositoriesForRecovery.mockResolvedValue(
+        mockRepositories
+      );
 
       render(<BackupRecovery {...mockProps} />);
 
@@ -191,7 +197,9 @@ describe('BackupRecovery', () => {
 
     describe('downloading books', () => {
       beforeEach(() => {
-        GitHubService.getUserRepositories.mockResolvedValue(mockRepositories);
+        GitHubService.getUserRepositoriesForRecovery.mockResolvedValue(
+          mockRepositories
+        );
         GitHubService.downloadBookFromRepository.mockResolvedValue(
           mockBookData
         );
@@ -319,7 +327,9 @@ describe('BackupRecovery', () => {
 
     describe('refresh functionality', () => {
       beforeEach(() => {
-        GitHubService.getUserRepositories.mockResolvedValue(mockRepositories);
+        GitHubService.getUserRepositoriesForRecovery.mockResolvedValue(
+          mockRepositories
+        );
       });
 
       it('shows refresh button when repositories are loaded', async () => {
@@ -339,11 +349,13 @@ describe('BackupRecovery', () => {
 
         fireEvent.click(screen.getByText('🔄 Refresh'));
 
-        expect(GitHubService.getUserRepositories).toHaveBeenCalledTimes(2);
+        expect(
+          GitHubService.getUserRepositoriesForRecovery
+        ).toHaveBeenCalledTimes(2);
       });
 
       it('disables refresh button while loading', async () => {
-        GitHubService.getUserRepositories.mockImplementation(
+        GitHubService.getUserRepositoriesForRecovery.mockImplementation(
           () =>
             new Promise(resolve =>
               setTimeout(() => resolve(mockRepositories), 100)
@@ -364,7 +376,9 @@ describe('BackupRecovery', () => {
     });
 
     it('shows helpful tip when repositories are available', async () => {
-      GitHubService.getUserRepositories.mockResolvedValue(mockRepositories);
+      GitHubService.getUserRepositoriesForRecovery.mockResolvedValue(
+        mockRepositories
+      );
 
       render(<BackupRecovery {...mockProps} />);
 
@@ -377,7 +391,9 @@ describe('BackupRecovery', () => {
     });
 
     it('calls onClose when close button is clicked', async () => {
-      GitHubService.getUserRepositories.mockResolvedValue(mockRepositories);
+      GitHubService.getUserRepositoriesForRecovery.mockResolvedValue(
+        mockRepositories
+      );
 
       render(<BackupRecovery {...mockProps} />);
 
@@ -392,7 +408,7 @@ describe('BackupRecovery', () => {
     });
 
     it('clears status message on error', async () => {
-      GitHubService.getUserRepositories.mockRejectedValue(
+      GitHubService.getUserRepositoriesForRecovery.mockRejectedValue(
         new Error('Test error')
       );
 
@@ -404,7 +420,9 @@ describe('BackupRecovery', () => {
     });
 
     it('clears status message on successful completion', async () => {
-      GitHubService.getUserRepositories.mockResolvedValue(mockRepositories);
+      GitHubService.getUserRepositoriesForRecovery.mockResolvedValue(
+        mockRepositories
+      );
       GitHubService.downloadBookFromRepository.mockResolvedValue(mockBookData);
 
       render(<BackupRecovery {...mockProps} />);
