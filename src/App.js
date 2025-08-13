@@ -103,6 +103,11 @@ function App() {
     metadata: {
       created: new Date().toISOString(),
       modified: new Date().toISOString()
+    },
+    collaboration: {
+      enabled: false, // Hidden until multiple authors are detected
+      authors: [], // List of author names for assignment
+      currentAuthor: null // Currently signed-in author
     }
   });
 
@@ -778,7 +783,8 @@ function App() {
       content: '',
       notes: '',
       created: new Date().toISOString(),
-      modified: new Date().toISOString()
+      modified: new Date().toISOString(),
+      assignedAuthor: null // Optional collaboration field - null for solo work
     };
 
     setBook(prev => ({
@@ -798,7 +804,8 @@ function App() {
     const newChapter = {
       id: Date.now().toString(),
       title: `Chapter ${book.chapters.length + 1}`,
-      scenes: []
+      scenes: [],
+      assignedAuthor: null // Optional collaboration field - null for solo work
     };
 
     setBook(prev => ({
@@ -1759,6 +1766,7 @@ function App() {
           onSceneSelect={setCurrentSceneId}
           onChapterSelect={setCurrentChapterId}
           onPartSelect={setCurrentPartId}
+          collaboration={book.github?.collaboration || book.collaboration}
           onSceneAdd={handleNewScene}
           onChapterAdd={handleNewChapter}
           onPartAdd={handleNewPart}
@@ -1839,6 +1847,7 @@ function App() {
               scene={currentScene}
               template={book.template}
               onSceneUpdate={updateScene}
+              collaboration={book.github?.collaboration || book.collaboration}
             />
           ) : (
             <div className="scene-editor">
@@ -1966,6 +1975,7 @@ function App() {
           onClose={() => setShowGitHubIntegration(false)}
           book={book}
           currentFilePath={currentFilePath}
+          onBookUpdate={setBook}
         />
       )}
 

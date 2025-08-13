@@ -24,7 +24,7 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
     if (onStatusMessage) onStatusMessage('Loading repositories...');
 
     try {
-      const repos = await GitHubService.getUserRepositories();
+      const repos = await GitHubService.getUserRepositoriesForRecovery();
       setRepositories(repos);
       if (onStatusMessage) onStatusMessage('');
     } catch (error) {
@@ -182,7 +182,7 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
                 Loading your repositories...
               </p>
             </div>
-          ) : repositories.length === 0 ? (
+          ) : (repositories || []).length === 0 ? (
             <div
               style={{
                 textAlign: 'center',
@@ -205,7 +205,7 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
                 borderRadius: '6px'
               }}
             >
-              {repositories.map(repo => (
+              {(repositories || []).map(repo => (
                 <div
                   key={repo.id}
                   style={{
@@ -255,7 +255,7 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
             </div>
           )}
 
-          {repositories.length > 0 && (
+          {(repositories || []).length > 0 && (
             <div
               style={{
                 marginTop: '16px',
@@ -274,7 +274,7 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
         </div>
 
         <div className="modal-footer">
-          {repositories.length > 0 && (
+          {(repositories || []).length > 0 && (
             <button
               onClick={loadRepositories}
               disabled={isLoading}

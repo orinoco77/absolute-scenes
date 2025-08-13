@@ -1,6 +1,11 @@
 import { useRef } from 'react';
 
-function SceneEditor({ scene, template: _template, onSceneUpdate }) {
+function SceneEditor({
+  scene,
+  template: _template,
+  onSceneUpdate,
+  collaboration = null // Optional collaboration settings
+}) {
   const textareaRef = useRef(null);
 
   if (!scene) {
@@ -48,6 +53,13 @@ function SceneEditor({ scene, template: _template, onSceneUpdate }) {
   const handleNotesChange = e => {
     onSceneUpdate(scene.id, { notes: e.target.value });
   };
+
+  const handleAssignedAuthorChange = e => {
+    const assignedAuthor = e.target.value || null;
+    onSceneUpdate(scene.id, { assignedAuthor });
+  };
+
+  // Collaboration data available for scene assignment
 
   // Text formatting functions for textarea
   const insertMarkdown = (before, after = '') => {
@@ -109,9 +121,33 @@ function SceneEditor({ scene, template: _template, onSceneUpdate }) {
           className="scene-title-input"
           placeholder="Scene Title"
         />
-        <div className="scene-stats">
-          Words:{' '}
-          {scene.content.split(/\s+/).filter(word => word.length > 0).length}
+        <div className="scene-meta">
+          {/* Collaboration assignment - only show if collaboration is enabled */}
+          {(() => {
+            // Check if collaboration controls should be shown
+            return collaboration?.enabled && collaboration?.authors?.length > 1;
+          })() && (
+            <div className="scene-assignment">
+              <label htmlFor="scene-author">Assigned to:</label>
+              <select
+                id="scene-author"
+                value={scene.assignedAuthor || ''}
+                onChange={handleAssignedAuthorChange}
+                className="scene-author-select"
+              >
+                <option value="">Unassigned</option>
+                {collaboration.authors.map(author => (
+                  <option key={author} value={author}>
+                    {author}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="scene-stats">
+            Words:{' '}
+            {scene.content.split(/\s+/).filter(word => word.length > 0).length}
+          </div>
         </div>
       </div>
 

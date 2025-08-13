@@ -11,6 +11,7 @@ function SceneList({
   onPartSelect,
   onSceneAdd,
   onChapterAdd,
+  collaboration = null, // Optional collaboration settings
   onPartAdd,
   onSceneDelete,
   onChapterDelete,
@@ -631,7 +632,18 @@ function SceneList({
                     </div>
 
                     <div className="scene-content">
-                      <div className="scene-title">{scene.title}</div>
+                      <div className="scene-title-row">
+                        <div className="scene-title">{scene.title}</div>
+                        {/* Author indicator - only show if collaboration is enabled */}
+                        {collaboration?.enabled && scene.assignedAuthor && (
+                          <div
+                            className="scene-author-indicator"
+                            title={`Assigned to ${scene.assignedAuthor}`}
+                          >
+                            👤 {scene.assignedAuthor}
+                          </div>
+                        )}
+                      </div>
                       <div className="scene-meta">
                         <span className="scene-date">
                           {new Date(scene.modified).toLocaleDateString()}

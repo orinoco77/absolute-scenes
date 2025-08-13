@@ -150,3 +150,6 @@ cert/
 # Environment files with sensitive data
 .env.local
 .env.signing
+
+# Claude Code instructions (local development only)
+CLAUDE.md

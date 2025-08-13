@@ -166,6 +166,9 @@ function BookStructure({
   onFrontMatterReorder,
   authorName = '', // Add author name prop
 
+  // Collaboration props
+  collaboration = null,
+
   // Tab props
   activeTab,
   onTabChange
@@ -257,6 +260,7 @@ function BookStructure({
           onPartSelect={onPartSelect}
           onSceneAdd={onSceneAdd}
           onChapterAdd={onChapterAdd}
+          collaboration={collaboration}
           onPartAdd={onPartAdd}
           onSceneDelete={onSceneDelete}
           onChapterDelete={onChapterDelete}
