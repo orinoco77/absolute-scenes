@@ -21,6 +21,30 @@ function SceneEditor({ scene, template: _template, onSceneUpdate }) {
     onSceneUpdate(scene.id, { content: e.target.value });
   };
 
+  const handleKeyDown = e => {
+    // Handle Shift+Enter for forced line breaks
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault();
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      // Insert a forced line break that will be visible and preserved in export
+      const newContent =
+        textarea.value.substring(0, start) +
+        '\n<!--FORCED_BREAK-->\n' + // Special marker for forced breaks
+        textarea.value.substring(end);
+
+      onSceneUpdate(scene.id, { content: newContent });
+
+      // Move cursor after the marker
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + 21, start + 21); // After the full marker
+      }, 0);
+    }
+  };
+
   const handleNotesChange = e => {
     onSceneUpdate(scene.id, { notes: e.target.value });
   };
@@ -55,6 +79,25 @@ function SceneEditor({ scene, template: _template, onSceneUpdate }) {
   const makeItalic = () => insertMarkdown('*', '*');
   const makeHeading = () => insertMarkdown('## ', '');
   const insertLineBreak = () => insertMarkdown('\n\n', '');
+  const insertForcedLineBreak = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      const newContent =
+        textarea.value.substring(0, start) +
+        '\n<!--FORCED_BREAK-->\n' +
+        textarea.value.substring(end);
+
+      onSceneUpdate(scene.id, { content: newContent });
+
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + 21, start + 21); // After the full marker
+      }, 0);
+    }
+  };
 
   return (
     <div className="scene-editor">
@@ -98,8 +141,18 @@ function SceneEditor({ scene, template: _template, onSceneUpdate }) {
           >
             ¶
           </button>
+          <button
+            onClick={insertForcedLineBreak}
+            className="format-btn"
+            title="Forced Line Break (Shift+Enter)"
+          >
+            ↵
+          </button>
           <div className="format-help">
-            <small>Markdown: **bold**, *italic*, ## heading</small>
+            <small>
+              Markdown: **bold**, *italic*, ## heading | Shift+Enter: forced
+              line break
+            </small>
           </div>
         </div>
 
@@ -108,6 +161,7 @@ function SceneEditor({ scene, template: _template, onSceneUpdate }) {
             ref={textareaRef}
             value={scene.content}
             onChange={handleContentChange}
+            onKeyDown={handleKeyDown}
             placeholder="Start writing your scene here..."
             spellCheck="true"
           />

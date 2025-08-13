@@ -9,6 +9,7 @@ function FrontMatterEditor({
   const [title, setTitle] = useState(frontMatterItem?.title || '');
   const [content, setContent] = useState(frontMatterItem?.content || '');
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
 
   // Update local state when frontMatterItem changes
   useEffect(() => {
@@ -91,6 +92,39 @@ function FrontMatterEditor({
       content: newContent,
       modified: new Date().toISOString()
     });
+  };
+
+  const handleKeyDown = e => {
+    // Handle Shift+Enter for forced line breaks (only for prologue)
+    if (
+      e.key === 'Enter' &&
+      e.shiftKey &&
+      frontMatterItem.type === 'prologue'
+    ) {
+      e.preventDefault();
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      // Insert a forced line break that will be visible and preserved in export
+      const newContent =
+        textarea.value.substring(0, start) +
+        '\n<!--FORCED_BREAK-->\n' + // Special marker for forced breaks
+        textarea.value.substring(end);
+
+      setContent(newContent);
+      onFrontMatterUpdate(frontMatterItem.id, {
+        ...frontMatterItem,
+        content: newContent,
+        modified: new Date().toISOString()
+      });
+
+      // Move cursor after the marker
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + 21, start + 21); // After the full marker
+      }, 0);
+    }
   };
 
   const handleImageUpload = event => {
@@ -221,11 +255,15 @@ function FrontMatterEditor({
         <span className="editor-label">Content</span>
         <div className="format-help">
           Use **bold**, *italic*, and line breaks for formatting
+          {frontMatterItem.type === 'prologue' &&
+            ' | Shift+Enter: forced line break'}
         </div>
       </div>
       <textarea
+        ref={textareaRef}
         value={content}
         onChange={e => handleContentChange(e.target.value)}
+        onKeyDown={handleKeyDown}
         placeholder={getPlaceholderText()}
         className="front-matter-content-textarea"
       />

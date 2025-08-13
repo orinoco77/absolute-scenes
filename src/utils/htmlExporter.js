@@ -200,11 +200,23 @@ function generateHTML(book, options = {}) {
       if (scene.content && scene.content.trim()) {
         if (template.writingType === 'verse') {
           // For verse, preserve all formatting including line breaks and whitespace
-          const formattedContent = parseMarkdownToHTML(scene.content);
+          // Handle forced line breaks (preserve them as actual line breaks)
+          const contentWithForcedBreaks = scene.content.replace(
+            /\n<!--FORCED_BREAK-->\n/g,
+            '\n\n'
+          );
+          const formattedContent = parseMarkdownToHTML(contentWithForcedBreaks);
           content += `<p>${formattedContent}</p>`;
         } else {
           // For prose, use traditional paragraph handling
-          const paragraphs = scene.content.split('\n').filter(p => p.trim());
+          // First handle forced line breaks (preserve them as actual line breaks)
+          const contentWithForcedBreaks = scene.content.replace(
+            /\n<!--FORCED_BREAK-->\n/g,
+            '\n\n'
+          );
+          const paragraphs = contentWithForcedBreaks
+            .split('\n')
+            .filter(p => p.trim());
           paragraphs.forEach((paragraph, paragraphIndex) => {
             if (paragraph.trim()) {
               // Convert markdown to HTML
