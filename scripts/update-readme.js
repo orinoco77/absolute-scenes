@@ -13,9 +13,20 @@ const currentDate = new Date().toISOString().split('T')[0];
 // Get git commit info
 let latestCommit = '';
 let totalCommits = '';
+let versionHistory = '';
 try {
   latestCommit = execSync('git log -1 --format="%h - %s (%cr)"', { encoding: 'utf8' }).trim();
   totalCommits = execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim();
+  
+  // Get recent version tags with their commit messages
+  const tagInfo = execSync('git for-each-ref --sort=-version:refname --format="%(refname:short)|%(objectname:short)|%(subject)" refs/tags', { encoding: 'utf8' }).trim();
+  const tags = tagInfo.split('\n').slice(0, 5); // Get last 5 releases
+  
+  versionHistory = tags.map(tag => {
+    const [version, hash, subject] = tag.split('|');
+    return `- **${version}**: ${subject}`;
+  }).join('\n');
+  
 } catch (error) {
   console.log('Git info not available');
 }
@@ -62,7 +73,8 @@ function updateReadmePlaceholders(content) {
     .replace(/<!--DATE-->.+?<!--\/DATE-->/gs, `<!--DATE-->${currentDate}<!--/DATE-->`)
     .replace(/<!--COMMIT-->.+?<!--\/COMMIT-->/gs, `<!--COMMIT-->${latestCommit}<!--/COMMIT-->`)
     .replace(/<!--COMMITS-->.+?<!--\/COMMITS-->/gs, `<!--COMMITS-->${totalCommits}<!--/COMMITS-->`)
-    .replace(/<!--TESTS-->.+?<!--\/TESTS-->/gs, `<!--TESTS-->${testCount}/${totalTests}<!--/TESTS-->`);
+    .replace(/<!--TESTS-->.+?<!--\/TESTS-->/gs, `<!--TESTS-->${testCount}/${totalTests}<!--/TESTS-->`)
+    .replace(/<!--VERSION_HISTORY-->[\s\S]*?<!--\/VERSION_HISTORY-->/gs, `<!--VERSION_HISTORY-->\n${versionHistory}\n<!--/VERSION_HISTORY-->`);
 }
 
 // Check if README exists and has placeholders
@@ -83,6 +95,7 @@ if (fs.existsSync(readmePath)) {
     console.log('- <!--COMMIT-->...<!--/COMMIT--> for latest commit');
     console.log('- <!--COMMITS-->...<!--/COMMITS--> for total commits');
     console.log('- <!--TESTS-->...<!--/TESTS--> for test results');
+    console.log('- <!--VERSION_HISTORY-->...<!--/VERSION_HISTORY--> for recent release history');
   }
 } else {
   console.log('No README.md found. Please create one with placeholders for auto-updates.');

@@ -2,7 +2,7 @@
 
 **A professional, scene-based book writing application with print-ready PDF output and GitHub integration.**
 
-**Version:** <!--VERSION-->1.3.57<!--/VERSION--> | **Tests:** <!--TESTS-->401/401<!--/TESTS--> ✅ | **Last Updated:** <!--DATE-->2025-08-14<!--/DATE-->
+**Version:** <!--VERSION-->1.3.58<!--/VERSION--> | **Tests:** <!--TESTS-->401/401<!--/TESTS--> ✅ | **Last Updated:** <!--DATE-->2025-08-14<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books with professional publishing features built-in. Unlike traditional word processors, it organizes your work by scenes and chapters, making it easier to manage complex narratives.
 
@@ -250,7 +250,7 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->401/401<!--/TESTS--> tests passing ✅ | **Total Commits:** <!--COMMITS-->73<!--/COMMITS--> | **Latest:** <!--COMMIT-->71b2ea1 - test: fix README auto-update test detection (40 seconds ago)<!--/COMMIT-->
+**Code Quality:** <!--TESTS-->401/401<!--/TESTS--> tests passing ✅ | **Total Commits:** <!--COMMITS-->74<!--/COMMITS--> | **Latest:** <!--COMMIT-->5b3256f - fix help menu (10 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 - **Frontend**: React 18 with modern hooks and context API
@@ -484,42 +484,27 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **📚 Documentation**: [Project Wiki](../../wiki)
 - **📧 Email**: ajs@shiny.org.uk
 
-## 🗺️ **Roadmap**
+## 🗺️ **Development & Roadmap**
 
-### **Current Version: v<!--VERSION-->1.3.57<!--/VERSION-->**
-- ✅ Scene-based writing with drag-and-drop organization
-- ✅ Character and location management with dedicated panels
-- ✅ Background information panel with editable document titles
-- ✅ Visual character thread tracking
-- ✅ Professional typography with premium fonts
-- ✅ Print-ready PDF export with proper book formatting
-- ✅ GitHub integration with automatic backup
-- ✅ Professional system-wide installation with command line access
-- ✅ File associations for .book files
-- ✅ Improved UI organization (Locations above Threads)
+**Current Release: v<!--VERSION-->1.3.58<!--/VERSION-->** - See [Version History](#version-history) below for recent updates.
 
-### **Upcoming Features (v1.4)**
-- [ ] **Dark Mode**: Eye-friendly writing environment
-- [ ] **Writing Goals**: Daily word count targets and progress tracking
-- [ ] **Advanced Search**: Find text across all scenes and chapters
-- [ ] **Collaboration Tools**: Real-time collaborative editing
-- [ ] **Mobile Companion**: Read-only mobile app for reviewing manuscripts
+For upcoming features, development priorities, and detailed project planning, visit our **[GitHub Projects](https://github.com/orinoco77/absolute-scenes/projects)** where we maintain an active roadmap with:
 
-### **Future Releases (v1.5+)**
-- [ ] **AI Writing Assistant**: Grammar checking and style suggestions
-- [ ] **Advanced Analytics**: Detailed writing statistics and insights
-- [ ] **Plugin System**: Custom extensions and integrations
-- [ ] **Advanced Export**: EPUB, MOBI, and InDesign formats
-- [ ] **Translation Support**: Multi-language interface
+- 🎯 **Current Sprint**: Features actively in development
+- 📋 **Backlog**: Planned features with priority rankings  
+- 🐛 **Bug Tracking**: Known issues and their status
+- 💡 **Feature Requests**: Community-suggested improvements
+
+Want to influence the roadmap? **[Open an issue](https://github.com/orinoco77/absolute-scenes/issues)** or join the discussion!
 
 ### **Version History**
-- **v1.3.18**: Enhanced background information panel with editable titles, improved folder organization, and UI refinements
-- **v1.3.15**: Enhanced file associations and command line improvements
-- **v1.3.12**: Professional installation system with proper paths
-- **v1.3.0**: Character and location management, visual thread tracking
-- **v1.2.0**: Enhanced typography system with premium fonts
-- **v1.1.0**: GitHub integration and cloud backup
-- **v1.0.0**: Initial release with core writing and export features
+<!--VERSION_HISTORY-->
+- **v1.3.56**: fix some layout and character encoding issues
+- **v1.3.55**: Collaboration first pass
+- **v1.3.54**: Another go
+- **v1.3.50**: Add cert stuff for deb and rpm
+- **v1.3.49**: another stupid release fix
+<!--/VERSION_HISTORY-->
 
 ---
 
@@ -527,4 +512,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 *"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write, organize, and publish books that look as good as they read."*
 
-*Last updated <!--DATE-->2025-08-14<!--/DATE--> | Build <!--COMMIT-->71b2ea1 - test: fix README auto-update test detection (40 seconds ago)<!--/COMMIT-->*
+*Last updated <!--DATE-->2025-08-14<!--/DATE--> | Build <!--COMMIT-->5b3256f - fix help menu (10 minutes ago)<!--/COMMIT-->*
