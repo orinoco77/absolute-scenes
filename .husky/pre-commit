@@ -6,8 +6,21 @@ npm run lint:check
 # Run tests
 npm test
 
-
 # Bump patch version for every commit
 echo "Bumping patch version..."
 npx auto-version --patch
 git add package.json
+
+# Update README with new version info
+echo "Updating README.md..."
+if [ -f "scripts/update-readme.js" ]; then
+    node scripts/update-readme.js
+    
+    # Add the updated README to the commit if it changed
+    if git diff --quiet HEAD -- README.md; then
+        echo "README.md unchanged"
+    else
+        echo "README.md updated - adding to commit"
+        git add README.md
+    fi
+fi
