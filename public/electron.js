@@ -462,13 +462,13 @@ function createMenu() {
         {
           label: 'Learn More',
           click: () =>
-            shell.openExternal('https://github.com/your-repo/absolutescenes')
+            shell.openExternal('https://github.com/orinoco77/absolute-scenes')
         },
         {
           label: 'Report an Issue',
           click: () =>
             shell.openExternal(
-              'https://github.com/your-repo/absolutescenes/issues'
+              'https://github.com/orinoco77/absolute-scenes/issues'
             )
         },
         { type: 'separator' },
@@ -490,11 +490,22 @@ function createMenu() {
 
 // Show About dialog
 function showAboutDialog() {
+  // Read version from package.json
+  const packageJsonPath = path.join(__dirname, '../package.json');
+  let version = '1.0.0'; // fallback version
+
+  try {
+    const packageJson = require(packageJsonPath);
+    version = packageJson.version;
+  } catch (error) {
+    console.error('Error reading version from package.json:', error);
+  }
+
   dialog.showMessageBox(mainWindow, {
     type: 'info',
     title: 'About AbsoluteScenes',
     message: 'AbsoluteScenes Book Writer',
-    detail: `Version: 1.3.12\nA scene-based book writing application\n\nBuilt with Electron and React\n\nCopyright © 2024 AbsoluteScenes`,
+    detail: `Version: ${version}\nA scene-based book writing application\n\nBuilt with Electron and React\n\nCopyright © 2025 Adam Short <ajs@shiny.org.uk>`,
     buttons: ['OK']
   });
 }

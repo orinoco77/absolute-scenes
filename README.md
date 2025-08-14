@@ -2,6 +2,8 @@
 
 **A professional, scene-based book writing application with print-ready PDF output and GitHub integration.**
 
+**Version:** <!--VERSION-->1.3.57<!--/VERSION--> | **Tests:** <!--TESTS-->401/401<!--/TESTS--> ✅ | **Last Updated:** <!--DATE-->2025-08-14<!--/DATE-->
+
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books with professional publishing features built-in. Unlike traditional word processors, it organizes your work by scenes and chapters, making it easier to manage complex narratives.
 
 ## ✨ Key Features
@@ -248,6 +250,8 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
+**Code Quality:** <!--TESTS-->401/401<!--/TESTS--> tests passing ✅ | **Total Commits:** <!--COMMITS-->73<!--/COMMITS--> | **Latest:** <!--COMMIT-->71b2ea1 - test: fix README auto-update test detection (40 seconds ago)<!--/COMMIT-->
+
 ### **Built With**
 - **Frontend**: React 18 with modern hooks and context API
 - **Desktop Framework**: Electron 25 with secure IPC communication
@@ -347,7 +351,7 @@ Absolute Scenes uses a structured JSON format (.book files):
     "fontSize": 12,
     "lineHeight": 1.6,
     "paragraphStyle": "indented",
-    "pageSize": "trade-paperback",
+    "pageSize": "trade-paperbook",
     "genre": "literary-fiction",
     "pageMargins": { "top": 1, "bottom": 1, "inside": 1.25, "outside": 1 },
     "textAlign": "justified",
@@ -482,7 +486,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Roadmap**
 
-### **Current Version: v1.3.18**
+### **Current Version: v<!--VERSION-->1.3.57<!--/VERSION-->**
 - ✅ Scene-based writing with drag-and-drop organization
 - ✅ Character and location management with dedicated panels
 - ✅ Background information panel with editable document titles
@@ -522,3 +526,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Made with ❤️ for authors who care about beautiful books**
 
 *"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write, organize, and publish books that look as good as they read."*
+
+*Last updated <!--DATE-->2025-08-14<!--/DATE--> | Build <!--COMMIT-->71b2ea1 - test: fix README auto-update test detection (40 seconds ago)<!--/COMMIT-->*
