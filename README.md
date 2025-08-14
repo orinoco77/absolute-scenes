@@ -1,26 +1,33 @@
 # Absolute Scenes
 
-**A professional, scene-based book writing application with print-ready PDF output and GitHub integration.**
+**A professional, scene-based book writing application with print-ready PDF output and GitHub
+integration.**
 
-**Version:** <!--VERSION-->1.3.60<!--/VERSION--> | **Tests:** <!--TESTS-->401/401<!--/TESTS--> ✅ | **Last Updated:** <!--DATE-->2025-08-14<!--/DATE-->
+**Version:** <!--VERSION-->1.3.60<!--/VERSION--> | **Tests:** <!--TESTS-->401/401<!--/TESTS--> ✅ |
+**Last Updated:** <!--DATE-->2025-08-14<!--/DATE-->
 
-Absolute Scenes is designed specifically for authors who want a structured approach to writing books with professional publishing features built-in. Unlike traditional word processors, it organizes your work by scenes and chapters, making it easier to manage complex narratives.
+Absolute Scenes is designed specifically for authors who want a structured approach to writing books
+with professional publishing features built-in. Unlike traditional word processors, it organizes
+your work by scenes and chapters, making it easier to manage complex narratives.
 
 ## ✨ Key Features
 
 ### 📖 **Scene-Based Writing**
+
 - Organize your book by chapters and scenes instead of one long document
 - Drag-and-drop to reorder chapters and scenes
 - Move scenes between chapters effortlessly
 - Built-in recycle bin to recover deleted content
 
 ### 🎨 **Professional Typography**
+
 - **Premium book fonts** including Palatino Linotype, Garamond, Baskerville, and more
 - **Genre-based font recommendations** (Literary Fiction, Romance, Thriller, etc.)
 - **Live font preview** with sample text
 - Automatic font optimization for different book formats
 
 ### 📚 **Print-Ready Publishing**
+
 - **Professional page layouts** with mirror margins for book binding
 - **Multiple book formats**: Trade Paperback (6×9), Mass Market, Hardcover, Large Print
 - **Running headers** with author name and book title
@@ -28,6 +35,7 @@ Absolute Scenes is designed specifically for authors who want a structured appro
 - **Justified text** and traditional paragraph styling
 
 ### 👥 **Character & Location Management**
+
 - Create detailed character profiles with avatars and descriptions
 - Track character roles, development notes, and relationships
 - Manage story locations with descriptions and notes
@@ -35,6 +43,7 @@ Absolute Scenes is designed specifically for authors who want a structured appro
 - Organize characters and locations separately from your manuscript
 
 ### 📚 **Background Information Panel**
+
 - Dedicated workspace for world-building and development notes
 - Organize information in folders (General Notes, Characters, Locations, etc.)
 - Editable document titles with double-click functionality
@@ -43,12 +52,14 @@ Absolute Scenes is designed specifically for authors who want a structured appro
 - Auto-save functionality with real-time updates
 
 ### 🗺️ **Story Visualization**
+
 - **Character Thread Visualization**: See which characters appear in which scenes
 - Track character development across your entire book
 - Identify plot threads and story arcs visually
 - Character detection blacklist for common words
 
 ### ☁️ **GitHub Integration**
+
 - **Automatic cloud backup** of your manuscripts
 - **Version history** to track changes over time
 - **Access your work anywhere** through GitHub
@@ -56,11 +67,13 @@ Absolute Scenes is designed specifically for authors who want a structured appro
 - **Automatic sync** on save (optional)
 
 ### 🚀 **Export Options**
+
 - **PDF Export**: Print-ready PDFs with professional book formatting
 - **HTML Export**: Clean web version for sharing or online publishing
 - Customizable export settings (scene breaks, titles, formatting)
 
 ### 💻 **Professional Installation**
+
 - **System-wide installation** to proper directories (Program Files, Applications, /opt)
 - **Command line access** via `absolute-scenes` command
 - **File associations** for `.book` files - double-click to open
@@ -69,6 +82,7 @@ Absolute Scenes is designed specifically for authors who want a structured appro
 ## 🖥️ **Installation**
 
 ### **System Requirements**
+
 - **Windows**: Windows 10+ (installs to `C:\Program Files\Absolute Scenes\`)
 - **macOS**: macOS 10.14+ (installs to `/Applications/Absolute Scenes.app`)
 - **Linux**: Modern Linux with systemd (installs to `/opt/Absolute Scenes/`)
@@ -79,21 +93,25 @@ Absolute Scenes is designed specifically for authors who want a structured appro
 ### **Download & Install**
 
 #### **Windows**
+
 1. Download `Absolute Scenes Setup x.x.x.exe` from [Releases](../../releases)
 2. **Run as Administrator** (required for system-wide installation)
 3. Follow the installer wizard
 4. ✅ App installed to Program Files with command line access
 
 #### **macOS**
+
 1. Download `Absolute Scenes x.x.x.dmg` from [Releases](../../releases)
 2. Open the DMG and drag to Applications folder
 3. First launch: Right-click → Open (to bypass Gatekeeper)
 4. ✅ App installed to Applications with command line access
 
 #### **Linux**
+
 Choose your preferred package format:
 
 **Ubuntu/Debian (.deb)**:
+
 ```bash
 # Download the .deb file, then:
 sudo dpkg -i absolute-scenes_x.x.x_amd64.deb
@@ -101,12 +119,14 @@ sudo apt-get install -f  # Fix any dependency issues
 ```
 
 **RHEL/Fedora (.rpm)**:
+
 ```bash
 # Download the .rpm file, then:
 sudo rpm -i absolute-scenes-x.x.x.x86_64.rpm
 ```
 
 **Universal (AppImage)**:
+
 ```bash
 # Download the .AppImage file, then:
 chmod +x Absolute-Scenes-x.x.x.AppImage
@@ -134,6 +154,7 @@ absolute-scenes --version
 ### **File Associations**
 
 The installer automatically sets up file associations for `.book` files:
+
 - ✅ **Double-click** any `.book` file to open it in Absolute Scenes
 - ✅ **Right-click context menu** shows "Open with Absolute Scenes"
 - ✅ **File icons** display with Absolute Scenes branding
@@ -141,18 +162,21 @@ The installer automatically sets up file associations for `.book` files:
 ## 📖 **Quick Start Guide**
 
 ### 1. **Create Your First Book**
+
 - Launch Absolute Scenes (from Start Menu, Applications, or `absolute-scenes` command)
 - Enter your book title and author name
 - Add a scene to the default first chapter
 - Start writing!
 
 ### 2. **Organize Your Story**
+
 - Add new chapters with the **"📁+ Chapter"** button
 - Add scenes to chapters with **"📄+ Scene"**
 - Drag and drop to reorder content
 - Use the recycle bin to recover deleted content
 
 ### 3. **Manage Characters, Locations & Background**
+
 - Switch to the **"Background"** tab to create world-building notes and development documents
 - Switch to the **"Characters"** tab to create character profiles
 - Switch to the **"Locations"** tab to define story settings
@@ -160,17 +184,20 @@ The installer automatically sets up file associations for `.book` files:
 - Organize information in folders and edit document titles by double-clicking
 
 ### 4. **Set Up Professional Formatting**
+
 - Click the **⚙️ Template Settings** button
 - Choose your book's genre for font recommendations
 - Select page size (Trade Paperback 6×9 is most popular)
 - Configure margins, fonts, and chapter headers
 
 ### 5. **Connect GitHub for Backup**
+
 - Click the **🔗 GitHub Integration** button
 - Follow the setup wizard to connect your GitHub account
 - Your book will automatically sync to the cloud on each save
 
 ### 6. **Export Your Book**
+
 - Click the **📤 Export** button
 - Choose PDF for print-ready output or HTML for web sharing
 - Configure export options and generate your book
@@ -178,6 +205,7 @@ The installer automatically sets up file associations for `.book` files:
 ## 🎯 **Advanced Features**
 
 ### **Premium Typography System**
+
 ```
 Available Font Categories:
 ├── Premium Book Fonts (Best Quality)
@@ -194,6 +222,7 @@ Available Font Categories:
 ```
 
 ### **Professional Book Formatting**
+
 - **Mirror Margins**: Different margins for odd/even pages accounting for binding
 - **Running Headers**: Author on left pages, title on right pages
 - **Chapter Headers**: Multiple styles (numbered, titled, custom format)
@@ -202,6 +231,7 @@ Available Font Categories:
 - **Line Height & Spacing**: Optimized for readability
 
 ### **Smart Content Organization**
+
 - **Automatic Scene Numbering**: Format like 1.1, 1.2, 2.1, etc.
 - **Word Count Tracking**: Real-time counts per scene, chapter, and total
 - **Drag & Drop Interface**: Intuitive reordering of content
@@ -209,6 +239,7 @@ Available Font Categories:
 - **Auto-save**: Never lose your work with automatic saving
 
 ### **Character Thread Visualization**
+
 - **Visual Character Mapping**: See exactly which characters appear in which scenes
 - **Character Detection**: Automatic detection of character names in scene text
 - **Blacklist Management**: Exclude common words from character detection
@@ -218,6 +249,7 @@ Available Font Categories:
 ## 🔧 **Configuration**
 
 ### **Template Settings**
+
 Access via the ⚙️ Template Settings button:
 
 - **Font Selection**: Choose from premium book fonts with live preview
@@ -229,6 +261,7 @@ Access via the ⚙️ Template Settings button:
 - **Genre Presets**: Optimized settings for different book genres
 
 ### **GitHub Integration**
+
 Access via the 🔗 GitHub Integration button:
 
 - **Personal Access Token**: Secure authentication setup
@@ -238,6 +271,7 @@ Access via the 🔗 GitHub Integration button:
 - **Collaboration**: Share repositories with co-authors or editors
 
 ### **Keyboard Shortcuts**
+
 - **Ctrl/Cmd + N**: New Book
 - **Ctrl/Cmd + O**: Open Book
 - **Ctrl/Cmd + S**: Save Book
@@ -250,9 +284,12 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->401/401<!--/TESTS--> tests passing ✅ | **Total Commits:** <!--COMMITS-->75<!--/COMMITS--> | **Latest:** <!--COMMIT-->d44f78d - More readme updates (22 minutes ago)<!--/COMMIT-->
+**Code Quality:** <!--TESTS-->401/401<!--/TESTS--> tests passing ✅ | **Total Commits:**
+<!--COMMITS-->75<!--/COMMITS--> | **Latest:** <!--COMMIT-->3c1e4bf - More readme updates (74 minutes
+ago)<!--/COMMIT-->
 
 ### **Built With**
+
 - **Frontend**: React 18 with modern hooks and context API
 - **Desktop Framework**: Electron 25 with secure IPC communication
 - **PDF Generation**: jsPDF with custom font loading and advanced layout
@@ -262,6 +299,7 @@ Access via the 🔗 GitHub Integration button:
 - **Testing**: Jest with React Testing Library
 
 ### **Architecture**
+
 ```
 src/
 ├── components/              # React UI components
@@ -289,7 +327,9 @@ src/
 ```
 
 ### **File Format Specification**
+
 Absolute Scenes uses a structured JSON format (.book files):
+
 ```json
 {
   "title": "Your Book Title",
@@ -355,8 +395,12 @@ Absolute Scenes uses a structured JSON format (.book files):
     "genre": "literary-fiction",
     "pageMargins": { "top": 1, "bottom": 1, "inside": 1.25, "outside": 1 },
     "textAlign": "justified",
-    "chapterHeader": { /* chapter formatting options */ },
-    "runningHeaders": { /* header configuration */ }
+    "chapterHeader": {
+      /* chapter formatting options */
+    },
+    "runningHeaders": {
+      /* header configuration */
+    }
   },
   "github": {
     "repository": "username/book-repository",
@@ -371,6 +415,7 @@ Absolute Scenes uses a structured JSON format (.book files):
 ```
 
 ### **Development Setup**
+
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/absolute-scenes.git
@@ -422,6 +467,7 @@ npm run dist -- --linux  # Linux DEB, RPM, and AppImage
 ```
 
 **Generated Installers**:
+
 - **Windows**: `dist/Absolute Scenes Setup x.x.x.exe` (NSIS installer with PATH setup)
 - **macOS**: `dist/Absolute Scenes x.x.x.dmg` (DMG with Applications folder)
 - **Linux**: `dist/absolute-scenes_x.x.x_amd64.deb`, `.rpm`, and `.AppImage`
@@ -431,6 +477,7 @@ npm run dist -- --linux  # Linux DEB, RPM, and AppImage
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 ### **Development Workflow**
+
 1. **Fork** the repository on GitHub
 2. **Clone** your fork locally
 3. **Create** a feature branch: `git checkout -b feature/amazing-feature`
@@ -443,7 +490,9 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 10. **Open** a Pull Request with detailed description
 
 ### **Code Standards**
-- **ESLint + Prettier**: Automated code quality and formatting (see [ESLINT.md](ESLINT.md) for details)
+
+- **ESLint + Prettier**: Automated code quality and formatting (see [ESLINT.md](ESLINT.md) for
+  details)
 - **Code Quality**: ESLint enforces logic, imports, and React best practices
 - **Code Formatting**: Prettier handles indentation, quotes, and visual consistency
 - **React Best Practices**: Proper hooks usage and component structure
@@ -454,6 +503,7 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 ## 🐛 **Bug Reports & Feature Requests**
 
 ### **Reporting Bugs**
+
 - **Search** existing issues first
 - **Include** steps to reproduce
 - **Attach** sample .book files if relevant
@@ -461,6 +511,7 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 - **Add** screenshots if applicable
 
 ### **Feature Requests**
+
 - **Describe** the feature and its benefits
 - **Explain** how it fits with existing functionality
 - **Consider** implementation complexity
@@ -486,19 +537,27 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.60<!--/VERSION-->** - See [Version History](#version-history) below for recent updates.
+**Current Release: v<!--VERSION-->1.3.60<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.60<!--/VERSION-->** - See
+[Version History](#version-history) below for recent updates.
 
-For upcoming features, development priorities, and detailed project planning, visit our **[GitHub Projects](https://github.com/orinoco77/absolute-scenes/projects)** where we maintain an active roadmap with:
+For upcoming features, development priorities, and detailed project planning, visit our
+**[GitHub Projects](https://github.com/orinoco77/absolute-scenes/projects)** where we maintain an
+active roadmap with:
 
 - 🎯 **Current Sprint**: Features actively in development
-- 📋 **Backlog**: Planned features with priority rankings  
+- 📋 **Backlog**: Planned features with priority rankings
 - 🐛 **Bug Tracking**: Known issues and their status
 - 💡 **Feature Requests**: Community-suggested improvements
 
-Want to influence the roadmap? **[Open an issue](https://github.com/orinoco77/absolute-scenes/issues)** or join the discussion!
+Want to influence the roadmap?
+**[Open an issue](https://github.com/orinoco77/absolute-scenes/issues)** or join the discussion!
 
 ### **Version History**
+
 <!--VERSION_HISTORY-->
+
+- **v1.3.59**: More readme updates
 - **v1.3.59**: More readme updates
 - **v1.3.56**: fix some layout and character encoding issues
 - **v1.3.55**: Collaboration first pass
@@ -510,6 +569,8 @@ Want to influence the roadmap? **[Open an issue](https://github.com/orinoco77/ab
 
 **Made with ❤️ for authors who care about beautiful books**
 
-*"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write, organize, and publish books that look as good as they read."*
+_"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
+organize, and publish books that look as good as they read."_
 
-*Last updated <!--DATE-->2025-08-14<!--/DATE--> | Build <!--COMMIT-->d44f78d - More readme updates (22 minutes ago)<!--/COMMIT-->*
+_Last updated <!--DATE-->2025-08-14<!--/DATE--> | Build <!--COMMIT-->3c1e4bf - More readme updates
+(74 minutes ago)<!--/COMMIT-->_
