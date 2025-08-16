@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.63<!--/VERSION--> | **Tests:** <!--TESTS-->427/427<!--/TESTS--> ✅ |
+**Version:** <!--VERSION-->1.3.64<!--/VERSION--> | **Tests:** <!--TESTS-->427/427<!--/TESTS--> ✅ |
 **Last Updated:** <!--DATE-->2025-08-16<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -285,7 +285,7 @@ Access via the 🔗 GitHub Integration button:
 ## 🛠️ **Development**
 
 **Code Quality:** <!--TESTS-->427/427<!--/TESTS--> tests passing ✅ | **Total Commits:**
-<!--COMMITS-->80<!--/COMMITS--> | **Latest:** <!--COMMIT-->c1c547a - Bump version number due to problematic rebase (26 hours ago)<!--/COMMIT-->
+<!--COMMITS-->81<!--/COMMITS--> | **Latest:** <!--COMMIT-->6ba337b - New collaboration feature. Real git integration and merging (3 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -536,8 +536,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.63<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.3.63<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.3.64<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.64<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -569,4 +569,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-08-16<!--/DATE--> | Build <!--COMMIT-->c1c547a - Bump version number due to problematic rebase (26 hours ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-08-16<!--/DATE--> | Build <!--COMMIT-->6ba337b - New collaboration feature. Real git integration and merging (3 minutes ago)<!--/COMMIT-->_

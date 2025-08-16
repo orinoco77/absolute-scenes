@@ -1,3 +1,4 @@
+/* eslint-disable testing-library/no-node-access */
 /**
  * Test suite for ConflictResolution component
  * Following TDD approach - tests first, then implementation
