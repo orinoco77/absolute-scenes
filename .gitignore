@@ -153,3 +153,6 @@ cert/
 
 # Claude Code instructions (local development only)
 CLAUDE.md
+
+# Documentation from development sessions
+docs/
