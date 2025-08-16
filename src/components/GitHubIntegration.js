@@ -1,6 +1,8 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { useState, useEffect } from 'react';
+import { BrowserEnhancedGitHubService } from '../utils/browserEnhancedGitHubService';
 import GitHubService from '../utils/gitHubService';
+import { ConflictResolution } from './ConflictResolution';
 
 function GitHubIntegration({
   currentRepo,
@@ -29,6 +31,11 @@ function GitHubIntegration({
   const [selectedRepo, setSelectedRepo] = useState('');
   const [isLoadingRepos, setIsLoadingRepos] = useState(false);
 
+  // New collaboration state
+  const [conflicts, setConflicts] = useState([]);
+  const [enhancedService] = useState(() => new BrowserEnhancedGitHubService());
+  const [pendingSyncData, setPendingSyncData] = useState(null);
+
   // Use sync time from book data
   const lastSyncTime = book.github?.lastSyncTime
     ? new Date(book.github.lastSyncTime)
@@ -46,6 +53,13 @@ function GitHubIntegration({
     // Sync currentRepository with book's GitHub repository
     setCurrentRepository(book.github?.repository || null);
   }, [book.github?.repository]);
+
+  useEffect(() => {
+    // Cleanup enhanced service on unmount
+    return () => {
+      enhancedService.cleanup();
+    };
+  }, [enhancedService]);
 
   const handleStartSetup = async () => {
     setError(null);
@@ -345,114 +359,50 @@ function GitHubIntegration({
     try {
       const commitMessage = `Manual sync: ${new Date().toLocaleString()}`;
 
-      // Step 1: Try to pull latest content from GitHub first and determine correct filename
-      if (onStatusMessage)
-        onStatusMessage('Checking for latest content on GitHub...');
+      if (onStatusMessage) onStatusMessage('Checking for conflicts...');
 
-      let filename = 'manuscript.book'; // Default fallback
-      let hasBookFile = null; // Track if remote content was found
-      const originalLocalContent = JSON.stringify(book); // Snapshot of local content before pull
+      // Use new enhanced collaboration service
+      const result = await enhancedService.safeSyncWithRepository(
+        currentRepository,
+        book,
+        commitMessage,
+        currentFilePath
+      );
 
-      try {
-        // Check if the repository has any book file
-        // Checking repository for existing book files
-        hasBookFile =
-          await GitHubService.checkRepositoryForBookFile(currentRepository);
-        // Repository scan complete
-
-        if (hasBookFile) {
-          // PRIORITY 1: Use existing filename from repository
-          filename = hasBookFile.name;
-          // Using existing filename from repository
-
+      if (result.success) {
+        // Sync completed without conflicts
+        onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
+        if (result.mergedContent && onBookUpdate) {
+          onBookUpdate(result.mergedContent);
           if (onStatusMessage)
-            onStatusMessage('Downloading latest content from GitHub...');
-          // Downloading content from repository
-
-          // Download the latest content
-          const remoteBookData = await GitHubService.downloadBookFromRepository(
-            currentRepository,
-            hasBookFile
-          );
-          // Successfully downloaded remote book data
-
-          // Update local book state with remote content
-          // This ensures we have the latest changes before pushing our local modifications
-          if (onBookUpdate && remoteBookData.bookData) {
-            // Updating local book with remote content
-            onBookUpdate(remoteBookData.bookData);
-            if (onStatusMessage)
-              onStatusMessage(
-                'Updated local content with latest from GitHub...'
-              );
-          } else {
-            // No book update callback available
-          }
+            onStatusMessage('Sync completed with automatic merge!');
         } else {
-          // No book file found in repository - will create new file
-
-          // PRIORITY 2: Generate filename only if no existing file found
-          if (currentFilePath) {
-            // Extract filename from current local file path
-            filename = currentFilePath.split(/[\\/]/).pop();
-            if (!filename.endsWith('.book')) {
-              filename = filename.replace(/\.(book|json)$/, '') + '.book';
-            }
-          } else if (book.title?.trim()) {
-            // Generate filename from book title
-            filename =
-              book.title
-                .toLowerCase()
-                .replace(/[^a-z0-9\s-]/g, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-')
-                .replace(/^-|-$/g, '') + '.book';
-          }
-          // Generated filename for new repository
+          if (onStatusMessage) onStatusMessage('Sync completed successfully!');
         }
-      } catch (pullError) {
-        // If we can't pull (file doesn't exist, network error, etc.), continue with push
-        // Could not pull remote content, continuing with local sync
-        // Could not pull latest content - continue with push
+
+        // Clear status message after a short delay
+        setTimeout(() => {
+          if (onStatusMessage) onStatusMessage('');
+        }, 2000);
+      } else if (result.requiresResolution) {
+        // Conflicts detected - show resolution UI
+        setConflicts(result.conflicts);
+        setPendingSyncData({
+          repository: currentRepository,
+          commitMessage,
+          localBookData: book,
+          filename:
+            result.filename ||
+            enhancedService.generateFilename(book, currentFilePath)
+        });
         if (onStatusMessage)
           onStatusMessage(
-            'No remote content to sync, proceeding with upload...'
+            'Conflicts detected - please resolve them to continue sync.'
           );
-      }
-
-      // Step 2: Smart push logic - only push if we had local changes or no remote content
-      const hadLocalChanges =
-        originalLocalContent !== '{}' && originalLocalContent.length > 50; // Check if we had substantial local content
-      const shouldPush = !hasBookFile || hadLocalChanges; // Push if no remote file OR we had local changes
-
-      if (shouldPush) {
-        const reason = !hasBookFile
-          ? 'Creating new file'
-          : 'Preserving local changes';
-        if (onStatusMessage)
-          onStatusMessage(`Uploading to GitHub... (${reason})`);
-        // Uploading book content to GitHub
-
-        await GitHubService.saveBookToRepository(
-          currentRepository,
-          book,
-          commitMessage,
-          filename
-        );
-
-        onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
-        if (onStatusMessage) onStatusMessage('Sync completed successfully!');
       } else {
-        // No local changes to sync
-        onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
-        if (onStatusMessage)
-          onStatusMessage('Sync completed - updated from GitHub!');
+        // Sync failed for other reasons
+        throw new Error(result.error || 'Sync failed');
       }
-
-      // Clear status message after a short delay
-      setTimeout(() => {
-        if (onStatusMessage) onStatusMessage('');
-      }, 2000);
     } catch (error) {
       console.error('Sync failed:', error);
       setError(error.message);
@@ -460,6 +410,61 @@ function GitHubIntegration({
     } finally {
       setIsSyncing(false);
     }
+  };
+
+  const handleConflictResolution = async resolutions => {
+    if (!pendingSyncData) return;
+
+    setIsSyncing(true);
+    if (onStatusMessage) onStatusMessage('Applying conflict resolutions...');
+
+    try {
+      const result = await enhancedService.resolveConflictsAndSync(
+        pendingSyncData.repository,
+        resolutions,
+        pendingSyncData.localBookData,
+        pendingSyncData.commitMessage,
+        pendingSyncData.filename
+      );
+
+      if (result.success) {
+        // Update book with resolved content
+        if (result.mergedContent && onBookUpdate) {
+          onBookUpdate(result.mergedContent);
+        }
+
+        onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
+        if (onStatusMessage)
+          onStatusMessage('Conflicts resolved - sync completed!');
+
+        // Clear conflict state
+        setConflicts([]);
+        setPendingSyncData(null);
+
+        // Clear status message after a short delay
+        setTimeout(() => {
+          if (onStatusMessage) onStatusMessage('');
+        }, 2000);
+      } else {
+        throw new Error(result.error || 'Failed to resolve conflicts');
+      }
+    } catch (error) {
+      console.error('Conflict resolution failed:', error);
+      setError(error.message);
+      if (onStatusMessage) onStatusMessage('');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleConflictCancel = () => {
+    setConflicts([]);
+    setPendingSyncData(null);
+    if (onStatusMessage)
+      onStatusMessage('Sync cancelled - conflicts not resolved.');
+    setTimeout(() => {
+      if (onStatusMessage) onStatusMessage('');
+    }, 2000);
   };
 
   const handleDisconnect = () => {
@@ -1430,6 +1435,15 @@ function GitHubIntegration({
           </button>
         </div>
       </div>
+
+      {/* Conflict Resolution UI */}
+      {conflicts.length > 0 && (
+        <ConflictResolution
+          conflicts={conflicts}
+          onResolve={handleConflictResolution}
+          onCancel={handleConflictCancel}
+        />
+      )}
     </div>
   );
 }

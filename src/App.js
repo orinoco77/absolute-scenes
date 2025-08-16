@@ -348,37 +348,35 @@ function App() {
       const dataToSync = bookData || book; // Use passed data or fallback to current state
 
       try {
-        const GitHubService = (await import('./utils/gitHubService')).default;
+        const { BrowserEnhancedGitHubService } = await import(
+          './utils/browserEnhancedGitHubService'
+        );
+        const enhancedService = new BrowserEnhancedGitHubService();
 
-        const isAuth = GitHubService.isAuthenticated();
+        const isAuth = enhancedService.gitHubService.isAuthenticated();
 
         if (isAuth) {
           const commitMessage = `Auto-save: ${new Date().toLocaleString()}`;
 
-          // Generate filename
-          let filename = 'manuscript.book';
-          if (filePath) {
-            filename = filePath.split(/[\\/]/).pop();
-            if (!filename.endsWith('.book')) {
-              filename = filename.replace(/\.(book|json)$/, '') + '.book';
-            }
-          } else if (dataToSync.title?.trim()) {
-            filename =
-              dataToSync.title
-                .toLowerCase()
-                .replace(/[^a-z0-9\s-]/g, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-')
-                .replace(/^-|-$/g, '') + '.book';
-          }
-
-          await GitHubService.saveBookToRepository(
+          const result = await enhancedService.safeSyncWithRepository(
             dataToSync.github.repository,
             dataToSync,
             commitMessage,
-            filename
+            filePath
           );
-          updateGitHubSyncStatus({ lastSyncTime: saveTime });
+
+          if (result.conflicts && result.conflicts.length > 0) {
+            // For auto-sync, don't show conflict UI - just warn user
+            alert(
+              'Auto-sync detected conflicts with remote changes. Please use the manual sync button in GitHub settings to resolve conflicts safely.'
+            );
+          } else if (result.success) {
+            // Sync successful
+            updateGitHubSyncStatus({ lastSyncTime: saveTime });
+          } else if (result.error) {
+            console.warn('Auto-sync failed:', result.error);
+            alert(`Auto-sync failed: ${result.error}`);
+          }
         } else {
           alert(
             'GitHub auto-sync failed: Not authenticated. Please check your GitHub connection in settings.'
