@@ -1097,6 +1097,20 @@ body {
   transform: translateY(1px);
 }
 
+.distraction-free-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-size: 14px;
+}
+
+.distraction-free-btn:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
 .format-help {
   margin-left: auto;
   color: #6c757d;
@@ -1404,6 +1418,15 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* Distraction-Free Mode toolbar styles */
+.toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background: #ddd;
+  margin: 0 8px;
+}
+
 
 /* Location Editor Styles */
 .location-editor {
@@ -3552,3 +3575,12 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* Distraction-Free Mode toolbar styles */
+.toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background: #ddd;
+  margin: 0 8px;
+}
+

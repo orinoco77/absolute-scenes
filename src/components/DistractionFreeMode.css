@@ -1,0 +1,172 @@
+/* Distraction-Free Mode Overlay */
+.distraction-free-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #1a1a1a; /* Dark grey background */
+  color: #e8e8e8;
+  z-index: 10000; /* Above everything */
+  display: flex;
+  flex-direction: column;
+  font-family: 'Georgia', 'Times New Roman', serif; /* Professional writing font */
+}
+
+/* Close button - subtle but accessible */
+.distraction-free-close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10001;
+}
+
+.distraction-free-close:hover {
+  color: #999;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.distraction-free-close:focus {
+  outline: 2px solid #4a90e2;
+  outline-offset: 2px;
+}
+
+/* Scene title - subtle at top */
+.distraction-free-title {
+  position: absolute;
+  top: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #666;
+  font-size: 14px;
+  font-weight: 300;
+  text-align: center;
+  z-index: 10001;
+  pointer-events: none;
+}
+
+/* Main editor container */
+.distraction-free-editor {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px 60px; /* Space for title and stats */
+  min-height: 0; /* Allow flexbox shrinking */
+}
+
+/* The main textarea */
+.distraction-free-textarea {
+  width: 100%;
+  max-width: 800px; /* Comfortable reading width */
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e8e8e8;
+  font-size: 18px;
+  line-height: 1.6;
+  font-family: inherit;
+  resize: none;
+  padding: 40px;
+}
+
+.distraction-free-textarea::placeholder {
+  color: #555;
+  font-style: italic;
+}
+
+.distraction-free-textarea:focus {
+  outline: none;
+}
+
+/* Word count stats - subtle at bottom */
+.distraction-free-stats {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #555;
+  font-size: 12px;
+  font-weight: 300;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Animation for smooth entry */
+.distraction-free-overlay {
+  animation: distraction-free-fade-in 0.3s ease-out;
+}
+
+@keyframes distraction-free-fade-in {
+  from {
+    opacity: 0;
+    background: rgba(26, 26, 26, 0);
+  }
+  to {
+    opacity: 1;
+    background: #1a1a1a;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .distraction-free-editor {
+    padding: 60px 15px 50px;
+  }
+  
+  .distraction-free-textarea {
+    font-size: 16px;
+    max-width: none;
+    padding: 20px;
+  }
+  
+  .distraction-free-close {
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+  
+  .distraction-free-title {
+    top: 20px;
+    font-size: 13px;
+  }
+  
+  .distraction-free-stats {
+    bottom: 20px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .distraction-free-overlay {
+    background: #000;
+    color: #fff;
+  }
+  
+  .distraction-free-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .distraction-free-overlay {
+    animation: none;
+  }
+}
