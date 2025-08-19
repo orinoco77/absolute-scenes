@@ -8,7 +8,10 @@
       "Bash(npx expo install:*)",
       "Bash(npm install)",
       "Bash(timeout 30s npx expo start)"
+      "Bash(npm audit:*)",
+      "WebFetch(domain:github.com)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

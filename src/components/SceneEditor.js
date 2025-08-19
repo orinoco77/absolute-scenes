@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import DistractionFreeMode from './DistractionFreeMode';
 
 function SceneEditor({
   scene,
@@ -7,6 +8,35 @@ function SceneEditor({
   collaboration = null // Optional collaboration settings
 }) {
   const textareaRef = useRef(null);
+  const [isDistractionFree, setIsDistractionFree] = useState(false);
+
+  // Handle F11 for distraction-free mode with fullscreen
+  useEffect(() => {
+    const handleKeyDown = e => {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        setIsDistractionFree(true);
+
+        // Enter fullscreen mode
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Handle exiting distraction-free mode
+  const handleCloseDistractionFree = () => {
+    setIsDistractionFree(false);
+
+    // Exit fullscreen mode
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen();
+    }
+  };
 
   if (!scene) {
     return (
@@ -184,6 +214,20 @@ function SceneEditor({
           >
             ↵
           </button>
+          <div className="toolbar-separator" />
+          <button
+            onClick={() => {
+              setIsDistractionFree(true);
+              // Enter fullscreen mode
+              if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+              }
+            }}
+            className="format-btn distraction-free-btn"
+            title="Distraction-Free Mode (F11)"
+          >
+            🎯
+          </button>
           <div className="format-help">
             <small>
               Markdown: **bold**, *italic*, ## heading | Shift+Enter: forced
@@ -213,6 +257,14 @@ function SceneEditor({
           rows="4"
         />
       </div>
+
+      {/* Distraction-Free Mode Overlay */}
+      <DistractionFreeMode
+        scene={scene}
+        onSceneUpdate={onSceneUpdate}
+        onClose={handleCloseDistractionFree}
+        isOpen={isDistractionFree}
+      />
     </div>
   );
 }

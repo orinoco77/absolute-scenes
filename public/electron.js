@@ -69,6 +69,15 @@ function createWindow() {
     }, 1000);
   });
 
+  // Handle fullscreen events to hide/show menu bar
+  mainWindow.on('enter-full-screen', () => {
+    mainWindow.setMenuBarVisibility(false);
+  });
+
+  mainWindow.on('leave-full-screen', () => {
+    mainWindow.setMenuBarVisibility(true);
+  });
+
   createMenu();
 }
 

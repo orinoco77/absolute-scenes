@@ -557,6 +557,7 @@ Want to influence the roadmap?
 
 <!--VERSION_HISTORY-->
 
+- **v1.3.64**: test fix
 - **v1.3.59**: More readme updates
 - **v1.3.56**: fix some layout and character encoding issues
 - **v1.3.55**: Collaboration first pass
@@ -571,5 +572,5 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-08-16<!--/DATE--> | Build <!--COMMIT-->6ba337b - New collaboration
-feature. Real git integration and merging (3 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-08-19<!--/DATE--> | Build <!--COMMIT-->a7b4ae6 - test: fix pre-commit
+hook order for README updates (5 days ago)<!--/COMMIT-->_
