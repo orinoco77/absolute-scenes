@@ -156,3 +156,18 @@ CLAUDE.md
 
 # Documentation from development sessions
 docs/
+
+# Scrivener projects and creative content (personal work, not part of app)
+*.scriv/
+*.book
+
+# Mobile app (separate Flutter project - should be its own repo)
+absolute_scenes_mobile_new/
+
+# Temporary files
+*.tmp
+
+# Personal creative work and assets
+Brother's\ Folly.scriv/
+Fantasy\ Saga.scriv/
+Fantasy\ Saga.book

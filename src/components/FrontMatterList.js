@@ -1,5 +1,4 @@
-/* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 function FrontMatterList({
   frontMatter,
@@ -7,7 +6,7 @@ function FrontMatterList({
   onFrontMatterSelect,
   onFrontMatterAdd,
   onFrontMatterDelete,
-  onFrontMatterUpdate,
+  onFrontMatterUpdate: _onFrontMatterUpdate,
   onFrontMatterToggle,
   onFrontMatterReorder,
   authorName = '' // Add author name prop

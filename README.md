@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.65<!--/VERSION--> | **Tests:** <!--TESTS-->427/427<!--/TESTS--> ✅ |
-**Last Updated:** <!--DATE-->2025-08-16<!--/DATE-->
+**Version:** <!--VERSION-->1.3.67<!--/VERSION--> | **Tests:** <!--TESTS-->449/449<!--/TESTS--> ✅ |
+**Last Updated:** <!--DATE-->2025-08-21<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -284,9 +284,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->427/427<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->449/449<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->81<!--/COMMITS--> | **Latest:** <!--COMMIT-->6ba337b - New collaboration feature. Real git integration and merging (3 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->84<!--/COMMITS--> | **Latest:** <!--COMMIT-->d1ccdf9 - Added a distraction-free writing mode that takes over the whole screen and provides just a cursor and a blank space to write in (2 days ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.65<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.3.65<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.3.67<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.67<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -556,13 +556,11 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
-
 - **v1.3.64**: test fix
 - **v1.3.59**: More readme updates
 - **v1.3.56**: fix some layout and character encoding issues
 - **v1.3.55**: Collaboration first pass
 - **v1.3.54**: Another go
-- **v1.3.50**: Add cert stuff for deb and rpm
 <!--/VERSION_HISTORY-->
 
 ---
@@ -572,5 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-08-19<!--/DATE--> | Build <!--COMMIT-->a7b4ae6 - test: fix pre-commit
-hook order for README updates (5 days ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-08-21<!--/DATE--> | Build <!--COMMIT-->d1ccdf9 - Added a distraction-free writing mode that takes over the whole screen and provides just a cursor and a blank space to write in (2 days ago)<!--/COMMIT-->_

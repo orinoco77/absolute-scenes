@@ -41,14 +41,7 @@ if (isElectron()) {
 }
 
 function App() {
-  // Check if we're in Electron environment
-  const isElectronApp = () => {
-    return (
-      typeof window !== 'undefined' && typeof window.require === 'function'
-    );
-  };
-
-  const [book, setBook] = useState({
+  const [book, setBookInternal] = useState({
     title: '',
     author: '',
     frontMatter: [], // Optional front matter sections
@@ -127,9 +120,19 @@ function App() {
   const [currentFolderId, setCurrentFolderId] = useState('default-bg');
   const [currentFrontMatterId, setCurrentFrontMatterId] = useState(null);
   const [activeTab, setActiveTab] = useState('manuscript');
+
+  // Keep bookRef in sync with book state
+  useEffect(() => {
+    bookRef.current = book;
+  }, [book]);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showGitHubIntegration, setShowGitHubIntegration] = useState(false);
+
+  // Wrapper for setBook
+  const setBook = useCallback(newBookData => {
+    setBookInternal(newBookData);
+  }, []);
   const [showBackupRecovery, setShowBackupRecovery] = useState(false);
   // GitHub repo is now stored in book.github.repository, but we keep this for compatibility
   const gitHubRepo = book.github?.repository || null;
@@ -145,6 +148,7 @@ function App() {
 
   // Add ref to track save operations more reliably
   const saveOperationRef = useRef(false);
+  const bookRef = useRef(book);
 
   // Initialize font system for better web fonts
   // Update window title
@@ -273,11 +277,13 @@ function App() {
       let saveResult;
       let savedFilePath = currentFilePath;
 
-      // Ensure we have clean book data before saving
+      // Ensure we have clean book data before saving - use ref to avoid closure issues
+      const currentBook = bookRef.current;
+
       const bookDataToSave = {
-        ...book,
+        ...currentBook,
         metadata: {
-          ...book.metadata,
+          ...currentBook.metadata,
           modified: new Date().toISOString()
         }
       };
@@ -558,6 +564,79 @@ function App() {
       emptyRecycleBin();
     };
 
+    const handleImportScrivenerResult = async (event, result) => {
+      try {
+        setCurrentOperation('');
+
+        if (!result.success) {
+          alert(`Failed to import Scrivener project: ${result.error}`);
+          return;
+        }
+
+        if (
+          hasUnsavedChanges &&
+          !window.confirm(
+            'You have unsaved changes. Importing will replace your current book. Continue?'
+          )
+        ) {
+          return;
+        }
+
+        const importedBook = result.bookData;
+
+        // Clean imported book data and set state
+
+        // Clean the imported book data - remove Scrivener-specific fields
+        const cleanedBook = {
+          title: importedBook.title,
+          author: importedBook.author,
+          frontMatter: importedBook.frontMatter || [],
+          parts: importedBook.parts || [],
+          chapters: importedBook.chapters || [],
+          characters: importedBook.characters || [],
+          characterDetectionBlacklist:
+            importedBook.characterDetectionBlacklist || [],
+          locations: importedBook.locations || [],
+          backgroundFolders: importedBook.backgroundFolders || [],
+          template: importedBook.template,
+          github: importedBook.github || {
+            repository: null,
+            lastSyncTime: null
+          },
+          metadata: importedBook.metadata,
+          collaboration: importedBook.collaboration || {
+            enabled: false,
+            authors: [],
+            currentAuthor: null
+          }
+        };
+
+        // Set the imported book data
+        setBook(cleanedBook);
+
+        setCurrentFilePath(null); // No current file path since this is imported
+        setHasUnsavedChanges(true); // Mark as changed so user can save
+
+        // Switch to scenes tab to show imported content
+        setActiveTab('scenes');
+
+        // Calculate total scene count across all chapters
+        const totalScenes = importedBook.chapters.reduce(
+          (total, chapter) => total + (chapter.scenes?.length || 0),
+          0
+        );
+
+        // Show success message
+        alert(
+          `Successfully imported "${importedBook.title}" from Scrivener!\n\n- ${importedBook.chapters.length} chapters\n- ${totalScenes} scenes\n- ${importedBook.characters.length} characters\n- ${importedBook.locations.length} locations`
+        );
+      } catch (error) {
+        console.error('Error processing Scrivener import result:', error);
+        alert(`Failed to process import result: ${error.message}`);
+        setCurrentOperation('');
+      }
+    };
+
     const handleBookLoaded = (event, bookData) => {
       // Extract and remove filePath from book data (it's metadata, not content)
       const filePath = bookData.filePath || null;
@@ -656,6 +735,7 @@ function App() {
     ipcRenderer.on('menu-backup-recovery', handleMenuBackupRecovery);
     ipcRenderer.on('menu-empty-recycle-bin', handleMenuEmptyRecycleBin);
     ipcRenderer.on('book-loaded', handleBookLoaded);
+    ipcRenderer.on('import-scrivener-result', handleImportScrivenerResult);
 
     // Set IPC ready flag for file association handling
     window.ipcReady = true;
@@ -678,6 +758,7 @@ function App() {
       ipcRenderer.removeAllListeners('menu-backup-recovery');
       ipcRenderer.removeAllListeners('menu-empty-recycle-bin');
       ipcRenderer.removeAllListeners('book-loaded');
+      ipcRenderer.removeAllListeners('import-scrivener-result');
 
       // Clear IPC ready flag
       window.ipcReady = false;
@@ -1801,7 +1882,7 @@ function App() {
           >
             📥
           </button>
-          {!isElectronApp() && (
+          {!isElectron() && (
             <span className="browser-mode-indicator">
               Browser Mode - Limited functionality
             </span>

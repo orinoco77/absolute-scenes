@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useCallback } from 'react';
 
 function BackgroundEditor({ document, template, onDocumentUpdate }) {
@@ -17,6 +16,7 @@ function BackgroundEditor({ document, template, onDocumentUpdate }) {
   }, [document]);
 
   // Auto-save function with debouncing
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdate = useCallback(
     (() => {
       let timeout;
@@ -29,7 +29,7 @@ function BackgroundEditor({ document, template, onDocumentUpdate }) {
         }, 500);
       };
     })(),
-    [document, onDocumentUpdate]
+    [document, onDocumentUpdate] // Dependencies are correct; ESLint can't analyze IIFE closure
   );
 
   const handleTitleChange = e => {
