@@ -168,7 +168,64 @@ function App() {
 
   useEffect(() => {
     initializeFontSystem();
+
+    // Expose hasUnsavedChanges to Electron main process
+    window.electronAPI = window.electronAPI || {};
+    window.electronAPI.hasUnsavedChanges = () => hasUnsavedChanges;
   }, []);
+
+  // Update the exposed function when hasUnsavedChanges changes
+  useEffect(() => {
+    if (window.electronAPI) {
+      window.electronAPI.hasUnsavedChanges = () => hasUnsavedChanges;
+    }
+  }, [hasUnsavedChanges]);
+
+  // Track user activation for beforeunload dialog
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
+
+  // Add beforeunload event listener to prevent accidental window close with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = event => {
+      console.log(
+        'beforeunload triggered, hasUnsavedChanges:',
+        hasUnsavedChanges,
+        'userHasInteracted:',
+        userHasInteracted
+      );
+      if (hasUnsavedChanges) {
+        console.log('Preventing default and setting returnValue');
+        event.preventDefault();
+        // Modern browsers require both preventDefault and returnValue
+        event.returnValue =
+          'You have unsaved changes. Are you sure you want to leave?';
+        return 'You have unsaved changes. Are you sure you want to leave?';
+      }
+    };
+
+    // Track user interactions for modern browser beforeunload requirements
+    const handleUserInteraction = () => {
+      if (!userHasInteracted) {
+        console.log('User interaction detected');
+        setUserHasInteracted(true);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('click', handleUserInteraction);
+    window.addEventListener('keydown', handleUserInteraction);
+    console.log(
+      'Added beforeunload listener, hasUnsavedChanges:',
+      hasUnsavedChanges
+    );
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('click', handleUserInteraction);
+      window.removeEventListener('keydown', handleUserInteraction);
+      console.log('Removed beforeunload listener');
+    };
+  }, [hasUnsavedChanges, userHasInteracted]);
 
   // Auto-select first scene if none selected but scenes exist
   useEffect(() => {
@@ -242,6 +299,7 @@ function App() {
     if (isSaving) {
       return; // Ignore changes during save operation
     }
+    console.log('markAsChanged called, setting hasUnsavedChanges to true');
     setHasUnsavedChanges(true);
   };
 
@@ -766,14 +824,17 @@ function App() {
   }, []); // Empty dependency array - only set up once
 
   const handleNewBook = () => {
+    console.log('handleNewBook called, hasUnsavedChanges:', hasUnsavedChanges);
     if (
       hasUnsavedChanges &&
       !window.confirm(
         'You have unsaved changes. Are you sure you want to create a new book?'
       )
     ) {
+      console.log('User cancelled new book creation');
       return;
     }
+    console.log('Creating new book...');
 
     const newBookData = {
       title: '',
