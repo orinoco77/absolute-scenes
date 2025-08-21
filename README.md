@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.67<!--/VERSION--> | **Tests:** <!--TESTS-->449/449<!--/TESTS--> ✅ |
+**Version:** <!--VERSION-->1.3.68<!--/VERSION--> | **Tests:** <!--TESTS-->454/454<!--/TESTS--> ✅ |
 **Last Updated:** <!--DATE-->2025-08-21<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -284,9 +284,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->449/449<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->454/454<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->84<!--/COMMITS--> | **Latest:** <!--COMMIT-->d1ccdf9 - Added a distraction-free writing mode that takes over the whole screen and provides just a cursor and a blank space to write in (2 days ago)<!--/COMMIT-->
+<!--COMMITS-->85<!--/COMMITS--> | **Latest:** <!--COMMIT-->16bd48b - Scrivener import and general refactor (3 hours ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.67<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.3.67<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.3.68<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.68<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -556,11 +556,11 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+- **v1.3.67**: Scrivener import and general refactor
 - **v1.3.64**: test fix
 - **v1.3.59**: More readme updates
 - **v1.3.56**: fix some layout and character encoding issues
 - **v1.3.55**: Collaboration first pass
-- **v1.3.54**: Another go
 <!--/VERSION_HISTORY-->
 
 ---
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-08-21<!--/DATE--> | Build <!--COMMIT-->d1ccdf9 - Added a distraction-free writing mode that takes over the whole screen and provides just a cursor and a blank space to write in (2 days ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-08-21<!--/DATE--> | Build <!--COMMIT-->16bd48b - Scrivener import and general refactor (3 hours ago)<!--/COMMIT-->_

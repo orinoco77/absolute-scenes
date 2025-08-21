@@ -80,7 +80,82 @@ function createWindow() {
     mainWindow.setMenuBarVisibility(true);
   });
 
+  // Handle window close event - check for unsaved changes
+  mainWindow.on('close', event => {
+    event.preventDefault();
+    handleWindowClose();
+  });
+
   createMenu();
+}
+
+// Handle New Book menu item with unsaved changes check
+async function handleNewBook() {
+  try {
+    // Check if there are unsaved changes in the React app
+    const hasUnsavedChanges = await mainWindow.webContents.executeJavaScript(`
+      window.electronAPI && window.electronAPI.hasUnsavedChanges ? window.electronAPI.hasUnsavedChanges() : false
+    `);
+
+    if (hasUnsavedChanges) {
+      const response = await dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        buttons: ['Create New Book', 'Cancel'],
+        defaultId: 1,
+        cancelId: 1,
+        title: 'Unsaved Changes',
+        message:
+          'You have unsaved changes. Are you sure you want to create a new book?',
+        detail: 'All unsaved changes will be lost.'
+      });
+
+      if (response.response !== 0) {
+        return; // User cancelled
+      }
+    }
+
+    // Proceed with new book creation
+    mainWindow.webContents.send('menu-new-book');
+  } catch (error) {
+    console.error('Error checking unsaved changes for new book:', error);
+    // Fallback: show the dialog anyway
+    mainWindow.webContents.send('menu-new-book');
+  }
+}
+
+// Handle window close with unsaved changes check
+async function handleWindowClose() {
+  try {
+    // Check if there are unsaved changes in the React app
+    const hasUnsavedChanges = await mainWindow.webContents.executeJavaScript(`
+      window.electronAPI && window.electronAPI.hasUnsavedChanges ? window.electronAPI.hasUnsavedChanges() : false
+    `);
+
+    if (hasUnsavedChanges) {
+      const response = await dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        buttons: ['Close Without Saving', 'Cancel'],
+        defaultId: 1,
+        cancelId: 1,
+        title: 'Unsaved Changes',
+        message: 'You have unsaved changes. Are you sure you want to close?',
+        detail: 'All unsaved changes will be lost.'
+      });
+
+      if (response.response !== 0) {
+        return; // User cancelled
+      }
+    }
+
+    // Proceed with closing
+    mainWindow.destroy();
+    app.quit();
+  } catch (error) {
+    console.error('Error checking unsaved changes for window close:', error);
+    // Fallback: close anyway
+    mainWindow.destroy();
+    app.quit();
+  }
 }
 
 // Enhanced function to extract file path from command line arguments
@@ -1465,7 +1540,7 @@ function createMenu() {
         {
           label: 'New Book',
           accelerator: 'CmdOrCtrl+N',
-          click: () => mainWindow.webContents.send('menu-new-book')
+          click: () => handleNewBook()
         },
         {
           label: 'Open Book...',
