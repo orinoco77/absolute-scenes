@@ -189,8 +189,9 @@ function ExportDialog({ book, onClose, onExport }) {
                   chapter.scenes.reduce(
                     (chapterTotal, scene) =>
                       chapterTotal +
-                      scene.content.split(/\s+/).filter(word => word.length > 0)
-                        .length,
+                      (scene.content || '')
+                        .split(/\s+/)
+                        .filter(word => word.length > 0).length,
                     0
                   ),
                 0
@@ -220,7 +221,7 @@ function ExportDialog({ book, onClose, onExport }) {
                         ch.scenes.reduce(
                           (chTotal, scene) =>
                             chTotal +
-                            scene.content
+                            (scene.content || '')
                               .split(/\s+/)
                               .filter(word => word.length > 0).length,
                           0
@@ -253,7 +254,7 @@ function ExportDialog({ book, onClose, onExport }) {
                         ch.scenes.reduce(
                           (chTotal, scene) =>
                             chTotal +
-                            scene.content
+                            (scene.content || '')
                               .split(/\s+/)
                               .filter(word => word.length > 0).length,
                           0

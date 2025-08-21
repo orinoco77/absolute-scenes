@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 function LocationList({
   locations,
@@ -170,4 +170,4 @@ function LocationList({
   );
 }
 
-export default LocationList;
+export default React.memo(LocationList);

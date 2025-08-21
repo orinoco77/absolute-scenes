@@ -176,7 +176,10 @@ function SceneEditor({
           )}
           <div className="scene-stats">
             Words:{' '}
-            {scene.content.split(/\s+/).filter(word => word.length > 0).length}
+            {
+              (scene.content || '').split(/\s+/).filter(word => word.length > 0)
+                .length
+            }
           </div>
         </div>
       </div>

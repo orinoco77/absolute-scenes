@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 function CharacterList({
   characters,
@@ -226,4 +226,4 @@ function CharacterList({
   );
 }
 
-export default CharacterList;
+export default React.memo(CharacterList);

@@ -156,9 +156,9 @@ function SceneList({
 
   const getTotalWords = scenes => {
     return scenes.reduce((total, scene) => {
+      const content = scene.content || '';
       return (
-        total +
-        scene.content.split(/\s+/).filter(word => word.length > 0).length
+        total + content.split(/\s+/).filter(word => word.length > 0).length
       );
     }, 0);
   };
@@ -650,7 +650,7 @@ function SceneList({
                         </span>
                         <span className="scene-word-count">
                           {
-                            scene.content
+                            (scene.content || '')
                               .split(/\s+/)
                               .filter(word => word.length > 0).length
                           }{' '}
@@ -1014,4 +1014,4 @@ function SceneList({
   );
 }
 
-export default SceneList;
+export default React.memo(SceneList);

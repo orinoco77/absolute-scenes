@@ -1,3 +1,4 @@
+import React from 'react';
 import BackgroundList from './BackgroundList';
 import CharacterList from './CharacterList';
 import FrontMatterList from './FrontMatterList';
@@ -11,10 +12,6 @@ function ThreadsControls({
   characterDetectionBlacklist,
   onUpdateCharacterDetectionBlacklist: _onUpdateCharacterDetectionBlacklist
 }) {
-  // Get character count for display
-  const allCharacters = new Set();
-  characters.forEach(char => allCharacters.add(char.name));
-
   // Count scenes
   const totalScenes = chapters.reduce(
     (total, ch) => total + ch.scenes.length,
@@ -396,4 +393,4 @@ function BookStructure({
   );
 }
 
-export default BookStructure;
+export default React.memo(BookStructure);
