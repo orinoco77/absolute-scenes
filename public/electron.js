@@ -1454,9 +1454,8 @@ function convertToBookFormat(bookData) {
 async function importScrivenerProject() {
   try {
     const result = await dialog.showOpenDialog(mainWindow, {
-      title: 'Import Scrivener Project',
-      properties: ['openDirectory'],
-      filters: [{ name: 'Scrivener Projects', extensions: ['scriv'] }]
+      title: 'Import Scrivener Project (.scriv folder)',
+      properties: ['openDirectory']
     });
 
     if (result.canceled || result.filePaths.length === 0) {

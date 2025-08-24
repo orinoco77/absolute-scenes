@@ -281,7 +281,7 @@ function renderFormattedTextToPDF(
   paragraphStyle = 'indented',
   pdfFont = 'times'
 ) {
-  let currentX = x;
+  // Position tracking no longer needed - each line starts fresh at x
   let currentY = y;
   let currentMaxWidth = maxWidth;
   let isFirstLineOfParagraph = true;
@@ -339,7 +339,7 @@ function renderFormattedTextToPDF(
   const processLineBreak = () => {
     // Render current line if it has content
     if (currentLineWords.length > 0) {
-      let lineStartX = currentX;
+      let lineStartX = x;
       let availableWidth = currentMaxWidth;
 
       // Apply indentation only to the first line of the paragraph
@@ -367,7 +367,6 @@ function renderFormattedTextToPDF(
 
     // Move to next line
     currentY += lineHeight;
-    currentX = x;
     isFirstLineOfParagraph = false;
 
     // Check if we need a new page
@@ -377,7 +376,6 @@ function renderFormattedTextToPDF(
         const margins = updateMarginsCallback();
         if (margins) {
           x = margins.left;
-          currentX = x;
           currentMaxWidth = margins.contentWidth;
         }
       }
@@ -428,7 +426,7 @@ function renderFormattedTextToPDF(
 
   // Render any remaining words in the final line
   if (currentLineWords.length > 0) {
-    let lineStartX = currentX;
+    let lineStartX = x;
     let availableWidth = currentMaxWidth;
 
     if (isFirstLineOfParagraph && shouldIndentFirstLine) {
@@ -509,14 +507,15 @@ function renderMixedFormattedLine(
   let totalSpaces = 0;
 
   // Set font for each word to measure width accurately
-  wordObjects.forEach(wordObj => {
+  wordObjects.forEach((wordObj, wordIndex) => {
     const fontStyle = getFontStyle(wordObj.type);
     const wordFontSize = getFontSize(wordObj.type, baseFontSize);
     pdf.setFont(pdfFont, fontStyle);
     pdf.setFontSize(wordFontSize);
 
     totalWordWidth += pdf.getTextWidth(wordObj.text);
-    if (wordObj.needsSpace) {
+    // Count spaces that will actually be rendered (not before first word)
+    if (wordObj.needsSpace && wordIndex > 0) {
       totalSpaces++;
     }
   });
@@ -533,23 +532,29 @@ function renderMixedFormattedLine(
     spaceWidth = totalSpaceAvailable / totalSpaces;
   }
 
-  // Calculate starting position based on text alignment
-  let startX = x;
+  // Render each word with proper formatting
+  let currentX;
   if (textAlign === 'center') {
+    // Calculate starting position for center alignment only
     const totalContentWidth = totalWordWidth + totalSpaces * spaceWidth;
     // Only center if content fits within the available width, otherwise left-align
     if (totalContentWidth <= maxWidth) {
-      startX = x + (maxWidth - totalContentWidth) / 2;
+      currentX = x + (maxWidth - totalContentWidth) / 2;
+    } else {
+      currentX = x; // If content is too wide, fall back to left-align
     }
-    // If content is too wide, keep startX = x (left-aligned)
+  } else {
+    // For all other alignments (left, justified), use original position directly
+    currentX = x;
   }
-
-  // Render each word with proper formatting
-  let currentX = startX;
   let lastFontStyle = null;
   let lastFontSize = null;
 
-  wordObjects.forEach(wordObj => {
+  wordObjects.forEach((wordObj, wordIndex) => {
+    // Fix: First word of any line should never have space added before it
+    if (wordIndex === 0) {
+      wordObj.needsSpace = false;
+    }
     const fontStyle = getFontStyle(wordObj.type);
     const wordFontSize = getFontSize(wordObj.type, baseFontSize);
 
