@@ -2,6 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useCallback, useMemo } from 'react';
 import BackgroundEditor from './components/BackgroundEditor';
+import BackMatterEditor from './components/BackMatterEditor';
 import BackupRecovery from './components/BackupRecovery';
 import BookStructure from './components/BookStructure';
 import CharacterEditor from './components/CharacterEditor';
@@ -20,6 +21,7 @@ import { GitHubSyncService } from './services/GitHubSyncService';
 import { SaveService } from './services/SaveService';
 import { initializeFontSystem } from './utils/fontManager';
 import './styles/App.css';
+import './styles/back-matter.css';
 
 // Create service instances (following Dependency Inversion Principle)
 const saveService = new SaveService();
@@ -60,13 +62,17 @@ function App() {
     addFrontMatter,
     updateFrontMatter,
     deleteFrontMatter,
+    addBackMatter,
+    updateBackMatter,
+    deleteBackMatter,
     recoverBook,
     resetBook,
     getCurrentScene,
     getCurrentCharacter,
     getCurrentDocument,
     getCurrentLocation,
-    getCurrentFrontMatter
+    getCurrentFrontMatter,
+    getCurrentBackMatter
   } = bookState;
 
   const {
@@ -79,6 +85,7 @@ function App() {
     currentDocumentId,
     currentFolderId,
     currentFrontMatterId,
+    currentBackMatterId,
     setActiveTab,
     setCurrentSceneId,
     setCurrentChapterId,
@@ -88,6 +95,7 @@ function App() {
     setCurrentDocumentId,
     setCurrentFolderId,
     setCurrentFrontMatterId,
+    setCurrentBackMatterId,
     showTemplateManager,
     showExportDialog,
     showGitHubIntegration,
@@ -122,6 +130,7 @@ function App() {
     autoSelectFirstLocation,
     autoSelectFirstDocument,
     autoSelectFirstFrontMatter,
+    autoSelectFirstBackMatter,
     resetUIForNewBook,
     loadBook
   } = uiState;
@@ -174,6 +183,10 @@ function App() {
   useEffect(() => {
     autoSelectFirstFrontMatter(book);
   }, [activeTab, currentFrontMatterId, book.frontMatter]);
+
+  useEffect(() => {
+    autoSelectFirstBackMatter(book);
+  }, [activeTab, currentBackMatterId, book.backMatter]);
 
   // Save operation handlers (following Single Responsibility Principle)
   const handleSaveBook = useCallback(async () => {
@@ -246,6 +259,19 @@ function App() {
 
     return result;
   }, [book]);
+
+  // Utility functions
+  const emptyRecycleBin = useCallback(() => {
+    setRecycleBin([]);
+    // TODO: Also empty other recycle bins when implemented
+    // setCharacterRecycleBin([]);
+    // setLocationRecycleBin([]);
+    // setBackgroundRecycleBin([]);
+  }, [setRecycleBin]);
+
+  const handleExportBook = useCallback(() => {
+    setShowExportDialog(true);
+  }, [setShowExportDialog]);
 
   // GitHub sync handler (following Single Responsibility Principle)
   const handleGitHubSync = useCallback(
@@ -413,7 +439,110 @@ function App() {
 
     const cleanup3 = eventHandlerService.setupIpcHandlers({
       'import-scrivener-result': handleImportScrivenerResult,
-      'book-loaded': handleBookLoaded
+      'book-loaded': handleBookLoaded,
+      'menu-save-book': () => {
+        handleSaveBook();
+      },
+      'menu-save-as': () => {
+        _handleSaveAsBook();
+      },
+      'menu-export-book': () => {
+        handleExportBook();
+      },
+      'menu-delete': () => {
+        // Handle delete based on current context
+        if (activeTab === 'scenes' && currentSceneId) {
+          deleteScene(currentSceneId);
+          markAsChanged();
+          setCurrentSceneId(null);
+        } else if (activeTab === 'chapters' && currentChapterId) {
+          deleteChapter(currentChapterId);
+          markAsChanged();
+          const firstChapter = book.chapters.find(
+            ch => ch.id !== currentChapterId
+          );
+          setCurrentChapterId(firstChapter?.id || null);
+          setCurrentSceneId(null);
+        } else if (activeTab === 'parts' && currentPartId) {
+          deletePart(currentPartId);
+          markAsChanged();
+          setCurrentPartId(null);
+        }
+      },
+      'menu-new-chapter': () => {
+        if (activeTab !== 'chapters') {
+          setActiveTab('chapters');
+        }
+        const newChapterId = addChapter();
+        setCurrentChapterId(newChapterId);
+        markAsChanged();
+      },
+      'menu-delete-chapter': () => {
+        if (currentChapterId) {
+          deleteChapter(currentChapterId);
+          markAsChanged();
+          const firstChapter = book.chapters.find(
+            ch => ch.id !== currentChapterId
+          );
+          setCurrentChapterId(firstChapter?.id || null);
+          setCurrentSceneId(null);
+        }
+      },
+      'menu-new-part': () => {
+        if (activeTab !== 'parts') {
+          setActiveTab('parts');
+        }
+        const newPartId = addPart();
+        setCurrentPartId(newPartId);
+        markAsChanged();
+      },
+      'menu-delete-part': () => {
+        if (currentPartId) {
+          deletePart(currentPartId);
+          markAsChanged();
+          setCurrentPartId(null);
+        }
+      },
+      'menu-new-scene': () => {
+        if (activeTab !== 'scenes') {
+          setActiveTab('scenes');
+        }
+        const newSceneId = addScene(currentChapterId);
+        setCurrentSceneId(newSceneId);
+        markAsChanged();
+      },
+      'menu-delete-scene': () => {
+        if (currentSceneId) {
+          deleteScene(currentSceneId);
+          markAsChanged();
+          setCurrentSceneId(null);
+        }
+      },
+      'menu-toggle-recycle-bin': () => {
+        setShowRecycleBin(!showRecycleBin);
+      },
+      'menu-template-settings': () => {
+        setActiveTab('settings');
+        // Focus on template settings if there's a specific section
+      },
+      'menu-github-integration': () => {
+        setActiveTab('settings');
+        // Could open a specific GitHub settings modal in the future
+      },
+      'menu-backup-recovery': () => {
+        setActiveTab('settings');
+        // Could open a specific backup recovery modal in the future
+      },
+      'menu-empty-recycle-bin': () => {
+        // Empty the recycle bin
+        if (
+          window.confirm(
+            'Are you sure you want to permanently delete all items in the recycle bin? This action cannot be undone.'
+          )
+        ) {
+          emptyRecycleBin();
+        }
+      }
     });
 
     return () => {
@@ -425,11 +554,34 @@ function App() {
     hasUnsavedChanges,
     userHasInteracted,
     debouncedSave,
+    handleSaveBook,
+    _handleSaveAsBook,
+    handleExportBook,
+    activeTab,
+    currentSceneId,
+    currentChapterId,
+    currentPartId,
+    showRecycleBin,
+    emptyRecycleBin,
+    addScene,
+    updateScene,
+    deleteScene,
+    addChapter,
+    updateChapter,
+    deleteChapter,
+    addPart,
+    updatePart,
+    deletePart,
+    markAsChanged,
     setBook,
     loadBook,
     setCurrentFilePath,
     setHasUnsavedChanges,
-    setActiveTab
+    setActiveTab,
+    setShowRecycleBin,
+    setCurrentSceneId,
+    setCurrentChapterId,
+    setCurrentPartId
   ]);
 
   // Content handlers (following Interface Segregation Principle)
@@ -562,6 +714,24 @@ function App() {
             setCurrentFrontMatterId(null);
           }
         }
+      },
+      backMatter: {
+        add: backMatterItem => {
+          addBackMatter(backMatterItem);
+          setCurrentBackMatterId(backMatterItem.id);
+          markAsChanged();
+        },
+        update: (backMatterId, updates) => {
+          updateBackMatter(backMatterId, updates);
+          markAsChanged();
+        },
+        delete: backMatterId => {
+          deleteBackMatter(backMatterId);
+          markAsChanged();
+          if (currentBackMatterId === backMatterId) {
+            setCurrentBackMatterId(null);
+          }
+        }
       }
     }),
     [
@@ -572,6 +742,7 @@ function App() {
       currentLocationId,
       currentDocumentId,
       currentFrontMatterId,
+      currentBackMatterId,
       book,
       addScene,
       updateScene,
@@ -594,6 +765,9 @@ function App() {
       addFrontMatter,
       updateFrontMatter,
       deleteFrontMatter,
+      addBackMatter,
+      updateBackMatter,
+      deleteBackMatter,
       markAsChanged
     ]
   );
@@ -656,6 +830,7 @@ function App() {
   const currentDocument = getCurrentDocument(currentDocumentId);
   const currentLocation = getCurrentLocation(currentLocationId);
   const currentFrontMatter = getCurrentFrontMatter(currentFrontMatterId);
+  const currentBackMatter = getCurrentBackMatter(currentBackMatterId);
 
   // Render main editor based on active tab (following Open/Closed Principle)
   const renderMainEditor = () => {
@@ -763,6 +938,15 @@ function App() {
           <FrontMatterEditor
             frontMatterItem={currentFrontMatter}
             onFrontMatterUpdate={contentHandlers.frontMatter.update}
+            authorName={book.author}
+          />
+        );
+
+      case 'backmatter':
+        return (
+          <BackMatterEditor
+            backMatterItem={currentBackMatter}
+            onBackMatterUpdate={contentHandlers.backMatter.update}
             authorName={book.author}
           />
         );
@@ -933,6 +1117,14 @@ function App() {
           onFrontMatterUpdate={contentHandlers.frontMatter.update}
           onFrontMatterToggle={() => {}} // TODO: Implement toggle
           onFrontMatterReorder={() => {}} // TODO: Implement reorder
+          backMatter={book.backMatter || []}
+          currentBackMatterId={currentBackMatterId}
+          onBackMatterSelect={setCurrentBackMatterId}
+          onBackMatterAdd={contentHandlers.backMatter.add}
+          onBackMatterDelete={contentHandlers.backMatter.delete}
+          onBackMatterUpdate={contentHandlers.backMatter.update}
+          onBackMatterToggle={() => {}} // TODO: Implement toggle
+          onBackMatterReorder={() => {}} // TODO: Implement reorder
           authorName={book.author}
           activeTab={activeTab}
           onTabChange={setActiveTab}

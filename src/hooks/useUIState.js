@@ -21,6 +21,7 @@ export function useUIState() {
   const [currentDocumentId, setCurrentDocumentId] = useState(null);
   const [currentFolderId, setCurrentFolderId] = useState('default-bg');
   const [currentFrontMatterId, setCurrentFrontMatterId] = useState(null);
+  const [currentBackMatterId, setCurrentBackMatterId] = useState(null);
   const [activeTab, setActiveTab] = useState('manuscript');
 
   // Recycle bin state
@@ -159,6 +160,20 @@ export function useUIState() {
     [activeTab, currentFrontMatterId]
   );
 
+  const autoSelectFirstBackMatter = useCallback(
+    book => {
+      if (
+        activeTab === 'backmatter' &&
+        !currentBackMatterId &&
+        book.backMatter &&
+        book.backMatter.length > 0
+      ) {
+        setCurrentBackMatterId(book.backMatter[0].id);
+      }
+    },
+    [activeTab, currentBackMatterId]
+  );
+
   // Reset UI state for new book
   const resetUIForNewBook = useCallback(() => {
     setCurrentSceneId(null);
@@ -169,6 +184,7 @@ export function useUIState() {
     setCurrentDocumentId(null);
     setCurrentFolderId('default-bg');
     setCurrentFrontMatterId(null);
+    setCurrentBackMatterId(null);
     setCurrentFilePath(null);
     setHasUnsavedChanges(false);
     setActiveTab('manuscript');
@@ -184,6 +200,7 @@ export function useUIState() {
     setCurrentDocumentId(null);
     setCurrentFolderId(bookData.backgroundFolders?.[0]?.id || 'default-bg');
     setCurrentFrontMatterId(null);
+    setCurrentBackMatterId(null);
     setCurrentFilePath(filePath);
     setHasUnsavedChanges(false);
   }, []);
@@ -218,6 +235,8 @@ export function useUIState() {
     setCurrentFolderId,
     currentFrontMatterId,
     setCurrentFrontMatterId,
+    currentBackMatterId,
+    setCurrentBackMatterId,
     activeTab,
     setActiveTab,
 
@@ -256,6 +275,7 @@ export function useUIState() {
     autoSelectFirstLocation,
     autoSelectFirstDocument,
     autoSelectFirstFrontMatter,
+    autoSelectFirstBackMatter,
 
     // State management
     resetUIForNewBook,

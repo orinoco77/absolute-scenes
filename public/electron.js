@@ -80,6 +80,26 @@ function createWindow() {
     mainWindow.setMenuBarVisibility(true);
   });
 
+  // Listen for fullscreen change events from renderer (for distraction-free mode)
+  mainWindow.webContents.on('dom-ready', () => {
+    mainWindow.webContents.executeJavaScript(`
+      document.addEventListener('fullscreenchange', () => {
+        const { ipcRenderer } = require('electron');
+        if (!document.fullscreenElement) {
+          // Exiting fullscreen - ensure menu is visible
+          ipcRenderer.send('fullscreen-exited');
+        }
+      });
+    `);
+  });
+
+  // Handle manual fullscreen exit
+  ipcMain.on('fullscreen-exited', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setMenuBarVisibility(true);
+    }
+  });
+
   // Handle window close event - check for unsaved changes
   mainWindow.on('close', event => {
     event.preventDefault();

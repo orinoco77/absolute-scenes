@@ -32,7 +32,8 @@ function SceneEditor({
   const handleCloseDistractionFree = () => {
     setIsDistractionFree(false);
 
-    // Exit fullscreen mode
+    // Exit fullscreen mode - this will trigger the fullscreenchange event
+    // which will in turn send the 'fullscreen-exited' IPC message to show the menu
     if (document.fullscreenElement && document.exitFullscreen) {
       document.exitFullscreen();
     }

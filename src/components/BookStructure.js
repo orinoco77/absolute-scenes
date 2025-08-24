@@ -1,5 +1,6 @@
 import React from 'react';
 import BackgroundList from './BackgroundList';
+import BackMatterList from './BackMatterList';
 import CharacterList from './CharacterList';
 import FrontMatterList from './FrontMatterList';
 import LocationList from './LocationList';
@@ -161,6 +162,17 @@ function BookStructure({
   onFrontMatterUpdate,
   onFrontMatterToggle,
   onFrontMatterReorder,
+
+  // Back Matter props
+  backMatter,
+  currentBackMatterId,
+  onBackMatterSelect,
+  onBackMatterAdd,
+  onBackMatterDelete,
+  onBackMatterUpdate,
+  onBackMatterToggle,
+  onBackMatterReorder,
+
   authorName = '', // Add author name prop
 
   // Collaboration props
@@ -219,6 +231,13 @@ function BookStructure({
       frontMatter.length > 0
     ) {
       onFrontMatterSelect(frontMatter[0].id);
+    } else if (
+      tabId === 'backmatter' &&
+      !currentBackMatterId &&
+      backMatter &&
+      backMatter.length > 0
+    ) {
+      onBackMatterSelect(backMatter[0].id);
     }
   };
 
@@ -278,6 +297,24 @@ function BookStructure({
           onRestoreFromRecycleBin={onRestoreFromRecycleBin}
           onPermanentlyDelete={onPermanentlyDelete}
           onEmptyRecycleBin={onEmptyRecycleBin}
+        />
+      )
+    },
+    {
+      id: 'backmatter',
+      label: 'Back Matter',
+      icon: '📑',
+      component: (
+        <BackMatterList
+          backMatter={backMatter}
+          currentBackMatterId={currentBackMatterId}
+          onBackMatterSelect={onBackMatterSelect}
+          onBackMatterAdd={onBackMatterAdd}
+          onBackMatterDelete={onBackMatterDelete}
+          onBackMatterUpdate={onBackMatterUpdate}
+          onBackMatterToggle={onBackMatterToggle}
+          onBackMatterReorder={onBackMatterReorder}
+          authorName={authorName}
         />
       )
     },
