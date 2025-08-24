@@ -45,9 +45,45 @@ jest.mock('../components/BookStructure', () => {
         <button onClick={() => props.onTabChange('frontmatter')}>
           Frontmatter Tab
         </button>
+        <button onClick={() => props.onTabChange('backmatter')}>
+          Backmatter Tab
+        </button>
         <button onClick={() => props.onTabChange('threads')}>
           Threads Tab
         </button>
+
+        {props.activeTab === 'backmatter' && (
+          <div>
+            <select
+              className="add-back-matter-select"
+              value="➕ Add Section"
+              onChange={e => {
+                if (e.target.value && props.onBackMatterAdd) {
+                  props.onBackMatterAdd({
+                    id: `${e.target.value}-test`,
+                    type: e.target.value,
+                    title:
+                      e.target.value.charAt(0).toUpperCase() +
+                      e.target.value.slice(1),
+                    content: 'Test content',
+                    enabled: true,
+                    created: new Date().toISOString(),
+                    modified: new Date().toISOString()
+                  });
+                }
+              }}
+            >
+              <option value="">➕ Add Section</option>
+              <option value="epilogue">🎬 Epilogue</option>
+            </select>
+            {props.backMatter &&
+              props.backMatter.map(item => (
+                <div key={item.id}>
+                  <span>{item.title}</span>
+                </div>
+              ))}
+          </div>
+        )}
 
         <button onClick={() => props.onSceneSelect('scene-1')}>
           Select Scene
@@ -442,6 +478,7 @@ describe('App Component - Comprehensive Tests', () => {
         'locations',
         'background',
         'frontmatter',
+        'backmatter',
         'threads'
       ];
 
@@ -588,6 +625,32 @@ describe('App Component - Comprehensive Tests', () => {
       expect(screen.getByTestId('save-status')).toHaveTextContent(
         'Unsaved Changes'
       );
+    });
+
+    test('manages back matter sections correctly', async () => {
+      render(<App />);
+
+      // Switch to back matter tab
+      fireEvent.click(screen.getByText('Backmatter Tab'));
+      expect(screen.getByTestId('active-tab')).toHaveTextContent('backmatter');
+
+      // Should show no back matter message initially
+      expect(
+        screen.getByText('📑 No Back Matter Selected')
+      ).toBeInTheDocument();
+
+      // Add a back matter section through dropdown
+      const addSelect = screen.getByDisplayValue('➕ Add Section');
+      fireEvent.change(addSelect, { target: { value: 'epilogue' } });
+
+      // Should mark as changed
+      expect(screen.getByTestId('save-status')).toHaveTextContent(
+        'Unsaved Changes'
+      );
+
+      // Should now show the epilogue in the back matter list (check both locations)
+      const epilogueElements = screen.getAllByText('Epilogue');
+      expect(epilogueElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 

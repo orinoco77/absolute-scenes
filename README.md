@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.69<!--/VERSION--> | **Tests:** <!--TESTS-->430/430<!--/TESTS--> ✅ |
+**Version:** <!--VERSION-->1.3.70<!--/VERSION--> | **Tests:** <!--TESTS-->471/471<!--/TESTS--> ✅ |
 **Last Updated:** <!--DATE-->2025-08-24<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -284,9 +284,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->430/430<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->471/471<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->86<!--/COMMITS--> | **Latest:** <!--COMMIT-->03fbf1e - Protect unsaved edits on close and on new book (3 days ago)<!--/COMMIT-->
+<!--COMMITS-->87<!--/COMMITS--> | **Latest:** <!--COMMIT-->a512886 - Fixed ragged left margin in fully justified text and cleaned up unused code (10 hours ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.69<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.3.69<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.3.70<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.70<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-08-24<!--/DATE--> | Build <!--COMMIT-->03fbf1e - Protect unsaved edits on close and on new book (3 days ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-08-24<!--/DATE--> | Build <!--COMMIT-->a512886 - Fixed ragged left margin in fully justified text and cleaned up unused code (10 hours ago)<!--/COMMIT-->_

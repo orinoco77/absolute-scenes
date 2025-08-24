@@ -20,6 +20,7 @@ const createDefaultBook = () => ({
       scenes: []
     }
   ],
+  backMatter: [], // Optional back matter sections
   characters: [],
   characterDetectionBlacklist: [],
   locations: [],
@@ -521,6 +522,44 @@ export const useBookState = (initialBook = null) => {
     [setBook]
   );
 
+  // Back matter operations
+  const addBackMatter = useCallback(
+    backMatterItem => {
+      setBook(prev => ({
+        ...prev,
+        backMatter: [...(prev.backMatter || []), backMatterItem],
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+    },
+    [setBook]
+  );
+
+  const updateBackMatter = useCallback(
+    (backMatterId, updatedBackMatter) => {
+      setBook(prev => ({
+        ...prev,
+        backMatter: (prev.backMatter || []).map(bm =>
+          bm.id === backMatterId ? updatedBackMatter : bm
+        ),
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+    },
+    [setBook]
+  );
+
+  const deleteBackMatter = useCallback(
+    backMatterId => {
+      setBook(prev => ({
+        ...prev,
+        backMatter: (prev.backMatter || []).filter(
+          bm => bm.id !== backMatterId
+        ),
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+    },
+    [setBook]
+  );
+
   // Recovery operations
   const recoverBook = useCallback(
     recoveredBookData => {
@@ -540,6 +579,11 @@ export const useBookState = (initialBook = null) => {
             })) || [],
           frontMatter:
             book.frontMatter?.map(item => ({
+              ...item,
+              content: normalizeContent(item.content)
+            })) || [],
+          backMatter:
+            book.backMatter?.map(item => ({
               ...item,
               content: normalizeContent(item.content)
             })) || [],
@@ -659,6 +703,14 @@ export const useBookState = (initialBook = null) => {
     [book.frontMatter]
   );
 
+  const getCurrentBackMatter = useCallback(
+    backMatterId => {
+      if (!backMatterId || !book.backMatter) return null;
+      return book.backMatter.find(bm => bm.id === backMatterId) || null;
+    },
+    [book.backMatter]
+  );
+
   return {
     book,
     bookRef,
@@ -692,6 +744,9 @@ export const useBookState = (initialBook = null) => {
     addFrontMatter,
     updateFrontMatter,
     deleteFrontMatter,
+    addBackMatter,
+    updateBackMatter,
+    deleteBackMatter,
 
     // Recovery operations
     recoverBook,
@@ -702,6 +757,7 @@ export const useBookState = (initialBook = null) => {
     getCurrentCharacter,
     getCurrentDocument,
     getCurrentLocation,
-    getCurrentFrontMatter
+    getCurrentFrontMatter,
+    getCurrentBackMatter
   };
 };

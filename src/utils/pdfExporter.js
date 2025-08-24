@@ -1494,6 +1494,287 @@ export async function exportToPDF(book, options = {}) {
       });
     }
 
+    // Back Matter Processing
+    if (book.backMatter && book.backMatter.length > 0) {
+      book.backMatter.forEach(backMatterItem => {
+        if (
+          !backMatterItem.enabled ||
+          (!backMatterItem.content && !backMatterItem.imageData)
+        ) {
+          return; // Skip disabled or empty back matter items
+        }
+
+        // Start new page for each back matter item
+        pdf.addPage();
+        updateMarginsForPage();
+        currentY = topMargin;
+
+        // Force back matter to start on right-hand (odd) page
+        const currentPageNumber = pdf.internal.getNumberOfPages();
+        if (currentPageNumber % 2 === 0) {
+          markBlankPage(); // Mark current page as blank
+          pdf.addPage(); // Add the actual back matter page
+          updateMarginsForPage();
+          currentY = topMargin;
+        }
+
+        // Mark this as back matter page
+        const markBackMatterPage = () => {
+          const pageNumber = pdf.internal.getNumberOfPages();
+          blankPages.delete(pageNumber); // Remove from blank pages if it was marked as such
+        };
+        markBackMatterPage();
+
+        // Add heading for back matter items
+        if (backMatterItem.title) {
+          // Add line breaks before back matter header (similar to chapter headers)
+          const lineBreaksBefore = template.chapterHeader.lineBreaksBefore || 0;
+          for (let i = 0; i < lineBreaksBefore; i++) {
+            currentY += lineHeight;
+            // Check if we need a new page
+            if (
+              currentY + template.chapterHeader.fontSize * 2 >
+              pageHeight - bottomMargin
+            ) {
+              pdf.addPage();
+              updateMarginsForPage();
+              currentY = topMargin;
+              markBackMatterPage();
+              break; // Stop adding line breaks if we hit a new page
+            }
+          }
+
+          // Check if we need a new page for the back matter header
+          if (
+            currentY + template.chapterHeader.fontSize * 2 >
+            pageHeight - bottomMargin
+          ) {
+            pdf.addPage();
+            updateMarginsForPage();
+            currentY = topMargin;
+            markBackMatterPage();
+          }
+
+          // Render back matter header
+          pdf.setFont(pdfFont, template.chapterHeader.fontWeight);
+          pdf.setFontSize(template.chapterHeader.fontSize);
+
+          const backMatterHeaderLines = pdf.splitTextToSize(
+            backMatterItem.title,
+            contentWidth
+          );
+
+          backMatterHeaderLines.forEach((line, _lineIndex) => {
+            let headerX = leftMargin;
+            if (template.chapterHeader.alignment === 'center') {
+              const lineWidth = pdf.getTextWidth(line);
+              headerX = leftMargin + (contentWidth - lineWidth) / 2;
+            } else if (template.chapterHeader.alignment === 'right') {
+              const lineWidth = pdf.getTextWidth(line);
+              headerX = leftMargin + contentWidth - lineWidth;
+            }
+
+            safeText(pdf, line, headerX, currentY);
+            currentY += template.chapterHeader.fontSize * 1.2; // Line spacing for headers
+          });
+
+          // Add spacing after back matter header
+          currentY +=
+            template.chapterHeader.fontSize *
+            (template.chapterHeader.spacing - 1.2);
+
+          // Reset to content font
+          pdf.setFont(pdfFont, 'normal');
+          pdf.setFontSize(fontSize);
+        }
+
+        // Handle different types of back matter content
+        if (backMatterItem.imageData) {
+          // Handle image-based back matter (like author photos)
+          try {
+            const imgWidth = contentWidth * 0.6; // Use 60% of content width
+            const imgHeight = imgWidth * 0.75; // Assume 4:3 aspect ratio, can be adjusted
+
+            // Check if image fits on current page
+            if (currentY + imgHeight > pageHeight - bottomMargin) {
+              pdf.addPage();
+              updateMarginsForPage();
+              currentY = topMargin;
+              markBackMatterPage();
+            }
+
+            // Center the image horizontally
+            const imgX = leftMargin + (contentWidth - imgWidth) / 2;
+
+            pdf.addImage(
+              backMatterItem.imageData,
+              'JPEG',
+              imgX,
+              currentY,
+              imgWidth,
+              imgHeight
+            );
+
+            currentY += imgHeight + lineHeight;
+
+            // Add image description if there's text content
+            if (backMatterItem.content && backMatterItem.content.trim()) {
+              currentY += lineHeight; // Extra space before caption
+
+              const paragraphs = backMatterItem.content
+                .split('\n')
+                .filter(p => p.trim());
+
+              paragraphs.forEach((paragraph, paragraphIndex) => {
+                if (paragraph.trim()) {
+                  // Check if we need a new page
+                  if (currentY + lineHeight > pageHeight - bottomMargin) {
+                    pdf.addPage();
+                    updateMarginsForPage();
+                    currentY = topMargin;
+                    markBackMatterPage();
+                  }
+
+                  // Parse markdown BEFORE any text processing
+                  const segments = parseMarkdownForPDF(paragraph.trim());
+
+                  // Render the formatted text with center alignment for captions
+                  const newY = renderFormattedTextToPDF(
+                    pdf,
+                    segments,
+                    leftMargin,
+                    currentY,
+                    contentWidth,
+                    fontSize,
+                    lineHeight,
+                    pageHeight,
+                    bottomMargin,
+                    topMargin,
+                    () => {
+                      updateMarginsForPage();
+                      markBackMatterPage();
+                      return {
+                        left: leftMargin,
+                        right: rightMargin,
+                        top: topMargin,
+                        bottom: bottomMargin,
+                        contentWidth: contentWidth
+                      };
+                    },
+                    'center', // Center-align image captions
+                    paragraphIndex === 0, // isFirstParagraph
+                    'separated', // Use separated style for back matter
+                    pdfFont
+                  );
+
+                  currentY = newY + lineHeight;
+
+                  // Add paragraph spacing
+                  currentY += lineHeight * 0.5;
+                }
+              });
+            }
+          } catch (error) {
+            console.error('Error adding back matter image:', error);
+            // Fall back to text content if image fails
+            if (backMatterItem.content && backMatterItem.content.trim()) {
+              const segments = parseMarkdownForPDF(backMatterItem.content);
+              const newY = renderFormattedTextToPDF(
+                pdf,
+                segments,
+                leftMargin,
+                currentY,
+                contentWidth,
+                fontSize,
+                lineHeight,
+                pageHeight,
+                bottomMargin,
+                topMargin,
+                () => {
+                  updateMarginsForPage();
+                  markBackMatterPage();
+                  return {
+                    left: leftMargin,
+                    right: rightMargin,
+                    top: topMargin,
+                    bottom: bottomMargin,
+                    contentWidth: contentWidth
+                  };
+                },
+                'left',
+                true,
+                'separated',
+                pdfFont
+              );
+              currentY = newY + lineHeight;
+            }
+          }
+        } else if (backMatterItem.content && backMatterItem.content.trim()) {
+          // Handle text-based back matter
+          const paragraphs = backMatterItem.content
+            .split('\n')
+            .filter(p => p.trim());
+
+          paragraphs.forEach((paragraph, paragraphIndex) => {
+            if (paragraph.trim()) {
+              // Check if we need a new page
+              if (currentY + lineHeight > pageHeight - bottomMargin) {
+                pdf.addPage();
+                updateMarginsForPage();
+                currentY = topMargin;
+                markBackMatterPage();
+              }
+
+              // Parse markdown BEFORE any text processing
+              const segments = parseMarkdownForPDF(paragraph.trim());
+
+              // Use different alignment based on back matter type
+              let textAlign = 'justified';
+              if (backMatterItem.type === 'about-author') {
+                textAlign = 'left'; // Author bios are typically left-aligned
+              } else if (backMatterItem.type === 'acknowledgments') {
+                textAlign = 'justified'; // Acknowledgments can be justified
+              }
+
+              // Render the formatted text with appropriate styling
+              const newY = renderFormattedTextToPDF(
+                pdf,
+                segments,
+                leftMargin,
+                currentY,
+                contentWidth,
+                fontSize,
+                lineHeight,
+                pageHeight,
+                bottomMargin,
+                topMargin,
+                () => {
+                  updateMarginsForPage();
+                  markBackMatterPage();
+                  return {
+                    left: leftMargin,
+                    right: rightMargin,
+                    top: topMargin,
+                    bottom: bottomMargin,
+                    contentWidth: contentWidth
+                  };
+                },
+                textAlign,
+                paragraphIndex === 0, // isFirstParagraph
+                'separated', // Use separated style for back matter readability
+                pdfFont
+              );
+
+              currentY = newY + lineHeight;
+
+              // Add paragraph spacing
+              currentY += lineHeight * 0.5;
+            }
+          });
+        }
+      });
+    }
+
     // Add page numbers and running headers
     const pageCount = pdf.internal.getNumberOfPages();
 

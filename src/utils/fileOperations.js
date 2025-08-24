@@ -19,11 +19,6 @@ if (isElectron()) {
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function saveBook(bookData, existingFilePath = null) {
-  console.log('saveBook called with:', {
-    hasBookData: !!bookData,
-    existingFilePath
-  });
-
   if (!ipcRenderer) {
     console.warn('Electron IPC not available - running in browser mode');
     return browserFallbackSave(bookData);
