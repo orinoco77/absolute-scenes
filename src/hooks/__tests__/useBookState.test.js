@@ -512,9 +512,12 @@ describe('useBookState', () => {
       ).toBeUndefined();
     });
 
-    it('updates metadata timestamp when folder operations are performed', () => {
+    it('updates metadata timestamp when folder operations are performed', async () => {
       const { result } = renderUseBookState();
       const initialModified = result.current.book.metadata.modified;
+
+      // Add a small delay to ensure timestamp difference
+      await new Promise(resolve => setTimeout(resolve, 1));
 
       act(() => {
         result.current.addBackgroundFolder();
@@ -522,7 +525,7 @@ describe('useBookState', () => {
 
       const { book } = result.current;
       expect(book.metadata.modified).not.toBe(initialModified);
-      expect(new Date(book.metadata.modified).getTime()).toBeGreaterThan(
+      expect(new Date(book.metadata.modified).getTime()).toBeGreaterThanOrEqual(
         new Date(initialModified).getTime()
       );
     });
