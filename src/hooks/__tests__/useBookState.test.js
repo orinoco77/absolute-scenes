@@ -451,6 +451,83 @@ describe('useBookState', () => {
     });
   });
 
+  describe('background folder operations', () => {
+    it('adds a background folder', () => {
+      const { result } = renderUseBookState();
+      const initialFolderCount = result.current.book.backgroundFolders.length;
+
+      let newFolderId;
+      act(() => {
+        newFolderId = result.current.addBackgroundFolder();
+      });
+
+      const { book } = result.current;
+      expect(book.backgroundFolders).toHaveLength(initialFolderCount + 1);
+
+      const newFolder = book.backgroundFolders.find(f => f.id === newFolderId);
+      expect(newFolder).toBeDefined();
+      expect(newFolder.title).toBe(`Folder ${initialFolderCount + 1}`);
+      expect(newFolder.documents).toEqual([]);
+      expect(newFolder.created).toBeDefined();
+      expect(newFolder.modified).toBeDefined();
+    });
+
+    it('updates a background folder', () => {
+      const { result } = renderUseBookState();
+      const folderId = result.current.book.backgroundFolders[0].id;
+      const updates = {
+        title: 'Updated Folder Name'
+      };
+
+      act(() => {
+        result.current.updateBackgroundFolder(folderId, updates);
+      });
+
+      const { book } = result.current;
+      const updatedFolder = book.backgroundFolders.find(f => f.id === folderId);
+      expect(updatedFolder.title).toBe('Updated Folder Name');
+      expect(updatedFolder.modified).toBeDefined();
+    });
+
+    it('deletes a background folder', () => {
+      const { result } = renderUseBookState();
+      let newFolderId;
+
+      // First add a folder
+      act(() => {
+        newFolderId = result.current.addBackgroundFolder();
+      });
+
+      const folderCountAfterAdd = result.current.book.backgroundFolders.length;
+
+      // Then delete it
+      act(() => {
+        result.current.deleteBackgroundFolder(newFolderId);
+      });
+
+      const { book } = result.current;
+      expect(book.backgroundFolders).toHaveLength(folderCountAfterAdd - 1);
+      expect(
+        book.backgroundFolders.find(f => f.id === newFolderId)
+      ).toBeUndefined();
+    });
+
+    it('updates metadata timestamp when folder operations are performed', () => {
+      const { result } = renderUseBookState();
+      const initialModified = result.current.book.metadata.modified;
+
+      act(() => {
+        result.current.addBackgroundFolder();
+      });
+
+      const { book } = result.current;
+      expect(book.metadata.modified).not.toBe(initialModified);
+      expect(new Date(book.metadata.modified).getTime()).toBeGreaterThan(
+        new Date(initialModified).getTime()
+      );
+    });
+  });
+
   describe('bookRef synchronization', () => {
     it('keeps bookRef in sync with book state', () => {
       const { result } = renderUseBookState();
