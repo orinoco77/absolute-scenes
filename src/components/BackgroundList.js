@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useExpandableList } from '../hooks/useExpandableList';
 import { useInlineEdit } from '../hooks/useInlineEdit';
 
 function BackgroundList({
@@ -23,12 +23,18 @@ function BackgroundList({
   onPermanentlyDelete,
   onEmptyRecycleBin
 }) {
-  const [expandedFolders, setExpandedFolders] = useState(() => {
-    // Initialize with the current folder or first folder
-    const initialFolder =
-      currentFolderId || (folders.length > 0 ? folders[0].id : 'default-bg');
-    return new Set([initialFolder]);
-  });
+  // Expandable folders hook
+  const { isExpanded: isFolderExpanded, toggleItem: toggleFolder } =
+    useExpandableList({
+      items: folders,
+      autoExpand: false,
+      initialExpanded: currentFolderId
+        ? [currentFolderId]
+        : folders.length > 0
+          ? [folders[0].id]
+          : ['default-bg'],
+      currentItemId: currentFolderId
+    });
   // Folder editing hook
   const folderEdit = useInlineEdit({
     onSave: (folderId, newTitle) => {
@@ -50,28 +56,6 @@ function BackgroundList({
       return false;
     }
   });
-
-  // Auto-expand the current folder when it changes
-  React.useEffect(() => {
-    if (currentFolderId) {
-      setExpandedFolders(prev => {
-        if (!prev.has(currentFolderId)) {
-          return new Set([...prev, currentFolderId]);
-        }
-        return prev;
-      });
-    }
-  }, [currentFolderId]);
-
-  const toggleFolder = folderId => {
-    const newExpanded = new Set(expandedFolders);
-    if (newExpanded.has(folderId)) {
-      newExpanded.delete(folderId);
-    } else {
-      newExpanded.add(folderId);
-    }
-    setExpandedFolders(newExpanded);
-  };
 
   const getTotalDocuments = () => {
     return folders.reduce(
@@ -154,12 +138,12 @@ function BackgroundList({
                   className="chapter-toggle"
                   onClick={() => toggleFolder(folder.id)}
                   title={
-                    expandedFolders.has(folder.id)
+                    isFolderExpanded(folder.id)
                       ? 'Collapse folder'
                       : 'Expand folder'
                   }
                 >
-                  {expandedFolders.has(folder.id) ? '📂' : '📁'}
+                  {isFolderExpanded(folder.id) ? '📂' : '📁'}
                 </button>
 
                 {folderEdit.isEditing(folder.id) ? (
@@ -214,7 +198,7 @@ function BackgroundList({
               </div>
             </div>
 
-            {expandedFolders.has(folder.id) && (
+            {isFolderExpanded(folder.id) && (
               <div className="scenes-in-chapter">
                 {folder.documents.length === 0 ? (
                   <div className="empty-chapter">

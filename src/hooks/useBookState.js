@@ -486,6 +486,57 @@ export const useBookState = (initialBook = null) => {
     [setBook]
   );
 
+  // Background folder operations
+  const addBackgroundFolder = useCallback(() => {
+    const newFolder = {
+      id: Date.now().toString(),
+      title: '',
+      documents: [],
+      created: new Date().toISOString(),
+      modified: new Date().toISOString()
+    };
+
+    setBook(prev => {
+      newFolder.title = `Folder ${prev.backgroundFolders.length + 1}`;
+
+      return {
+        ...prev,
+        backgroundFolders: [...prev.backgroundFolders, newFolder],
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      };
+    });
+
+    return newFolder.id; // Return the new folder ID
+  }, [setBook]);
+
+  const updateBackgroundFolder = useCallback(
+    (folderId, updates) => {
+      setBook(prev => ({
+        ...prev,
+        backgroundFolders: prev.backgroundFolders.map(folder =>
+          folder.id === folderId
+            ? { ...folder, ...updates, modified: new Date().toISOString() }
+            : folder
+        ),
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+    },
+    [setBook]
+  );
+
+  const deleteBackgroundFolder = useCallback(
+    folderId => {
+      setBook(prev => ({
+        ...prev,
+        backgroundFolders: prev.backgroundFolders.filter(
+          folder => folder.id !== folderId
+        ),
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+    },
+    [setBook]
+  );
+
   // Front matter operations
   const addFrontMatter = useCallback(
     frontMatterItem => {
@@ -741,6 +792,9 @@ export const useBookState = (initialBook = null) => {
     addDocument,
     updateDocument,
     deleteDocument,
+    addBackgroundFolder,
+    updateBackgroundFolder,
+    deleteBackgroundFolder,
     addFrontMatter,
     updateFrontMatter,
     deleteFrontMatter,

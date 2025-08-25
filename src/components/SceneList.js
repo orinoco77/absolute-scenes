@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
+import { useExpandableList } from '../hooks/useExpandableList';
 
 function SceneList({
   parts,
@@ -34,12 +35,21 @@ function SceneList({
   onPermanentlyDelete,
   onEmptyRecycleBin
 }) {
-  const [expandedChapters, setExpandedChapters] = useState(
-    new Set((chapters || []).map(ch => ch.id))
-  );
-  const [expandedParts, setExpandedParts] = useState(
-    new Set((parts || []).map(part => part.id))
-  );
+  // Expandable chapters hook
+  const { isExpanded: isChapterExpanded, toggleItem: toggleChapter } =
+    useExpandableList({
+      items: chapters || [],
+      autoExpand: true,
+      currentItemId: currentChapterId
+    });
+
+  // Expandable parts hook
+  const { isExpanded: isPartExpanded, toggleItem: togglePart } =
+    useExpandableList({
+      items: parts || [],
+      autoExpand: true,
+      currentItemId: currentPartId
+    });
   const [editingChapter, setEditingChapter] = useState(null);
   const [editingPart, setEditingPart] = useState(null);
   const [showMoveMenu, setShowMoveMenu] = useState(null);
@@ -207,36 +217,6 @@ function SceneList({
     extractDropData: extractSceneListDropData
   });
 
-  // Update expanded chapters when chapters change
-  React.useEffect(() => {
-    if (chapters) {
-      setExpandedChapters(prev => {
-        const newExpanded = new Set(prev);
-        chapters.forEach(chapter => {
-          if (!newExpanded.has(chapter.id)) {
-            newExpanded.add(chapter.id); // Auto-expand new chapters
-          }
-        });
-        return newExpanded;
-      });
-    }
-  }, [chapters]);
-
-  // Update expanded parts when parts change
-  React.useEffect(() => {
-    if (parts) {
-      setExpandedParts(prev => {
-        const newExpanded = new Set(prev);
-        parts.forEach(part => {
-          if (!newExpanded.has(part.id)) {
-            newExpanded.add(part.id); // Auto-expand new parts
-          }
-        });
-        return newExpanded;
-      });
-    }
-  }, [parts]);
-
   // Close move menus when clicking outside
   React.useEffect(() => {
     const handleClickOutside = event => {
@@ -262,28 +242,14 @@ function SceneList({
     };
   }, [showMoveMenu, showChapterMoveMenu]);
 
-  const toggleChapter = chapterId => {
-    const newExpanded = new Set(expandedChapters);
-    if (newExpanded.has(chapterId)) {
-      newExpanded.delete(chapterId);
-    } else {
-      newExpanded.add(chapterId);
-    }
-    setExpandedChapters(newExpanded);
-
+  const handleChapterToggle = chapterId => {
+    toggleChapter(chapterId);
     // Also select the chapter when toggling
     onChapterSelect(chapterId);
   };
 
-  const togglePart = partId => {
-    const newExpanded = new Set(expandedParts);
-    if (newExpanded.has(partId)) {
-      newExpanded.delete(partId);
-    } else {
-      newExpanded.add(partId);
-    }
-    setExpandedParts(newExpanded);
-
+  const handlePartToggle = partId => {
+    togglePart(partId);
     // Also select the part when toggling
     onPartSelect(partId);
   };
@@ -300,18 +266,12 @@ function SceneList({
 
   const handleChapterClick = chapterId => {
     onChapterSelect(chapterId);
-    // Ensure the chapter is expanded when selected
-    if (!expandedChapters.has(chapterId)) {
-      toggleChapter(chapterId);
-    }
+    // Ensure the chapter is expanded when selected (hook auto-expands current item)
   };
 
   const handlePartClick = partId => {
     onPartSelect(partId);
-    // Ensure the part is expanded when selected
-    if (!expandedParts.has(partId)) {
-      togglePart(partId);
-    }
+    // Ensure the part is expanded when selected (hook auto-expands current item)
   };
 
   const getTotalWords = scenes => {
@@ -413,7 +373,7 @@ function SceneList({
 
   // Render a chapter with all its scenes
   const renderChapter = (chapter, chapterIndex, partId = null) => {
-    const isExpanded = expandedChapters.has(chapter.id);
+    const isExpanded = isChapterExpanded(chapter.id);
     const isCurrentChapter = chapter.id === currentChapterId;
     const chapterWordCount = getTotalWords(chapter.scenes);
     const isDraggedOver =
@@ -453,7 +413,7 @@ function SceneList({
               className="chapter-toggle"
               onClick={e => {
                 e.stopPropagation();
-                toggleChapter(chapter.id);
+                handleChapterToggle(chapter.id);
               }}
               title={isExpanded ? 'Collapse chapter' : 'Expand chapter'}
             >
@@ -775,7 +735,7 @@ function SceneList({
           // Parts-based view
           <>
             {(parts || []).map((part, __partIndex) => {
-              const isPartExpanded = expandedParts.has(part.id);
+              const partIsExpanded = isPartExpanded(part.id);
               const isCurrentPart = part.id === currentPartId;
               const partChapters = getChaptersInPart(part.id);
               const partWordCount = partChapters.reduce(
@@ -824,11 +784,11 @@ function SceneList({
                         className="part-toggle"
                         onClick={e => {
                           e.stopPropagation();
-                          togglePart(part.id);
+                          handlePartToggle(part.id);
                         }}
-                        title={isPartExpanded ? 'Collapse part' : 'Expand part'}
+                        title={partIsExpanded ? 'Collapse part' : 'Expand part'}
                       >
-                        {isPartExpanded ? '📚' : '📖'}
+                        {partIsExpanded ? '📚' : '📖'}
                       </button>
 
                       {editingPart === part.id ? (
@@ -883,7 +843,7 @@ function SceneList({
                     </div>
                   </div>
 
-                  {isPartExpanded && (
+                  {partIsExpanded && (
                     <div className="chapters-in-part">
                       {partChapters.length === 0 ? (
                         <div className="empty-part">

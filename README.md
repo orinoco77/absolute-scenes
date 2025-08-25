@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.74<!--/VERSION--> | **Tests:** <!--TESTS-->908/908<!--/TESTS--> ✅ |
+**Version:** <!--VERSION-->1.3.75<!--/VERSION--> | **Tests:** <!--TESTS-->937/937<!--/TESTS--> ✅ |
 **Last Updated:** <!--DATE-->2025-08-25<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -284,9 +284,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->908/908<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->937/937<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->91<!--/COMMITS--> | **Latest:** <!--COMMIT-->70de01e - more tests (3 hours ago)<!--/COMMIT-->
+<!--COMMITS-->92<!--/COMMITS--> | **Latest:** <!--COMMIT-->bc26d06 - General refactor. More to come. (33 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.74<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.3.74<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.3.75<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.75<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -556,11 +556,11 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+- **v1.3.73**: more tests
 - **v1.3.70**: Added back matter and some fixes for electron menu events
 - **v1.3.69**: Fixed ragged left margin in fully justified text and cleaned up unused code
 - **v1.3.67**: Scrivener import and general refactor
 - **v1.3.64**: test fix
-- **v1.3.59**: More readme updates
 <!--/VERSION_HISTORY-->
 
 ---
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-08-25<!--/DATE--> | Build <!--COMMIT-->70de01e - more tests (3 hours ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-08-25<!--/DATE--> | Build <!--COMMIT-->bc26d06 - General refactor. More to come. (33 minutes ago)<!--/COMMIT-->_

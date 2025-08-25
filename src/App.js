@@ -59,6 +59,9 @@ function App() {
     addDocument,
     updateDocument,
     deleteDocument,
+    addBackgroundFolder,
+    updateBackgroundFolder,
+    deleteBackgroundFolder,
     addFrontMatter,
     updateFrontMatter,
     deleteFrontMatter,
@@ -1089,11 +1092,11 @@ function App() {
           onDocumentSelect={setCurrentDocumentId}
           onFolderSelect={setCurrentFolderId}
           onDocumentAdd={contentHandlers.document.add}
-          onFolderAdd={() => {}} // TODO: Implement folder add
+          onFolderAdd={addBackgroundFolder}
           onDocumentDelete={contentHandlers.document.delete}
           onDocumentUpdate={contentHandlers.document.update}
-          onFolderDelete={() => {}} // TODO: Implement folder delete
-          onFolderUpdate={() => {}} // TODO: Implement folder update
+          onFolderDelete={deleteBackgroundFolder}
+          onFolderUpdate={updateBackgroundFolder}
           onReorderFolders={() => {}}
           onReorderDocumentsInFolder={() => {}}
           onMoveDocumentBetweenFolders={() => {}}
