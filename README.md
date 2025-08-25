@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.72<!--/VERSION--> | **Tests:** <!--TESTS-->866/866<!--/TESTS--> ✅ |
+**Version:** <!--VERSION-->1.3.73<!--/VERSION--> | **Tests:** <!--TESTS-->866/866<!--/TESTS--> ✅ |
 **Last Updated:** <!--DATE-->2025-08-25<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -286,7 +286,7 @@ Access via the 🔗 GitHub Integration button:
 
 **Code Quality:** <!--TESTS-->866/866<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->89<!--/COMMITS--> | **Latest:** <!--COMMIT-->94da6bf - Increase test coverage substantially. More to come. (81 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->90<!--/COMMITS--> | **Latest:** <!--COMMIT-->542af87 - More tests. Tests for electron specifically as well as other general tests (3 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.72<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.3.72<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.3.73<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.73<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-08-25<!--/DATE--> | Build <!--COMMIT-->94da6bf - Increase test coverage substantially. More to come. (81 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-08-25<!--/DATE--> | Build <!--COMMIT-->542af87 - More tests. Tests for electron specifically as well as other general tests (3 minutes ago)<!--/COMMIT-->_

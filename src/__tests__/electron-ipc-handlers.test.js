@@ -1,9 +1,21 @@
+/* eslint-disable no-unused-vars */
 /**
  * Comprehensive IPC Handler Tests
  * Tests Electron IPC handlers with full mocking
  */
 
 // Mock all Electron dependencies before imports
+// Import our helper functions
+import {
+  validateBookData,
+  formatBookForSaving,
+  validateFilePath,
+  handleFileSystemError,
+  getSaveDialogOptions,
+  OperationManager,
+  validateIpcMessage
+} from '../utils/electronHelpers';
+
 const mockMainWindow = {
   isMinimized: jest.fn(() => false),
   restore: jest.fn(),
@@ -55,17 +67,6 @@ jest.mock('fs', () => ({
 
 jest.mock('path', () => mockPath);
 
-// Import our helper functions
-import {
-  validateBookData,
-  formatBookForSaving,
-  validateFilePath,
-  handleFileSystemError,
-  getSaveDialogOptions,
-  OperationManager,
-  validateIpcMessage
-} from '../utils/electronHelpers';
-
 describe('Electron IPC Handler Tests', () => {
   let operationManager;
   let mockBookData;
@@ -73,7 +74,7 @@ describe('Electron IPC Handler Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     operationManager = new OperationManager();
-    
+
     mockBookData = {
       title: 'Test Book',
       author: 'Test Author',
@@ -81,9 +82,7 @@ describe('Electron IPC Handler Tests', () => {
         {
           id: 'ch1',
           title: 'Chapter 1',
-          scenes: [
-            { id: 'sc1', title: 'Scene 1', content: 'Content here' }
-          ]
+          scenes: [{ id: 'sc1', title: 'Scene 1', content: 'Content here' }]
         }
       ]
     };
@@ -111,7 +110,7 @@ describe('Electron IPC Handler Tests', () => {
     it('formats book data correctly for saving', () => {
       const formatted = formatBookForSaving(mockBookData, '1.3.71');
       const parsed = JSON.parse(formatted);
-      
+
       expect(parsed.title).toBe('Test Book');
       expect(parsed.savedAt).toBeDefined();
       expect(parsed.version).toBe('1.3.71');
@@ -119,7 +118,7 @@ describe('Electron IPC Handler Tests', () => {
 
     it('generates correct save dialog options', () => {
       const options = getSaveDialogOptions('/existing/path.book');
-      
+
       expect(options.defaultPath).toBe('/existing/path.book');
       expect(options.filters).toHaveLength(2);
       expect(options.filters[0].name).toBe('Book Files');
@@ -164,7 +163,9 @@ describe('Electron IPC Handler Tests', () => {
       const invalidChannel = validateIpcMessage('unknown-channel');
       expect(invalidChannel.valid).toBe(false);
 
-      const invalidData = validateIpcMessage('save-book-dialog', { invalid: true });
+      const invalidData = validateIpcMessage('save-book-dialog', {
+        invalid: true
+      });
       expect(invalidData.valid).toBe(false);
     });
   });
@@ -175,7 +176,10 @@ describe('Electron IPC Handler Tests', () => {
       const bookValidation = validateBookData(mockBookData);
       expect(bookValidation.valid).toBe(true);
 
-      const ipcValidation = validateIpcMessage('save-book-dialog', mockBookData);
+      const ipcValidation = validateIpcMessage(
+        'save-book-dialog',
+        mockBookData
+      );
       expect(ipcValidation.valid).toBe(true);
 
       // Step 2: Check concurrent operations
@@ -189,7 +193,10 @@ describe('Electron IPC Handler Tests', () => {
 
       // Step 4: Show dialog (mocked)
       const dialogOptions = getSaveDialogOptions();
-      const dialogResult = await mockDialog.showSaveDialog(mockMainWindow, dialogOptions);
+      const dialogResult = await mockDialog.showSaveDialog(
+        mockMainWindow,
+        dialogOptions
+      );
       expect(dialogResult.canceled).toBe(false);
       expect(dialogResult.filePath).toBe('/test/book.book');
 
@@ -216,7 +223,10 @@ describe('Electron IPC Handler Tests', () => {
       const operationResult = operationManager.attemptOperation('cancel-test');
       expect(operationResult.success).toBe(true);
 
-      const dialogResult = await mockDialog.showSaveDialog(mockMainWindow, getSaveDialogOptions());
+      const dialogResult = await mockDialog.showSaveDialog(
+        mockMainWindow,
+        getSaveDialogOptions()
+      );
       expect(dialogResult.canceled).toBe(true);
 
       // Should not attempt file write when canceled
@@ -241,7 +251,7 @@ describe('Electron IPC Handler Tests', () => {
       expect(validation.valid).toBe(false);
       // First validation failure is title, not chapters
       expect(validation.error).toContain('Book title is required');
-      
+
       // Test chapters validation specifically
       const invalidChapters = { title: 'Valid Title', chapters: 'not-array' };
       const chaptersValidation = validateBookData(invalidChapters);
@@ -260,22 +270,28 @@ describe('Electron IPC Handler Tests', () => {
   describe('save-book-to-file Handler Logic', () => {
     it('validates direct file saves', async () => {
       const filePath = '/direct/save/path.book';
-      
+
       // Validate inputs
       expect(validateBookData(mockBookData).valid).toBe(true);
       expect(validateFilePath(filePath).valid).toBe(true);
-      expect(validateIpcMessage('save-book-to-file', mockBookData, filePath).valid).toBe(true);
+      expect(
+        validateIpcMessage('save-book-to-file', mockBookData, filePath).valid
+      ).toBe(true);
 
       // Format and write
       const formatted = formatBookForSaving(mockBookData);
       await mockFs.writeFile(filePath, formatted, 'utf8');
 
-      expect(mockFs.writeFile).toHaveBeenCalledWith(filePath, formatted, 'utf8');
+      expect(mockFs.writeFile).toHaveBeenCalledWith(
+        filePath,
+        formatted,
+        'utf8'
+      );
     });
 
     it('skips dialog for direct saves', () => {
       const filePath = '/direct/path.book';
-      
+
       // Should not call showSaveDialog for direct saves
       // (This would be tested in actual handler implementation)
       expect(mockDialog.showSaveDialog).not.toHaveBeenCalled();
@@ -335,9 +351,15 @@ describe('Electron IPC Handler Tests', () => {
       });
 
       expect(mockMainWindow.webContents.send).toHaveBeenCalledTimes(3);
-      expect(mockMainWindow.webContents.send).toHaveBeenCalledWith('menu-save-book');
-      expect(mockMainWindow.webContents.send).toHaveBeenCalledWith('menu-save-as');
-      expect(mockMainWindow.webContents.send).toHaveBeenCalledWith('menu-export-book');
+      expect(mockMainWindow.webContents.send).toHaveBeenCalledWith(
+        'menu-save-book'
+      );
+      expect(mockMainWindow.webContents.send).toHaveBeenCalledWith(
+        'menu-save-as'
+      );
+      expect(mockMainWindow.webContents.send).toHaveBeenCalledWith(
+        'menu-export-book'
+      );
     });
 
     it('handles quit actions', () => {
@@ -350,7 +372,7 @@ describe('Electron IPC Handler Tests', () => {
       if (!mockMainWindow.isDestroyed()) {
         mockMainWindow.focus();
       }
-      
+
       expect(mockMainWindow.focus).toHaveBeenCalled();
       expect(mockMainWindow.isDestroyed).toHaveBeenCalled();
     });
@@ -360,7 +382,7 @@ describe('Electron IPC Handler Tests', () => {
     it('cleans up operations even when errors occur', () => {
       const operationId = 'error-test';
       operationManager.attemptOperation(operationId);
-      
+
       // Simulate error occurring
       try {
         throw new Error('Simulated error');
@@ -368,7 +390,7 @@ describe('Electron IPC Handler Tests', () => {
         // Ensure cleanup happens
         operationManager.completeOperation(operationId);
       }
-      
+
       expect(operationManager.isOperationActive()).toBe(false);
     });
 

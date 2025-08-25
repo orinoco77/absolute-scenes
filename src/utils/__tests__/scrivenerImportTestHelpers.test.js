@@ -25,22 +25,26 @@ describe('scrivenerImportTestHelpers', () => {
     it('parses valid compile settings XML', () => {
       const mockTitleElement = { textContent: 'My Great Novel' };
       const mockAuthorElement = { textContent: 'John Doe' };
-      
-      mockDocument.getElementsByTagName = jest.fn((tagName) => {
+
+      mockDocument.getElementsByTagName = jest.fn(tagName => {
         if (tagName === 'parsererror') return [];
         if (tagName === 'Title') return [mockTitleElement];
         if (tagName === 'Author') return [mockAuthorElement];
         return [];
       });
 
-      const xmlContent = '<compile><Title>My Great Novel</Title><Author>John Doe</Author></compile>';
+      const xmlContent =
+        '<compile><Title>My Great Novel</Title><Author>John Doe</Author></compile>';
       const result = parseCompileSettings(xmlContent);
 
       expect(result).toEqual({
         title: 'My Great Novel',
         author: 'John Doe'
       });
-      expect(mockDocument.parseFromString).toHaveBeenCalledWith(xmlContent, 'text/xml');
+      expect(mockDocument.parseFromString).toHaveBeenCalledWith(
+        xmlContent,
+        'text/xml'
+      );
     });
 
     it('handles empty XML content', () => {
@@ -54,7 +58,7 @@ describe('scrivenerImportTestHelpers', () => {
     });
 
     it('handles malformed XML', () => {
-      mockDocument.getElementsByTagName = jest.fn((tagName) => {
+      mockDocument.getElementsByTagName = jest.fn(tagName => {
         if (tagName === 'parsererror') return [{ textContent: 'Parse error' }];
         return [];
       });
@@ -82,15 +86,17 @@ describe('scrivenerImportTestHelpers', () => {
     it('trims whitespace from title and author', () => {
       const mockTitleElement = { textContent: '  Whitespace Novel  ' };
       const mockAuthorElement = { textContent: '\n\t  Jane Doe  \n\t' };
-      
-      mockDocument.getElementsByTagName = jest.fn((tagName) => {
+
+      mockDocument.getElementsByTagName = jest.fn(tagName => {
         if (tagName === 'parsererror') return [];
         if (tagName === 'Title') return [mockTitleElement];
         if (tagName === 'Author') return [mockAuthorElement];
         return [];
       });
 
-      const result = parseCompileSettings('<compile><Title>  Whitespace Novel  </Title><Author>  Jane Doe  </Author></compile>');
+      const result = parseCompileSettings(
+        '<compile><Title>  Whitespace Novel  </Title><Author>  Jane Doe  </Author></compile>'
+      );
       expect(result).toEqual({
         title: 'Whitespace Novel',
         author: 'Jane Doe'
@@ -113,8 +119,12 @@ describe('scrivenerImportTestHelpers', () => {
   describe('getSectionTypeId', () => {
     it('extracts section type ID', () => {
       const mockTypeElement = { textContent: 'section-type-123' };
-      const mockSectionTypesElement = { getElementsByTagName: () => [mockTypeElement] };
-      const mockMetaDataElement = { getElementsByTagName: () => [mockSectionTypesElement] };
+      const mockSectionTypesElement = {
+        getElementsByTagName: () => [mockTypeElement]
+      };
+      const mockMetaDataElement = {
+        getElementsByTagName: () => [mockSectionTypesElement]
+      };
       const mockItem = { getElementsByTagName: () => [mockMetaDataElement] };
 
       const result = getSectionTypeId(mockItem);
@@ -136,7 +146,9 @@ describe('scrivenerImportTestHelpers', () => {
 
     it('returns null when Type not found', () => {
       const mockSectionTypesElement = { getElementsByTagName: () => [] };
-      const mockMetaDataElement = { getElementsByTagName: () => [mockSectionTypesElement] };
+      const mockMetaDataElement = {
+        getElementsByTagName: () => [mockSectionTypesElement]
+      };
       const mockItem = { getElementsByTagName: () => [mockMetaDataElement] };
       const result = getSectionTypeId(mockItem);
       expect(result).toBeNull();

@@ -1,3 +1,4 @@
+/* eslint-disable testing-library/no-render-in-setup */
 /**
  * Tests for useUIState hook
  * Critical UI state management - comprehensive testing required
@@ -181,7 +182,9 @@ describe('useUIState', () => {
 
     it('updates recycle bin states via setters', () => {
       const mockRecycleBin = [{ id: 'deleted-scene', title: 'Deleted Scene' }];
-      const mockCharacterBin = [{ id: 'deleted-char', name: 'Deleted Character' }];
+      const mockCharacterBin = [
+        { id: 'deleted-char', name: 'Deleted Character' }
+      ];
 
       act(() => {
         result.current.setRecycleBin(mockRecycleBin);
@@ -273,17 +276,11 @@ describe('useUIState', () => {
         {
           id: 'bg1',
           title: 'Research',
-          documents: [
-            { id: 'doc1', title: 'Document 1' }
-          ]
+          documents: [{ id: 'doc1', title: 'Document 1' }]
         }
       ],
-      frontMatter: [
-        { id: 'fm1', title: 'Preface' }
-      ],
-      backMatter: [
-        { id: 'bm1', title: 'Epilogue' }
-      ]
+      frontMatter: [{ id: 'fm1', title: 'Preface' }],
+      backMatter: [{ id: 'bm1', title: 'Epilogue' }]
     };
 
     describe('autoSelectFirstScene', () => {
@@ -557,17 +554,11 @@ describe('useUIState', () => {
           {
             id: 'loaded-ch1',
             title: 'Loaded Chapter 1',
-            scenes: [
-              { id: 'loaded-sc1', title: 'Loaded Scene 1' }
-            ]
+            scenes: [{ id: 'loaded-sc1', title: 'Loaded Scene 1' }]
           }
         ],
-        parts: [
-          { id: 'loaded-part1', title: 'Loaded Part 1' }
-        ],
-        backgroundFolders: [
-          { id: 'loaded-bg1', title: 'Loaded Background' }
-        ]
+        parts: [{ id: 'loaded-part1', title: 'Loaded Part 1' }],
+        backgroundFolders: [{ id: 'loaded-bg1', title: 'Loaded Background' }]
       };
 
       it('loads book state with file path', () => {
@@ -614,7 +605,7 @@ describe('useUIState', () => {
       });
 
       it('handles book with no parts', () => {
-        const bookNoParts = { 
+        const bookNoParts = {
           chapters: [{ id: 'ch1', scenes: [] }]
           // no parts property
         };
@@ -627,7 +618,7 @@ describe('useUIState', () => {
       });
 
       it('handles book with empty background folders', () => {
-        const bookNoBackground = { 
+        const bookNoBackground = {
           chapters: [{ id: 'ch1', scenes: [] }]
           // no backgroundFolders property
         };
@@ -644,7 +635,7 @@ describe('useUIState', () => {
   describe('Hook Stability', () => {
     it('returns stable functions across re-renders', () => {
       const { result, rerender } = renderUseUIState();
-      
+
       // Store references to functions from first render
       const firstRenderFunctions = {
         toggleTemplateManager: result.current.toggleTemplateManager,
@@ -659,12 +650,22 @@ describe('useUIState', () => {
       rerender();
 
       // Functions should be stable (memoized with useCallback)
-      expect(result.current.toggleTemplateManager).toBe(firstRenderFunctions.toggleTemplateManager);
-      expect(result.current.markAsChanged).toBe(firstRenderFunctions.markAsChanged);
-      expect(result.current.autoSelectFirstScene).toBe(firstRenderFunctions.autoSelectFirstScene);
-      expect(result.current.resetUIForNewBook).toBe(firstRenderFunctions.resetUIForNewBook);
+      expect(result.current.toggleTemplateManager).toBe(
+        firstRenderFunctions.toggleTemplateManager
+      );
+      expect(result.current.markAsChanged).toBe(
+        firstRenderFunctions.markAsChanged
+      );
+      expect(result.current.autoSelectFirstScene).toBe(
+        firstRenderFunctions.autoSelectFirstScene
+      );
+      expect(result.current.resetUIForNewBook).toBe(
+        firstRenderFunctions.resetUIForNewBook
+      );
       expect(result.current.loadBook).toBe(firstRenderFunctions.loadBook);
-      expect(result.current.closeAllModals).toBe(firstRenderFunctions.closeAllModals);
+      expect(result.current.closeAllModals).toBe(
+        firstRenderFunctions.closeAllModals
+      );
     });
 
     it('updates dependent functions when dependencies change', () => {

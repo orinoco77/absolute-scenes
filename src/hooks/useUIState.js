@@ -195,7 +195,7 @@ export function useUIState() {
     if (!bookData || typeof bookData !== 'object') {
       return; // Gracefully handle invalid data
     }
-    
+
     setCurrentChapterId(bookData.chapters?.[0]?.id || 'default');
     setCurrentSceneId(bookData.chapters?.[0]?.scenes?.[0]?.id || null);
     setCurrentPartId(bookData.parts?.length > 0 ? bookData.parts[0]?.id : null);
