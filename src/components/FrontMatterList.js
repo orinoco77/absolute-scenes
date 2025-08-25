@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useDragAndDrop } from '../hooks/useDragAndDrop';
 
 function FrontMatterList({
   frontMatter,
@@ -11,8 +11,32 @@ function FrontMatterList({
   onFrontMatterReorder,
   authorName = '' // Add author name prop
 }) {
-  const [draggedItem, setDraggedItem] = useState(null);
-  const [dragOverTarget, setDragOverTarget] = useState(null);
+  // Handle reordering front matter items
+  const handleFrontMatterReorder = ({ draggedItem, target }) => {
+    if (!draggedItem || !target || draggedItem.id === target.id) return;
+
+    const fromIndex = frontMatter.findIndex(item => item.id === draggedItem.id);
+    const toIndex = frontMatter.findIndex(item => item.id === target.id);
+
+    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+      onFrontMatterReorder(fromIndex, toIndex);
+    }
+  };
+
+  // Initialize drag and drop functionality
+  const {
+    draggedItem: _draggedItem,
+    dragOverTarget,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnter,
+    handleDragLeave,
+    handleDrop,
+    handleDragEnd,
+    isValidDropTarget: _isValidDropTarget
+  } = useDragAndDrop({
+    onReorder: handleFrontMatterReorder
+  });
 
   // Predefined front matter types with their default configurations
   const frontMatterTypes = {
@@ -85,50 +109,6 @@ Printed in [Country]`;
       ...(typeConfig.isImage && { imageData: null, imageFileName: null })
     };
     onFrontMatterAdd(newItem);
-  };
-
-  const handleDragStart = (e, item) => {
-    setDraggedItem(item);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = e => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDragEnter = (e, target) => {
-    e.preventDefault();
-    if (draggedItem && target && draggedItem.id !== target.id) {
-      setDragOverTarget(target);
-    }
-  };
-
-  const handleDragLeave = e => {
-    if (!e.currentTarget.contains(e.relatedTarget)) {
-      setDragOverTarget(null);
-    }
-  };
-
-  const handleDrop = (e, target) => {
-    e.preventDefault();
-    setDragOverTarget(null);
-
-    if (!draggedItem || !target || draggedItem.id === target.id) return;
-
-    const fromIndex = frontMatter.findIndex(item => item.id === draggedItem.id);
-    const toIndex = frontMatter.findIndex(item => item.id === target.id);
-
-    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-      onFrontMatterReorder(fromIndex, toIndex);
-    }
-
-    setDraggedItem(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedItem(null);
-    setDragOverTarget(null);
   };
 
   // Get enabled front matter types for the add dropdown

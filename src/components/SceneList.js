@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDragAndDrop } from '../hooks/useDragAndDrop';
 
 function SceneList({
   parts,
@@ -41,11 +42,170 @@ function SceneList({
   );
   const [editingChapter, setEditingChapter] = useState(null);
   const [editingPart, setEditingPart] = useState(null);
-  const [draggedItem, setDraggedItem] = useState(null);
-  const [dragOverTarget, setDragOverTarget] = useState(null);
-  const [dragInvalidTarget, setDragInvalidTarget] = useState(null);
   const [showMoveMenu, setShowMoveMenu] = useState(null);
   const [showChapterMoveMenu, setShowChapterMoveMenu] = useState(null);
+
+  // Helper function to determine if we're using parts
+  const usingParts = parts && parts.length > 0;
+
+  // Helper function to get chapters for a specific part
+  const getChaptersInPart = partId => {
+    if (!parts || !chapters) return [];
+    const part = parts.find(p => p.id === partId);
+    if (!part) return [];
+    return part.chapterIds
+      .map(chapterId => chapters.find(ch => ch.id === chapterId))
+      .filter(Boolean);
+  };
+
+  // Helper function to find which part a chapter belongs to
+  const getPartForChapter = chapterId => {
+    return parts?.find(part => part.chapterIds.includes(chapterId));
+  };
+
+  // Validation function for drag and drop operations
+  const validateSceneListDrop = (draggedItem, target) => {
+    if (!draggedItem || !target) return { valid: false };
+
+    // Allow part-to-part drops
+    if (draggedItem.type === 'part' && target.type === 'part') {
+      return { valid: true };
+    }
+
+    // Allow chapter-to-chapter drops within the same part (or both unassigned)
+    if (draggedItem.type === 'chapter' && target.type === 'chapter') {
+      const draggedPartId = draggedItem.partId;
+      const targetPartId = target.partId;
+      return { valid: draggedPartId === targetPartId };
+    }
+
+    // Only allow scene-to-scene drops within the same chapter
+    if (draggedItem.type === 'scene' && target.type === 'scene') {
+      return { valid: draggedItem.chapterId === target.chapterId };
+    }
+
+    // Allow chapter-to-part drops (for adding chapters to parts)
+    if (draggedItem.type === 'chapter' && target.type === 'part') {
+      return { valid: true };
+    }
+
+    // Don't allow any other combinations
+    return { valid: false };
+  };
+
+  // Extract drop data for complex reordering operations
+  const extractSceneListDropData = (draggedItem, target) => {
+    const dropData = { draggedItem, target };
+
+    if (draggedItem.type === 'part' && target.type === 'part') {
+      const fromIndex = parts?.findIndex(p => p.id === draggedItem.id) ?? -1;
+      const toIndex = parts?.findIndex(p => p.id === target.id) ?? -1;
+      dropData.operation = 'reorderParts';
+      dropData.fromIndex = fromIndex;
+      dropData.toIndex = toIndex;
+    } else if (draggedItem.type === 'chapter' && target.type === 'chapter') {
+      const draggedPartId = draggedItem.partId;
+      if (usingParts && draggedPartId) {
+        // Reorder chapters within a part
+        const part = parts?.find(p => p.id === draggedPartId);
+        if (part) {
+          const fromIndex = part.chapterIds.findIndex(
+            id => id === draggedItem.id
+          );
+          const toIndex = part.chapterIds.findIndex(id => id === target.id);
+          dropData.operation = 'reorderChaptersInPart';
+          dropData.partId = draggedPartId;
+          dropData.fromIndex = fromIndex;
+          dropData.toIndex = toIndex;
+        }
+      } else {
+        // Reorder chapters globally
+        const fromIndex =
+          chapters?.findIndex(ch => ch.id === draggedItem.id) ?? -1;
+        const toIndex = chapters?.findIndex(ch => ch.id === target.id) ?? -1;
+        dropData.operation = 'reorderChapters';
+        dropData.fromIndex = fromIndex;
+        dropData.toIndex = toIndex;
+      }
+    } else if (draggedItem.type === 'chapter' && target.type === 'part') {
+      const currentPart = getPartForChapter(draggedItem.id);
+      if (currentPart && currentPart.id !== target.id) {
+        dropData.operation = 'moveChapterToPart';
+        dropData.fromPartId = currentPart.id;
+        dropData.toPartId = target.id;
+      } else if (!currentPart) {
+        dropData.operation = 'addChapterToPart';
+        dropData.toPartId = target.id;
+      }
+    } else if (draggedItem.type === 'scene' && target.type === 'scene') {
+      const chapter = chapters?.find(ch => ch.id === draggedItem.chapterId);
+      if (chapter) {
+        const fromIndex = chapter.scenes.findIndex(
+          s => s.id === draggedItem.id
+        );
+        const toIndex = chapter.scenes.findIndex(s => s.id === target.id);
+        dropData.operation = 'reorderScenesInChapter';
+        dropData.chapterId = draggedItem.chapterId;
+        dropData.fromIndex = fromIndex;
+        dropData.toIndex = toIndex;
+      }
+    }
+
+    return dropData;
+  };
+
+  // Handle reordering operations
+  const handleSceneListReorder = dropData => {
+    const { operation, fromIndex, toIndex } = dropData;
+
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return;
+
+    switch (operation) {
+      case 'reorderParts':
+        onReorderParts(fromIndex, toIndex);
+        break;
+      case 'reorderChapters':
+        onReorderChapters(fromIndex, toIndex);
+        break;
+      case 'reorderChaptersInPart':
+        onReorderChaptersInPart(dropData.partId, fromIndex, toIndex);
+        break;
+      case 'reorderScenesInChapter':
+        onReorderScenesInChapter(dropData.chapterId, fromIndex, toIndex);
+        break;
+      case 'moveChapterToPart':
+        onMoveChapterToPart(
+          dropData.draggedItem.id,
+          dropData.fromPartId,
+          dropData.toPartId
+        );
+        break;
+      case 'addChapterToPart':
+        onAddChapterToPart(dropData.draggedItem.id, dropData.toPartId);
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Initialize drag and drop functionality
+  const {
+    draggedItem: _draggedItem,
+    dragOverTarget,
+    dragInvalidTarget,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnter,
+    handleDragLeave,
+    handleDrop,
+    handleDragEnd,
+    isValidDropTarget: _isValidDropTarget,
+    isInvalidDropTarget: _isInvalidDropTarget
+  } = useDragAndDrop({
+    onReorder: handleSceneListReorder,
+    validateDrop: validateSceneListDrop,
+    extractDropData: extractSceneListDropData
+  });
 
   // Update expanded chapters when chapters change
   React.useEffect(() => {
@@ -163,19 +323,6 @@ function SceneList({
     }, 0);
   };
 
-  // Helper function to determine if we're using parts
-  const usingParts = parts && parts.length > 0;
-
-  // Helper function to get chapters for a specific part
-  const getChaptersInPart = partId => {
-    if (!parts || !chapters) return [];
-    const part = parts.find(p => p.id === partId);
-    if (!part) return [];
-    return part.chapterIds
-      .map(chapterId => chapters.find(ch => ch.id === chapterId))
-      .filter(Boolean);
-  };
-
   // Helper function to get unassigned chapters (not in any part)
   const getUnassignedChapters = () => {
     if (!chapters) return [];
@@ -189,167 +336,6 @@ function SceneList({
     });
 
     return chapters.filter(ch => !assignedChapterIds.has(ch.id));
-  };
-
-  // Helper function to find which part a chapter belongs to
-  const getPartForChapter = chapterId => {
-    return parts?.find(part => part.chapterIds.includes(chapterId));
-  };
-
-  // Drag and drop handlers
-  const handleDragStart = (e, item) => {
-    setDraggedItem(item);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', e.target.outerHTML);
-  };
-
-  const handleDragOver = e => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDragEnter = (e, target) => {
-    e.preventDefault();
-
-    // Only allow valid drop targets
-    if (!draggedItem || !target) return;
-
-    // Allow part-to-part drops
-    if (draggedItem.type === 'part' && target.type === 'part') {
-      setDragOverTarget(target);
-      setDragInvalidTarget(null);
-    }
-    // Allow chapter-to-chapter drops within the same part (or both unassigned)
-    else if (draggedItem.type === 'chapter' && target.type === 'chapter') {
-      const draggedPartId = draggedItem.partId;
-      const targetPartId = target.partId;
-
-      // Allow if both are in same part or both are unassigned
-      if (draggedPartId === targetPartId) {
-        setDragOverTarget(target);
-        setDragInvalidTarget(null);
-      } else {
-        setDragOverTarget(null);
-        setDragInvalidTarget(target);
-      }
-    }
-    // Only allow scene-to-scene drops within the same chapter
-    else if (
-      draggedItem.type === 'scene' &&
-      target.type === 'scene' &&
-      draggedItem.chapterId === target.chapterId
-    ) {
-      setDragOverTarget(target);
-      setDragInvalidTarget(null);
-    }
-    // Show invalid drop target for cross-chapter scene operations
-    else if (
-      draggedItem.type === 'scene' &&
-      (target.type === 'chapter' ||
-        (target.type === 'scene' && draggedItem.chapterId !== target.chapterId))
-    ) {
-      setDragOverTarget(null);
-      setDragInvalidTarget(target);
-    }
-    // Allow chapter-to-part drops (for adding chapters to parts)
-    else if (draggedItem.type === 'chapter' && target.type === 'part') {
-      setDragOverTarget(target);
-      setDragInvalidTarget(null);
-    }
-    // Don't allow any other combinations
-    else {
-      setDragOverTarget(null);
-      setDragInvalidTarget(null);
-    }
-  };
-
-  const handleDragLeave = e => {
-    // Only clear drag over target if we're leaving the drop zone completely
-    if (!e.currentTarget.contains(e.relatedTarget)) {
-      setDragOverTarget(null);
-      setDragInvalidTarget(null);
-    }
-  };
-
-  const handleDrop = (e, target) => {
-    e.preventDefault();
-    setDragOverTarget(null);
-    setDragInvalidTarget(null);
-
-    if (!draggedItem || !target) return;
-
-    if (draggedItem.type === 'part' && target.type === 'part') {
-      // Reorder parts
-      const fromIndex = parts?.findIndex(p => p.id === draggedItem.id) ?? -1;
-      const toIndex = parts?.findIndex(p => p.id === target.id) ?? -1;
-      if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-        onReorderParts(fromIndex, toIndex);
-      }
-    } else if (draggedItem.type === 'chapter' && target.type === 'chapter') {
-      const draggedPartId = draggedItem.partId;
-      const targetPartId = target.partId;
-
-      // Only allow reordering within same part or both unassigned
-      if (draggedPartId === targetPartId) {
-        if (usingParts && draggedPartId) {
-          // Reorder chapters within a part
-          const part = parts?.find(p => p.id === draggedPartId);
-          if (part) {
-            const fromIndex = part.chapterIds.findIndex(
-              id => id === draggedItem.id
-            );
-            const toIndex = part.chapterIds.findIndex(id => id === target.id);
-            if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-              onReorderChaptersInPart(draggedPartId, fromIndex, toIndex);
-            }
-          }
-        } else {
-          // Reorder chapters globally (when not using parts or both unassigned)
-          const fromIndex =
-            chapters?.findIndex(ch => ch.id === draggedItem.id) ?? -1;
-          const toIndex = chapters?.findIndex(ch => ch.id === target.id) ?? -1;
-          if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-            onReorderChapters(fromIndex, toIndex);
-          }
-        }
-      }
-    } else if (draggedItem.type === 'chapter' && target.type === 'part') {
-      // Add chapter to part
-      const currentPart = getPartForChapter(draggedItem.id);
-      if (currentPart && currentPart.id !== target.id) {
-        // Move from one part to another
-        onMoveChapterToPart(draggedItem.id, currentPart.id, target.id);
-      } else if (!currentPart) {
-        // Add unassigned chapter to part
-        onAddChapterToPart(draggedItem.id, target.id);
-      }
-    } else if (draggedItem.type === 'scene' && target.type === 'scene') {
-      // Only allow reordering scenes within the same chapter
-      if (draggedItem.chapterId === target.chapterId) {
-        const chapter = chapters?.find(ch => ch.id === draggedItem.chapterId);
-        if (chapter) {
-          const fromIndex = chapter.scenes.findIndex(
-            s => s.id === draggedItem.id
-          );
-          const toIndex = chapter.scenes.findIndex(s => s.id === target.id);
-          if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-            onReorderScenesInChapter(draggedItem.chapterId, fromIndex, toIndex);
-          }
-        }
-      }
-      // Cross-chapter scene dragging is disabled - use the move button instead
-    } else if (draggedItem.type === 'scene' && target.type === 'chapter') {
-      // Prevent dropping scenes on chapters - use the move button instead
-      // This prevents the duplication bug
-    }
-
-    setDraggedItem(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedItem(null);
-    setDragOverTarget(null);
-    setDragInvalidTarget(null);
   };
 
   const handleMoveSceneToChapter = (sceneId, fromChapterId, toChapterId) => {
