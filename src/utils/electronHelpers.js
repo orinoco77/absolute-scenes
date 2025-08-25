@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /**
  * Electron Helper Functions
  * Extracted from electron.js to make them testable
@@ -23,11 +24,15 @@ export function validateBookData(bookData) {
  * Formats book data for file saving
  */
 export function formatBookForSaving(bookData, version = '1.3.71') {
-  return JSON.stringify({
-    ...bookData,
-    savedAt: new Date().toISOString(),
-    version
-  }, null, 2);
+  return JSON.stringify(
+    {
+      ...bookData,
+      savedAt: new Date().toISOString(),
+      version
+    },
+    null,
+    2
+  );
 }
 
 /**
@@ -109,9 +114,7 @@ export function getOpenDialogOptions(type = 'book') {
       { name: 'JSON Files', extensions: ['json'] }
     ];
   } else if (type === 'scrivener') {
-    options.filters = [
-      { name: 'Scrivener Projects', extensions: ['scriv'] }
-    ];
+    options.filters = [{ name: 'Scrivener Projects', extensions: ['scriv'] }];
   }
 
   return options;
@@ -121,9 +124,11 @@ export function getOpenDialogOptions(type = 'book') {
  * Validates menu message formats
  */
 export function isValidMenuMessage(message) {
-  return typeof message === 'string' && 
-         message.startsWith('menu-') && 
-         message.length > 5;
+  return (
+    typeof message === 'string' &&
+    message.startsWith('menu-') &&
+    message.length > 5
+  );
 }
 
 /**
@@ -150,14 +155,14 @@ export class OperationManager {
 
   attemptOperation(operationId, operationType = 'save') {
     if (this.activeOperations.size > 0) {
-      return { 
-        success: false, 
-        error: `Another ${operationType} operation is in progress` 
+      return {
+        success: false,
+        error: `Another ${operationType} operation is in progress`
       };
     }
-    
+
     this.activeOperations.add(operationId);
-    
+
     return { success: true, operationId };
   }
 
@@ -179,13 +184,14 @@ export class OperationManager {
  */
 export function getFilePathFromArgs(args) {
   if (!Array.isArray(args)) return null;
-  
+
   // Look for file arguments that end with .book or .json
-  const fileArg = args.find(arg => 
-    typeof arg === 'string' && 
-    (arg.endsWith('.book') || arg.endsWith('.json'))
+  const fileArg = args.find(
+    arg =>
+      typeof arg === 'string' &&
+      (arg.endsWith('.book') || arg.endsWith('.json'))
   );
-  
+
   return fileArg || null;
 }
 
@@ -213,7 +219,8 @@ export function getAboutDialogOptions() {
     type: 'info',
     title: 'About Absolute Scenes',
     message: 'Absolute Scenes',
-    detail: 'A scene-based book writing application\n\nVersion: 1.3.71\n\nDeveloped by Adam Short',
+    detail:
+      'A scene-based book writing application\n\nVersion: 1.3.71\n\nDeveloped by Adam Short',
     buttons: ['OK']
   };
 }
@@ -250,11 +257,11 @@ export function validateScrivenerProject(projectPath) {
   if (!projectPath || typeof projectPath !== 'string') {
     return { valid: false, error: 'Invalid project path' };
   }
-  
+
   if (!projectPath.endsWith('.scriv')) {
     return { valid: false, error: 'Not a Scrivener project file' };
   }
-  
+
   return { valid: true };
 }
 
@@ -273,13 +280,13 @@ export function convertRtfToPlainText(rtfContent) {
 
   // Basic RTF stripping for testing
   let text = rtfContent;
-  
+
   // Remove RTF control sequences but preserve text
   text = text.replace(/{\\rtf1[^}]*}/g, ''); // Remove RTF header
   text = text.replace(/\\[a-z]+\d*/g, ' '); // Replace control words with space
   text = text.replace(/[{}]/g, ''); // Remove braces
   text = text.replace(/\s+/g, ' '); // Normalize whitespace
-  
+
   return text.trim();
 }
 
@@ -290,11 +297,11 @@ export function isValidSectionType(sectionType, itemType = '', title = '') {
   if (!sectionType || typeof sectionType !== 'string') {
     return false;
   }
-  
+
   // Basic validation - would be more complex in real implementation
   const validTypes = ['folder', 'text', 'part', 'chapter', 'scene'];
   const normalizedType = sectionType.toLowerCase();
-  
+
   return validTypes.some(type => normalizedType.includes(type));
 }
 
@@ -303,10 +310,10 @@ export function isValidSectionType(sectionType, itemType = '', title = '') {
  */
 export function isCharacterFolder(title) {
   if (!title || typeof title !== 'string') return false;
-  
+
   const characterKeywords = ['character', 'people', 'person', 'cast'];
   const lowerTitle = title.toLowerCase();
-  
+
   return characterKeywords.some(keyword => lowerTitle.includes(keyword));
 }
 
@@ -315,10 +322,10 @@ export function isCharacterFolder(title) {
  */
 export function isLocationFolder(title) {
   if (!title || typeof title !== 'string') return false;
-  
+
   const locationKeywords = ['location', 'place', 'setting', 'world'];
   const lowerTitle = title.toLowerCase();
-  
+
   return locationKeywords.some(keyword => lowerTitle.includes(keyword));
 }
 
@@ -327,25 +334,25 @@ export function isLocationFolder(title) {
  */
 export function validateBookFormat(bookData) {
   const validation = { valid: true, warnings: [], errors: [] };
-  
+
   if (!bookData || typeof bookData !== 'object') {
     validation.valid = false;
     validation.errors.push('Book data must be an object');
     return validation;
   }
-  
+
   // Check required fields
   if (!bookData.title) {
     validation.warnings.push('Book has no title');
   }
-  
+
   if (!bookData.chapters || !Array.isArray(bookData.chapters)) {
     validation.valid = false;
     validation.errors.push('Book must have chapters array');
   } else if (bookData.chapters.length === 0) {
     validation.warnings.push('Book has no chapters');
   }
-  
+
   // Validate chapter structure
   bookData.chapters?.forEach((chapter, index) => {
     if (!chapter.id) {
@@ -360,7 +367,7 @@ export function validateBookFormat(bookData) {
       validation.valid = false;
     }
   });
-  
+
   return validation;
 }
 
@@ -404,11 +411,15 @@ export function getFileMenuTemplate(isMac = false) {
         id: 'file-export'
       },
       { type: 'separator' },
-      ...(!isMac ? [{
-        label: 'Exit',
-        accelerator: 'Alt+F4',
-        id: 'file-exit'
-      }] : [])
+      ...(!isMac
+        ? [
+            {
+              label: 'Exit',
+              accelerator: 'Alt+F4',
+              id: 'file-exit'
+            }
+          ]
+        : [])
     ]
   };
 }
@@ -419,24 +430,27 @@ export function getFileMenuTemplate(isMac = false) {
 export function validateIpcMessage(channel, ...args) {
   const validChannels = [
     'save-book-dialog',
-    'save-book-to-file', 
+    'save-book-to-file',
     'save-recovered-book',
     'ipc-ready',
     'fullscreen-exited'
   ];
-  
+
   if (!validChannels.includes(channel)) {
     return { valid: false, error: `Invalid IPC channel: ${channel}` };
   }
-  
+
   // Channel-specific validation
   if (channel === 'save-book-dialog' || channel === 'save-book-to-file') {
     const [bookData] = args;
     const bookValidation = validateBookData(bookData);
     if (!bookValidation.valid) {
-      return { valid: false, error: `Invalid book data: ${bookValidation.error}` };
+      return {
+        valid: false,
+        error: `Invalid book data: ${bookValidation.error}`
+      };
     }
   }
-  
+
   return { valid: true };
 }

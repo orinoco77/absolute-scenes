@@ -69,10 +69,10 @@ describe('electronHelpers', () => {
       const result = validateBookData({ chapters: [] });
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Book title is required');
-      
+
       const result2 = validateBookData({ title: '', chapters: [] });
       expect(result2.valid).toBe(false);
-      
+
       const result3 = validateBookData({ title: 123, chapters: [] });
       expect(result3.valid).toBe(false);
     });
@@ -81,8 +81,11 @@ describe('electronHelpers', () => {
       const result = validateBookData({ title: 'Test' });
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Chapters must be an array');
-      
-      const result2 = validateBookData({ title: 'Test', chapters: 'not array' });
+
+      const result2 = validateBookData({
+        title: 'Test',
+        chapters: 'not array'
+      });
       expect(result2.valid).toBe(false);
     });
   });
@@ -91,7 +94,7 @@ describe('electronHelpers', () => {
     it('adds metadata to book data', () => {
       const formatted = formatBookForSaving(mockBookData);
       const parsed = JSON.parse(formatted);
-      
+
       expect(parsed.title).toBe('Test Book');
       expect(parsed.author).toBe('Test Author');
       expect(parsed.savedAt).toBeDefined();
@@ -102,21 +105,23 @@ describe('electronHelpers', () => {
     it('uses custom version when provided', () => {
       const formatted = formatBookForSaving(mockBookData, '2.0.0');
       const parsed = JSON.parse(formatted);
-      
+
       expect(parsed.version).toBe('2.0.0');
     });
 
     it('preserves original data structure', () => {
       const formatted = formatBookForSaving(mockBookData);
       const parsed = JSON.parse(formatted);
-      
+
       expect(parsed.chapters[0].id).toBe('chapter1');
-      expect(parsed.chapters[0].scenes[0].content).toBe('It was a dark and stormy night...');
+      expect(parsed.chapters[0].scenes[0].content).toBe(
+        'It was a dark and stormy night...'
+      );
     });
 
     it('formats as pretty JSON', () => {
       const formatted = formatBookForSaving(mockBookData);
-      
+
       // Check that it's pretty-printed (contains newlines and indentation)
       expect(formatted).toContain('\n');
       expect(formatted).toContain('  ');
@@ -146,8 +151,12 @@ describe('electronHelpers', () => {
   describe('validateFilePath', () => {
     it('validates normal file paths', () => {
       expect(validateFilePath('/home/user/book.book')).toEqual({ valid: true });
-      expect(validateFilePath('C:\\\\Users\\\\User\\\\book.book')).toEqual({ valid: true });
-      expect(validateFilePath('relative/path/book.book')).toEqual({ valid: true });
+      expect(validateFilePath('C:\\\\Users\\\\User\\\\book.book')).toEqual({
+        valid: true
+      });
+      expect(validateFilePath('relative/path/book.book')).toEqual({
+        valid: true
+      });
     });
 
     it('rejects invalid types', () => {
@@ -166,8 +175,12 @@ describe('electronHelpers', () => {
 
     it('rejects path traversal attempts', () => {
       expect(validateFilePath('../../../etc/passwd').valid).toBe(false);
-      expect(validateFilePath('legitimate/path/../../../secret').valid).toBe(false);
-      expect(validateFilePath('../../../etc/passwd').error).toBe('Path traversal not allowed');
+      expect(validateFilePath('legitimate/path/../../../secret').valid).toBe(
+        false
+      );
+      expect(validateFilePath('../../../etc/passwd').error).toBe(
+        'Path traversal not allowed'
+      );
     });
   });
 
@@ -206,11 +219,17 @@ describe('electronHelpers', () => {
   describe('getSaveDialogOptions', () => {
     it('returns correct default options', () => {
       const options = getSaveDialogOptions();
-      
+
       expect(options.defaultPath).toBeUndefined();
       expect(options.filters).toHaveLength(2);
-      expect(options.filters[0]).toEqual({ name: 'Book Files', extensions: ['book'] });
-      expect(options.filters[1]).toEqual({ name: 'JSON Files', extensions: ['json'] });
+      expect(options.filters[0]).toEqual({
+        name: 'Book Files',
+        extensions: ['book']
+      });
+      expect(options.filters[1]).toEqual({
+        name: 'JSON Files',
+        extensions: ['json']
+      });
     });
 
     it('uses existing file path when provided', () => {
@@ -222,7 +241,7 @@ describe('electronHelpers', () => {
   describe('getOpenDialogOptions', () => {
     it('returns book file options by default', () => {
       const options = getOpenDialogOptions();
-      
+
       expect(options.properties).toContain('openFile');
       expect(options.filters).toHaveLength(2);
       expect(options.filters[0].extensions).toContain('book');
@@ -231,7 +250,7 @@ describe('electronHelpers', () => {
 
     it('returns Scrivener options when requested', () => {
       const options = getOpenDialogOptions('scrivener');
-      
+
       expect(options.properties).toContain('openFile');
       expect(options.filters).toHaveLength(1);
       expect(options.filters[0].extensions).toContain('scriv');
@@ -266,7 +285,7 @@ describe('electronHelpers', () => {
   describe('getKeyboardShortcuts', () => {
     it('returns all required shortcuts', () => {
       const shortcuts = getKeyboardShortcuts();
-      
+
       expect(shortcuts['CmdOrCtrl+S']).toBe('menu-save-book');
       expect(shortcuts['CmdOrCtrl+Shift+S']).toBe('menu-save-as');
       expect(shortcuts['CmdOrCtrl+E']).toBe('menu-export-book');
@@ -277,7 +296,7 @@ describe('electronHelpers', () => {
 
     it('uses consistent key format', () => {
       const shortcuts = getKeyboardShortcuts();
-      
+
       Object.keys(shortcuts).forEach(key => {
         expect(key).toMatch(/CmdOrCtrl/);
       });
@@ -301,7 +320,7 @@ describe('electronHelpers', () => {
 
     it('blocks concurrent operations', () => {
       manager.attemptOperation('op1');
-      
+
       const result = manager.attemptOperation('op2');
       expect(result.success).toBe(false);
       expect(result.error).toContain('in progress');
@@ -310,9 +329,9 @@ describe('electronHelpers', () => {
     it('allows operations after completion', () => {
       manager.attemptOperation('op1');
       manager.completeOperation('op1');
-      
+
       expect(manager.isOperationActive()).toBe(false);
-      
+
       const result = manager.attemptOperation('op2');
       expect(result.success).toBe(true);
     });
@@ -320,17 +339,17 @@ describe('electronHelpers', () => {
     it('handles custom operation types', () => {
       const result = manager.attemptOperation('op1', 'export');
       expect(result.success).toBe(true);
-      
+
       const result2 = manager.attemptOperation('op2', 'export');
       expect(result2.error).toContain('export operation');
     });
 
     it('tracks operation count correctly', () => {
       expect(manager.getActiveOperationCount()).toBe(0);
-      
+
       manager.attemptOperation('op1');
       expect(manager.getActiveOperationCount()).toBe(1);
-      
+
       manager.completeOperation('op1');
       expect(manager.getActiveOperationCount()).toBe(0);
     });
@@ -372,7 +391,7 @@ describe('electronHelpers', () => {
   describe('getWindowOptions', () => {
     it('returns correct window configuration', () => {
       const options = getWindowOptions();
-      
+
       expect(options.width).toBe(1400);
       expect(options.height).toBe(940);
       expect(options.webPreferences.nodeIntegration).toBe(true);
@@ -383,7 +402,7 @@ describe('electronHelpers', () => {
   describe('getAboutDialogOptions', () => {
     it('returns about dialog configuration', () => {
       const options = getAboutDialogOptions();
-      
+
       expect(options.type).toBe('info');
       expect(options.title).toBe('About Absolute Scenes');
       expect(options.message).toBe('Absolute Scenes');
@@ -395,7 +414,7 @@ describe('electronHelpers', () => {
   describe('createDefaultBook', () => {
     it('creates a valid default book structure', () => {
       const book = createDefaultBook();
-      
+
       expect(book.title).toBe('');
       expect(book.author).toBe('');
       expect(Array.isArray(book.chapters)).toBe(true);
@@ -414,8 +433,12 @@ describe('electronHelpers', () => {
 
   describe('validateScrivenerProject', () => {
     it('validates Scrivener project files', () => {
-      expect(validateScrivenerProject('MyProject.scriv')).toEqual({ valid: true });
-      expect(validateScrivenerProject('/path/to/MyProject.scriv')).toEqual({ valid: true });
+      expect(validateScrivenerProject('MyProject.scriv')).toEqual({
+        valid: true
+      });
+      expect(validateScrivenerProject('/path/to/MyProject.scriv')).toEqual({
+        valid: true
+      });
     });
 
     it('rejects non-Scrivener files', () => {
@@ -542,21 +565,21 @@ describe('electronHelpers', () => {
   describe('getFileMenuTemplate', () => {
     it('returns file menu for non-Mac', () => {
       const menu = getFileMenuTemplate(false);
-      
+
       expect(menu.label).toBe('File');
       expect(Array.isArray(menu.submenu)).toBe(true);
-      
+
       const newItem = menu.submenu.find(item => item.id === 'file-new');
       expect(newItem.label).toBe('New Book');
       expect(newItem.accelerator).toBe('CmdOrCtrl+N');
-      
+
       const exitItem = menu.submenu.find(item => item.id === 'file-exit');
       expect(exitItem).toBeDefined();
     });
 
     it('returns file menu for Mac (no Exit item)', () => {
       const menu = getFileMenuTemplate(true);
-      
+
       const exitItem = menu.submenu.find(item => item.id === 'file-exit');
       expect(exitItem).toBeUndefined();
     });
@@ -564,7 +587,7 @@ describe('electronHelpers', () => {
     it('includes all required menu items', () => {
       const menu = getFileMenuTemplate();
       const submenu = menu.submenu;
-      
+
       expect(submenu.find(item => item.id === 'file-new')).toBeDefined();
       expect(submenu.find(item => item.id === 'file-open')).toBeDefined();
       expect(submenu.find(item => item.id === 'file-import')).toBeDefined();
@@ -576,7 +599,9 @@ describe('electronHelpers', () => {
 
   describe('validateIpcMessage', () => {
     it('validates known IPC channels', () => {
-      expect(validateIpcMessage('save-book-dialog', mockBookData)).toEqual({ valid: true });
+      expect(validateIpcMessage('save-book-dialog', mockBookData)).toEqual({
+        valid: true
+      });
       expect(validateIpcMessage('ipc-ready')).toEqual({ valid: true });
       expect(validateIpcMessage('fullscreen-exited')).toEqual({ valid: true });
     });
@@ -588,14 +613,20 @@ describe('electronHelpers', () => {
     });
 
     it('validates book data for save operations', () => {
-      const result = validateIpcMessage('save-book-dialog', { invalid: 'book' });
+      const result = validateIpcMessage('save-book-dialog', {
+        invalid: 'book'
+      });
       expect(result.valid).toBe(false);
       expect(result.error).toContain('Invalid book data');
     });
 
     it('handles save operations with valid data', () => {
-      expect(validateIpcMessage('save-book-to-file', mockBookData)).toEqual({ valid: true });
-      expect(validateIpcMessage('save-recovered-book', mockBookData)).toEqual({ valid: true });
+      expect(validateIpcMessage('save-book-to-file', mockBookData)).toEqual({
+        valid: true
+      });
+      expect(validateIpcMessage('save-recovered-book', mockBookData)).toEqual({
+        valid: true
+      });
     });
   });
 });

@@ -28,7 +28,9 @@ describe('GitHubSyncService', () => {
         title: 'Book'
       };
 
-      expect(gitHubSyncService.shouldSyncToGitHub(bookWithoutGitHub)).toBe(false);
+      expect(gitHubSyncService.shouldSyncToGitHub(bookWithoutGitHub)).toBe(
+        false
+      );
     });
 
     it('returns false when book has empty GitHub configuration', () => {
@@ -36,7 +38,9 @@ describe('GitHubSyncService', () => {
         github: {}
       };
 
-      expect(gitHubSyncService.shouldSyncToGitHub(bookWithEmptyGitHub)).toBe(false);
+      expect(gitHubSyncService.shouldSyncToGitHub(bookWithEmptyGitHub)).toBe(
+        false
+      );
     });
 
     it('returns false when book has null repository', () => {
@@ -46,7 +50,9 @@ describe('GitHubSyncService', () => {
         }
       };
 
-      expect(gitHubSyncService.shouldSyncToGitHub(bookWithNullRepo)).toBe(false);
+      expect(gitHubSyncService.shouldSyncToGitHub(bookWithNullRepo)).toBe(
+        false
+      );
     });
 
     it('returns false when book has undefined repository', () => {
@@ -56,7 +62,9 @@ describe('GitHubSyncService', () => {
         }
       };
 
-      expect(gitHubSyncService.shouldSyncToGitHub(bookWithUndefinedRepo)).toBe(false);
+      expect(gitHubSyncService.shouldSyncToGitHub(bookWithUndefinedRepo)).toBe(
+        false
+      );
     });
 
     it('returns false for null/undefined book data', () => {
@@ -71,7 +79,9 @@ describe('GitHubSyncService', () => {
         }
       };
 
-      expect(gitHubSyncService.shouldSyncToGitHub(bookWithEmptyStringRepo)).toBe(false);
+      expect(
+        gitHubSyncService.shouldSyncToGitHub(bookWithEmptyStringRepo)
+      ).toBe(false);
     });
 
     it('returns false for whitespace-only repository', () => {
@@ -81,7 +91,9 @@ describe('GitHubSyncService', () => {
         }
       };
 
-      expect(gitHubSyncService.shouldSyncToGitHub(bookWithWhitespaceRepo)).toBe(false);
+      expect(gitHubSyncService.shouldSyncToGitHub(bookWithWhitespaceRepo)).toBe(
+        false
+      );
     });
 
     it('returns true for valid repository configurations', () => {
@@ -102,11 +114,13 @@ describe('GitHubSyncService', () => {
         {}, // Empty object
         { github: null }, // Null github
         { github: { repository: 0 } }, // Number (should be false but won't crash)
-        { github: { repository: false } }, // Boolean
+        { github: { repository: false } } // Boolean
       ];
 
       edgeCases.forEach(config => {
-        expect(() => gitHubSyncService.shouldSyncToGitHub(config)).not.toThrow();
+        expect(() =>
+          gitHubSyncService.shouldSyncToGitHub(config)
+        ).not.toThrow();
       });
     });
   });

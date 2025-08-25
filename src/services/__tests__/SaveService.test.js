@@ -3,8 +3,8 @@
  * Critical service for data persistence - must be thoroughly tested
  */
 
-import { SaveService } from '../SaveService';
 import * as fileOperations from '../../utils/fileOperations';
+import { SaveService } from '../SaveService';
 
 // Mock file operations
 jest.mock('../../utils/fileOperations', () => ({
@@ -20,14 +20,14 @@ describe('SaveService', () => {
   beforeEach(() => {
     saveService = new SaveService();
     jest.clearAllMocks();
-    
+
     // Reset mock implementations
     fileOperations.saveBook.mockReset();
     fileOperations.saveBookToFile.mockReset();
-    
+
     mockCallbacks = {
       onSaveStart: jest.fn(),
-      onSaveEnd: jest.fn(), 
+      onSaveEnd: jest.fn(),
       onSaveSuccess: jest.fn(),
       onSaveError: jest.fn(),
       onOperationUpdate: jest.fn()
@@ -53,10 +53,10 @@ describe('SaveService', () => {
   describe('isSaveInProgress', () => {
     it('returns current save operation state', () => {
       expect(saveService.isSaveInProgress()).toBe(false);
-      
+
       saveService.saveOperationRef.current = true;
       expect(saveService.isSaveInProgress()).toBe(true);
-      
+
       saveService.saveOperationRef.current = false;
       expect(saveService.isSaveInProgress()).toBe(false);
     });
@@ -90,7 +90,9 @@ describe('SaveService', () => {
         expect(mockCallbacks.onSaveStart).toHaveBeenCalled();
         expect(mockCallbacks.onSaveEnd).toHaveBeenCalled();
         expect(mockCallbacks.onSaveSuccess).toHaveBeenCalledWith(filePath);
-        expect(mockCallbacks.onOperationUpdate).toHaveBeenCalledWith('Saving book...');
+        expect(mockCallbacks.onOperationUpdate).toHaveBeenCalledWith(
+          'Saving book...'
+        );
         expect(mockCallbacks.onOperationUpdate).toHaveBeenLastCalledWith(null);
       });
 
@@ -204,7 +206,9 @@ describe('SaveService', () => {
         });
 
         expect(result).toEqual({ success: false, error: 'Unexpected error' });
-        expect(mockCallbacks.onSaveError).toHaveBeenCalledWith('Unexpected error');
+        expect(mockCallbacks.onSaveError).toHaveBeenCalledWith(
+          'Unexpected error'
+        );
       });
 
       it('handles unknown errors gracefully', async () => {
@@ -272,7 +276,9 @@ describe('SaveService', () => {
       });
 
       it('cleans up state even when save fails', async () => {
-        fileOperations.saveBookToFile.mockRejectedValue(new Error('Save failed'));
+        fileOperations.saveBookToFile.mockRejectedValue(
+          new Error('Save failed')
+        );
 
         await saveService.saveBookData({
           book: mockBook,
@@ -294,13 +300,20 @@ describe('SaveService', () => {
           ...mockCallbacks
         });
 
-        expect(mockCallbacks.onOperationUpdate).toHaveBeenCalledWith('Saving book...');
-        expect(mockCallbacks.onOperationUpdate).toHaveBeenCalledWith('Saving to file...');
+        expect(mockCallbacks.onOperationUpdate).toHaveBeenCalledWith(
+          'Saving book...'
+        );
+        expect(mockCallbacks.onOperationUpdate).toHaveBeenCalledWith(
+          'Saving to file...'
+        );
         expect(mockCallbacks.onOperationUpdate).toHaveBeenLastCalledWith(null);
       });
 
       it('sends correct updates for new file save', async () => {
-        fileOperations.saveBook.mockResolvedValue({ success: true, filePath: '/test/new.book' });
+        fileOperations.saveBook.mockResolvedValue({
+          success: true,
+          filePath: '/test/new.book'
+        });
 
         await saveService.saveBookData({
           book: mockBook,
@@ -308,8 +321,12 @@ describe('SaveService', () => {
           ...mockCallbacks
         });
 
-        expect(mockCallbacks.onOperationUpdate).toHaveBeenCalledWith('Saving book...');
-        expect(mockCallbacks.onOperationUpdate).toHaveBeenCalledWith('Choose save location...');
+        expect(mockCallbacks.onOperationUpdate).toHaveBeenCalledWith(
+          'Saving book...'
+        );
+        expect(mockCallbacks.onOperationUpdate).toHaveBeenCalledWith(
+          'Choose save location...'
+        );
         expect(mockCallbacks.onOperationUpdate).toHaveBeenLastCalledWith(null);
       });
     });
@@ -352,7 +369,10 @@ describe('SaveService', () => {
       });
 
       // Clean up first operation
-      fileOperations.saveBook.mockResolvedValue({ success: true, filePath: '/test.book' });
+      fileOperations.saveBook.mockResolvedValue({
+        success: true,
+        filePath: '/test.book'
+      });
       await saveAs;
     });
 
@@ -402,7 +422,7 @@ describe('SaveService', () => {
       const debouncedSave = saveService.createDebouncedSave(saveCallback);
 
       expect(typeof debouncedSave).toBe('function');
-      
+
       // Call multiple times quickly
       debouncedSave();
       debouncedSave();
@@ -423,7 +443,7 @@ describe('SaveService', () => {
       const debouncedSave = saveService.createDebouncedSave(saveCallback, 500);
 
       debouncedSave();
-      
+
       // Should not call at default delay
       jest.advanceTimersByTime(100);
       expect(saveCallback).not.toHaveBeenCalled();

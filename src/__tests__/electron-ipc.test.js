@@ -26,7 +26,7 @@ describe('Electron IPC Handlers (Integration)', () => {
   describe('Save Dialog Handler Logic', () => {
     it('validates book data before saving', () => {
       // Test the core logic that would be in the IPC handler
-      const validateBookData = (bookData) => {
+      const validateBookData = bookData => {
         if (!bookData || typeof bookData !== 'object') {
           return { valid: false, error: 'Invalid book data' };
         }
@@ -46,16 +46,22 @@ describe('Electron IPC Handlers (Integration)', () => {
       expect(validateBookData(null).valid).toBe(false);
       expect(validateBookData({ author: 'Test' }).valid).toBe(false);
       expect(validateBookData({ title: '', chapters: [] }).valid).toBe(false);
-      expect(validateBookData({ title: 'Test', chapters: 'not array' }).valid).toBe(false);
+      expect(
+        validateBookData({ title: 'Test', chapters: 'not array' }).valid
+      ).toBe(false);
     });
 
     it('formats book data for file saving correctly', () => {
-      const formatBookForSaving = (bookData) => {
-        return JSON.stringify({
-          ...bookData,
-          savedAt: new Date().toISOString(),
-          version: '1.3.71'
-        }, null, 2);
+      const formatBookForSaving = bookData => {
+        return JSON.stringify(
+          {
+            ...bookData,
+            savedAt: new Date().toISOString(),
+            version: '1.3.71'
+          },
+          null,
+          2
+        );
       };
 
       const formatted = formatBookForSaving(mockBookData);
@@ -69,7 +75,7 @@ describe('Electron IPC Handlers (Integration)', () => {
     });
 
     it('generates appropriate file extensions', () => {
-      const getFileExtension = (filePath) => {
+      const getFileExtension = filePath => {
         if (!filePath) return '.book';
         return filePath.endsWith('.json') ? '.json' : '.book';
       };
@@ -82,23 +88,23 @@ describe('Electron IPC Handlers (Integration)', () => {
 
     it('handles concurrent save operation prevention', () => {
       // Simulate the active operations tracking
-      let activeSaveOperations = new Set();
+      const activeSaveOperations = new Set();
 
-      const attemptSave = (operationId) => {
+      const attemptSave = operationId => {
         if (activeSaveOperations.size > 0) {
-          return { 
-            success: false, 
-            error: 'Another save operation is in progress' 
+          return {
+            success: false,
+            error: 'Another save operation is in progress'
           };
         }
-        
+
         activeSaveOperations.add(operationId);
-        
+
         // Simulate async save completion
         setTimeout(() => {
           activeSaveOperations.delete(operationId);
         }, 100);
-        
+
         return { success: true, operationId };
       };
 
@@ -127,10 +133,12 @@ describe('Electron IPC Handlers (Integration)', () => {
         'menu-github-integration'
       ];
 
-      const isValidMenuMessage = (message) => {
-        return typeof message === 'string' && 
-               message.startsWith('menu-') && 
-               message.length > 5;
+      const isValidMenuMessage = message => {
+        return (
+          typeof message === 'string' &&
+          message.startsWith('menu-') &&
+          message.length > 5
+        );
       };
 
       validMenuMessages.forEach(msg => {
@@ -177,8 +185,14 @@ describe('Electron IPC Handlers (Integration)', () => {
 
       const options = getSaveDialogOptions();
       expect(options.filters).toHaveLength(2);
-      expect(options.filters[0]).toEqual({ name: 'Book Files', extensions: ['book'] });
-      expect(options.filters[1]).toEqual({ name: 'JSON Files', extensions: ['json'] });
+      expect(options.filters[0]).toEqual({
+        name: 'Book Files',
+        extensions: ['book']
+      });
+      expect(options.filters[1]).toEqual({
+        name: 'JSON Files',
+        extensions: ['json']
+      });
 
       // Test with existing file path
       const optionsWithPath = getSaveDialogOptions('/test/existing.book');
@@ -217,7 +231,7 @@ describe('Electron IPC Handlers (Integration)', () => {
 
   describe('Error Handling Logic', () => {
     it('handles file system errors gracefully', () => {
-      const handleFileSystemError = (error) => {
+      const handleFileSystemError = error => {
         if (error.code === 'EACCES') {
           return {
             success: false,
@@ -242,15 +256,23 @@ describe('Electron IPC Handlers (Integration)', () => {
       };
 
       // Test specific error codes
-      expect(handleFileSystemError({ code: 'EACCES' }).error).toContain('Permission denied');
-      expect(handleFileSystemError({ code: 'ENOENT' }).error).toContain('not found');
-      expect(handleFileSystemError({ code: 'ENOSPC' }).error).toContain('disk space');
-      expect(handleFileSystemError({ message: 'Custom error' }).error).toBe('Custom error');
+      expect(handleFileSystemError({ code: 'EACCES' }).error).toContain(
+        'Permission denied'
+      );
+      expect(handleFileSystemError({ code: 'ENOENT' }).error).toContain(
+        'not found'
+      );
+      expect(handleFileSystemError({ code: 'ENOSPC' }).error).toContain(
+        'disk space'
+      );
+      expect(handleFileSystemError({ message: 'Custom error' }).error).toBe(
+        'Custom error'
+      );
       expect(handleFileSystemError({}).error).toBe('Unknown file system error');
     });
 
     it('validates file paths before operations', () => {
-      const validateFilePath = (filePath) => {
+      const validateFilePath = filePath => {
         if (!filePath || typeof filePath !== 'string') {
           return { valid: false, error: 'Invalid file path' };
         }
@@ -265,7 +287,9 @@ describe('Electron IPC Handlers (Integration)', () => {
 
       // Valid paths
       expect(validateFilePath('/home/user/book.book')).toEqual({ valid: true });
-      expect(validateFilePath('C:\\Users\\User\\book.book')).toEqual({ valid: true });
+      expect(validateFilePath('C:\\Users\\User\\book.book')).toEqual({
+        valid: true
+      });
 
       // Invalid paths
       expect(validateFilePath('').valid).toBe(false);

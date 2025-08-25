@@ -1,3 +1,5 @@
+/* eslint-disable jest/no-conditional-expect */
+/* eslint-disable no-unused-vars */
 /**
  * Electron Main Process Testing
  * Tests the core IPC handlers and menu actions
@@ -107,15 +109,15 @@ describe('Electron Main Process', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Reset the handlers collection
     ipcHandlers = {};
-    
+
     // Capture IPC handlers when they're registered
     mockIpcMain.handle.mockImplementation((channel, handler) => {
       ipcHandlers[channel] = handler;
     });
-    
+
     // Mock successful save dialog
     mockDialog.showSaveDialog.mockResolvedValue({
       canceled: false,
@@ -191,18 +193,18 @@ describe('Electron Main Process', () => {
 
       it('prevents concurrent save operations', async () => {
         const handler = ipcHandlers['save-book-dialog'];
-        
+
         // Start first save (don't await)
         const firstSave = handler({}, { title: 'Test 1' });
-        
+
         // Try second save while first is in progress
         const result = await handler({}, { title: 'Test 2' });
-        
+
         expect(result).toEqual({
           success: false,
           error: 'Another save operation is in progress'
         });
-        
+
         // Wait for first save to complete
         await firstSave;
       });
@@ -237,10 +239,13 @@ describe('Electron Main Process', () => {
         });
 
         const handler = ipcHandlers['save-recovered-book'];
-        const result = await handler({}, {
-          bookData: { title: 'Recovered Book' },
-          suggestedFilename: 'recovered.book'
-        });
+        const result = await handler(
+          {},
+          {
+            bookData: { title: 'Recovered Book' },
+            suggestedFilename: 'recovered.book'
+          }
+        );
 
         expect(mockDialog.showSaveDialog).toHaveBeenCalledWith(
           expect.any(Object),
@@ -257,7 +262,7 @@ describe('Electron Main Process', () => {
       it('responds to IPC ready check', async () => {
         const handler = ipcHandlers['ipc-ready'];
         const result = await handler();
-        
+
         expect(result).toBe(true);
       });
     });
@@ -272,21 +277,25 @@ describe('Electron Main Process', () => {
 
     it('builds application menu with correct structure', () => {
       expect(mockMenu.buildFromTemplate).toHaveBeenCalled();
-      
+
       const menuTemplate = mockMenu.buildFromTemplate.mock.calls[0][0];
-      
+
       // Check File menu exists
       const fileMenu = menuTemplate.find(menu => menu.label === 'File');
       expect(fileMenu).toBeDefined();
       expect(fileMenu.submenu).toBeDefined();
-      
+
       // Check specific menu items
-      const saveItem = fileMenu.submenu.find(item => item.label === 'Save Book');
+      const saveItem = fileMenu.submenu.find(
+        item => item.label === 'Save Book'
+      );
       expect(saveItem).toBeDefined();
       expect(saveItem.accelerator).toBe('CmdOrCtrl+S');
       expect(typeof saveItem.click).toBe('function');
-      
-      const exportItem = fileMenu.submenu.find(item => item.label === 'Export Book...');
+
+      const exportItem = fileMenu.submenu.find(
+        item => item.label === 'Export Book...'
+      );
       expect(exportItem).toBeDefined();
       expect(exportItem.accelerator).toBe('CmdOrCtrl+E');
     });
@@ -294,29 +303,37 @@ describe('Electron Main Process', () => {
     it('menu actions send correct IPC messages', () => {
       const menuTemplate = mockMenu.buildFromTemplate.mock.calls[0][0];
       const fileMenu = menuTemplate.find(menu => menu.label === 'File');
-      
+
       // Test Save Book menu action
-      const saveItem = fileMenu.submenu.find(item => item.label === 'Save Book');
+      const saveItem = fileMenu.submenu.find(
+        item => item.label === 'Save Book'
+      );
       saveItem.click();
-      
-      expect(mockWindow.webContents.send).toHaveBeenCalledWith('menu-save-book');
-      
+
+      expect(mockWindow.webContents.send).toHaveBeenCalledWith(
+        'menu-save-book'
+      );
+
       // Test Export Book menu action
-      const exportItem = fileMenu.submenu.find(item => item.label === 'Export Book...');
+      const exportItem = fileMenu.submenu.find(
+        item => item.label === 'Export Book...'
+      );
       exportItem.click();
-      
-      expect(mockWindow.webContents.send).toHaveBeenCalledWith('menu-export-book');
+
+      expect(mockWindow.webContents.send).toHaveBeenCalledWith(
+        'menu-export-book'
+      );
     });
 
     it('quit action calls app.quit', () => {
       const menuTemplate = mockMenu.buildFromTemplate.mock.calls[0][0];
       const fileMenu = menuTemplate.find(menu => menu.label === 'File');
-      
+
       // Find Exit/Quit item (varies by platform)
-      const quitItem = fileMenu.submenu.find(item => 
-        item.label === 'Exit' || item.label === 'Quit'
+      const quitItem = fileMenu.submenu.find(
+        item => item.label === 'Exit' || item.label === 'Quit'
       );
-      
+
       if (quitItem) {
         quitItem.click();
         expect(mockApp.quit).toHaveBeenCalled();
@@ -330,15 +347,19 @@ describe('Electron Main Process', () => {
     });
 
     it('registers second-instance handler', () => {
-      expect(mockApp.on).toHaveBeenCalledWith('second-instance', expect.any(Function));
+      expect(mockApp.on).toHaveBeenCalledWith(
+        'second-instance',
+        expect.any(Function)
+      );
     });
 
     it('focuses window when second instance is attempted', () => {
-      const secondInstanceHandler = mockApp.on.mock.calls
-        .find(call => call[0] === 'second-instance')[1];
-      
+      const secondInstanceHandler = mockApp.on.mock.calls.find(
+        call => call[0] === 'second-instance'
+      )[1];
+
       secondInstanceHandler({}, [], '');
-      
+
       expect(mockWindow.focus).toHaveBeenCalled();
     });
   });
