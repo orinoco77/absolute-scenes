@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useInlineEdit } from '../hooks/useInlineEdit';
 
 function BackgroundList({
   folders,
@@ -28,10 +29,27 @@ function BackgroundList({
       currentFolderId || (folders.length > 0 ? folders[0].id : 'default-bg');
     return new Set([initialFolder]);
   });
-  const [editingFolderId, setEditingFolderId] = useState(null);
-  const [editingFolderTitle, setEditingFolderTitle] = useState('');
-  const [editingDocumentId, setEditingDocumentId] = useState(null);
-  const [editingDocumentTitle, setEditingDocumentTitle] = useState('');
+  // Folder editing hook
+  const folderEdit = useInlineEdit({
+    onSave: (folderId, newTitle) => {
+      if (newTitle.trim()) {
+        onFolderUpdate(folderId, { title: newTitle });
+        return true;
+      }
+      return false;
+    }
+  });
+
+  // Document editing hook
+  const documentEdit = useInlineEdit({
+    onSave: (documentId, newTitle) => {
+      if (newTitle.trim()) {
+        onDocumentUpdate(documentId, { title: newTitle });
+        return true;
+      }
+      return false;
+    }
+  });
 
   // Auto-expand the current folder when it changes
   React.useEffect(() => {
@@ -53,52 +71,6 @@ function BackgroundList({
       newExpanded.add(folderId);
     }
     setExpandedFolders(newExpanded);
-  };
-
-  const startEditingFolder = folder => {
-    setEditingFolderId(folder.id);
-    setEditingFolderTitle(folder.title);
-  };
-
-  const finishEditingFolder = () => {
-    if (editingFolderId && editingFolderTitle.trim()) {
-      onFolderUpdate(editingFolderId, { title: editingFolderTitle.trim() });
-    }
-    setEditingFolderId(null);
-    setEditingFolderTitle('');
-  };
-
-  const startEditingDocument = doc => {
-    setEditingDocumentId(doc.id);
-    setEditingDocumentTitle(doc.title);
-  };
-
-  const finishEditingDocument = () => {
-    if (editingDocumentId && editingDocumentTitle.trim()) {
-      onDocumentUpdate(editingDocumentId, {
-        title: editingDocumentTitle.trim()
-      });
-    }
-    setEditingDocumentId(null);
-    setEditingDocumentTitle('');
-  };
-
-  const handleKeyDown = e => {
-    if (e.key === 'Enter') {
-      if (editingFolderId) {
-        finishEditingFolder();
-      } else if (editingDocumentId) {
-        finishEditingDocument();
-      }
-    } else if (e.key === 'Escape') {
-      if (editingFolderId) {
-        setEditingFolderId(null);
-        setEditingFolderTitle('');
-      } else if (editingDocumentId) {
-        setEditingDocumentId(null);
-        setEditingDocumentTitle('');
-      }
-    }
   };
 
   const getTotalDocuments = () => {
@@ -190,13 +162,13 @@ function BackgroundList({
                   {expandedFolders.has(folder.id) ? '📂' : '📁'}
                 </button>
 
-                {editingFolderId === folder.id ? (
+                {folderEdit.isEditing(folder.id) ? (
                   <input
                     type="text"
-                    value={editingFolderTitle}
-                    onChange={e => setEditingFolderTitle(e.target.value)}
-                    onBlur={finishEditingFolder}
-                    onKeyDown={handleKeyDown}
+                    value={folderEdit.editingValue}
+                    onChange={e => folderEdit.updateValue(e.target.value)}
+                    onBlur={folderEdit.handleBlur}
+                    onKeyDown={folderEdit.handleKeyPress}
                     className="chapter-title-edit"
                     autoFocus
                   />
@@ -204,7 +176,9 @@ function BackgroundList({
                   <div
                     className="chapter-title"
                     onClick={() => onFolderSelect(folder.id)}
-                    onDoubleClick={() => startEditingFolder(folder)}
+                    onDoubleClick={() =>
+                      folderEdit.startEditing(folder.id, folder.title)
+                    }
                     title="Click to select folder, double-click to rename"
                   >
                     {folder.title}
@@ -270,15 +244,15 @@ function BackgroundList({
                             marginRight: '8px'
                           }}
                         >
-                          {editingDocumentId === doc.id ? (
+                          {documentEdit.isEditing(doc.id) ? (
                             <input
                               type="text"
-                              value={editingDocumentTitle}
+                              value={documentEdit.editingValue}
                               onChange={e =>
-                                setEditingDocumentTitle(e.target.value)
+                                documentEdit.updateValue(e.target.value)
                               }
-                              onBlur={finishEditingDocument}
-                              onKeyDown={handleKeyDown}
+                              onBlur={documentEdit.handleBlur}
+                              onKeyDown={documentEdit.handleKeyPress}
                               className="scene-title-edit"
                               style={{
                                 width: '100%',
@@ -293,7 +267,7 @@ function BackgroundList({
                               className="scene-title"
                               onDoubleClick={e => {
                                 e.stopPropagation();
-                                startEditingDocument(doc);
+                                documentEdit.startEditing(doc.id, doc.title);
                               }}
                               title="Double-click to rename document"
                               style={{

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useDragAndDrop } from '../hooks/useDragAndDrop';
 
 function BackMatterList({
   backMatter = [],
@@ -11,8 +11,32 @@ function BackMatterList({
   onBackMatterReorder,
   authorName = ''
 }) {
-  const [draggedItem, setDraggedItem] = useState(null);
-  const [dragOverTarget, setDragOverTarget] = useState(null);
+  // Handle reordering back matter items
+  const handleBackMatterReorder = ({ draggedItem, target }) => {
+    if (!draggedItem || !target || draggedItem.id === target.id) return;
+
+    const fromIndex = backMatter.findIndex(item => item.id === draggedItem.id);
+    const toIndex = backMatter.findIndex(item => item.id === target.id);
+
+    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+      onBackMatterReorder(fromIndex, toIndex);
+    }
+  };
+
+  // Initialize drag and drop functionality
+  const {
+    draggedItem: _draggedItem,
+    dragOverTarget,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnter,
+    handleDragLeave,
+    handleDrop,
+    handleDragEnd,
+    isValidDropTarget: _isValidDropTarget
+  } = useDragAndDrop({
+    onReorder: handleBackMatterReorder
+  });
 
   // Predefined back matter types with their default configurations
   const backMatterTypes = {
@@ -134,48 +158,6 @@ For more information, visit [website] or follow on [social media platforms].`;
       ...(typeConfig.isImage && { imageData: null, imageFileName: null })
     };
     onBackMatterAdd(newItem);
-  };
-
-  const handleDragStart = (e, item) => {
-    setDraggedItem(item);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = e => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDragEnter = (e, target) => {
-    e.preventDefault();
-    if (draggedItem && target && draggedItem.id !== target.id) {
-      setDragOverTarget(target);
-    }
-  };
-
-  const handleDragLeave = e => {
-    // Only clear drag over if we're leaving the entire list item
-    if (!e.currentTarget.contains(e.relatedTarget)) {
-      setDragOverTarget(null);
-    }
-  };
-
-  const handleDrop = (e, dropTarget) => {
-    e.preventDefault();
-    if (draggedItem && draggedItem.id !== dropTarget.id) {
-      const dragIndex = backMatter.findIndex(
-        item => item.id === draggedItem.id
-      );
-      const dropIndex = backMatter.findIndex(item => item.id === dropTarget.id);
-      onBackMatterReorder(dragIndex, dropIndex);
-    }
-    setDraggedItem(null);
-    setDragOverTarget(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedItem(null);
-    setDragOverTarget(null);
   };
 
   const sortedBackMatter = [...backMatter].sort((a, b) => {
