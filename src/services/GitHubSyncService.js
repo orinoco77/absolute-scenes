@@ -71,6 +71,8 @@ export class GitHubSyncService {
    * Check if GitHub sync should be performed
    */
   shouldSyncToGitHub(bookData) {
-    return bookData?.github?.repository != null;
+    return bookData?.github?.repository != null && 
+           typeof bookData.github.repository === 'string' &&
+           bookData.github.repository.trim() !== '';
   }
 }

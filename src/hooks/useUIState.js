@@ -82,7 +82,7 @@ export function useUIState() {
   // Auto-selection logic
   const autoSelectFirstScene = useCallback(
     book => {
-      if (activeTab === 'manuscript' && !currentSceneId && book.chapters) {
+      if (activeTab === 'manuscript' && !currentSceneId && book?.chapters) {
         const firstChapterWithScenes = book.chapters.find(
           ch => ch.scenes && ch.scenes.length > 0
         );
@@ -103,7 +103,7 @@ export function useUIState() {
       if (
         activeTab === 'characters' &&
         !currentCharacterId &&
-        book.characters &&
+        book?.characters &&
         book.characters.length > 0
       ) {
         setCurrentCharacterId(book.characters[0].id);
@@ -117,7 +117,7 @@ export function useUIState() {
       if (
         activeTab === 'locations' &&
         !currentLocationId &&
-        book.locations &&
+        book?.locations &&
         book.locations.length > 0
       ) {
         setCurrentLocationId(book.locations[0].id);
@@ -131,7 +131,7 @@ export function useUIState() {
       if (
         activeTab === 'background' &&
         !currentDocumentId &&
-        book.backgroundFolders &&
+        book?.backgroundFolders &&
         book.backgroundFolders.length > 0
       ) {
         const firstFolderWithDocs = book.backgroundFolders.find(
@@ -151,7 +151,7 @@ export function useUIState() {
       if (
         activeTab === 'frontmatter' &&
         !currentFrontMatterId &&
-        book.frontMatter &&
+        book?.frontMatter &&
         book.frontMatter.length > 0
       ) {
         setCurrentFrontMatterId(book.frontMatter[0].id);
@@ -165,7 +165,7 @@ export function useUIState() {
       if (
         activeTab === 'backmatter' &&
         !currentBackMatterId &&
-        book.backMatter &&
+        book?.backMatter &&
         book.backMatter.length > 0
       ) {
         setCurrentBackMatterId(book.backMatter[0].id);
@@ -192,8 +192,12 @@ export function useUIState() {
 
   // Load book state
   const loadBook = useCallback((bookData, filePath = null) => {
-    setCurrentChapterId(bookData.chapters[0]?.id || 'default');
-    setCurrentSceneId(bookData.chapters[0]?.scenes[0]?.id || null);
+    if (!bookData || typeof bookData !== 'object') {
+      return; // Gracefully handle invalid data
+    }
+    
+    setCurrentChapterId(bookData.chapters?.[0]?.id || 'default');
+    setCurrentSceneId(bookData.chapters?.[0]?.scenes?.[0]?.id || null);
     setCurrentPartId(bookData.parts?.length > 0 ? bookData.parts[0]?.id : null);
     setCurrentCharacterId(null);
     setCurrentLocationId(null);
