@@ -61,16 +61,25 @@ function SpellCheckSettings({ onClose }) {
     // Save the language preference
     localStorage.setItem('spellCheckLanguage', selectedLanguage);
 
-    // Send the new language to the main process
+    // Send the new language to the main process for saving to electron-store
     try {
       const electron = window.require ? window.require('electron') : null;
       if (electron && electron.ipcRenderer) {
-        await electron.ipcRenderer.invoke('set-spell-checker-languages', [
+        await electron.ipcRenderer.invoke(
+          'save-spell-checker-language',
           selectedLanguage
-        ]);
+        );
+
+        // Show restart message
+        alert(
+          'Language saved! Please restart the application for the spell checker language change to take effect.'
+        );
       }
     } catch (error) {
-      console.warn('Failed to set spell checker languages:', error);
+      console.warn('Failed to save spell checker language:', error);
+      alert(
+        'Language saved locally, but there was an issue communicating with the app. Please restart the application.'
+      );
     }
 
     onClose();
@@ -145,14 +154,15 @@ function SpellCheckSettings({ onClose }) {
               style={{
                 marginTop: '15px',
                 padding: '10px',
-                backgroundColor: '#e3f2fd',
+                backgroundColor: '#fff3e0',
                 borderRadius: '4px',
                 fontSize: '12px'
               }}
             >
-              <strong>Note:</strong> Language changes will take effect
-              immediately. You may need to restart typing in text areas to see
-              spell checking in the new language.
+              <strong>Important:</strong> Language changes require an
+              application restart to take effect. After saving your selection,
+              please restart Absolute Scenes to use the new spell checking
+              language.
             </div>
           </div>
         </div>

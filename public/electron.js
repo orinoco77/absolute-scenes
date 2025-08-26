@@ -41,6 +41,34 @@ function createWindow() {
   // Register IPC handlers first, before creating the window
   registerIpcHandlers();
 
+  // Load spell check language from storage before creating window
+  const { session } = require('electron');
+
+  // Get saved language or default to en-US
+  let savedLanguage = 'en-US';
+  try {
+    const Store = require('electron-store');
+    const store = new Store();
+    savedLanguage = store.get('spellCheckLanguage', 'en-US');
+  } catch (error) {
+    console.log('Could not load saved language, using en-US');
+  }
+
+  console.log('Setting spell checker language at startup:', savedLanguage);
+
+  // Set spell checker language on default session BEFORE creating window
+  const availableLanguages =
+    session.defaultSession.availableSpellCheckerLanguages;
+  if (availableLanguages.includes(savedLanguage)) {
+    session.defaultSession.setSpellCheckerEnabled(true);
+    session.defaultSession.setSpellCheckerLanguages([savedLanguage]);
+    console.log('Spell checker language set to:', savedLanguage);
+  } else {
+    console.warn('Language not available:', savedLanguage, 'using en-US');
+    session.defaultSession.setSpellCheckerEnabled(true);
+    session.defaultSession.setSpellCheckerLanguages(['en-US']);
+  }
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 940,
@@ -2055,16 +2083,18 @@ function registerIpcHandlers() {
     return [];
   });
 
-  ipcMain.handle('set-spell-checker-languages', (event, languages) => {
-    if (
-      mainWindow &&
-      mainWindow.webContents &&
-      mainWindow.webContents.session
-    ) {
-      mainWindow.webContents.session.setSpellCheckerLanguages(languages);
+  // Save spell checker language to electron-store for next app startup
+  ipcMain.handle('save-spell-checker-language', async (event, language) => {
+    try {
+      const Store = require('electron-store');
+      const store = new Store();
+      store.set('spellCheckLanguage', language);
+      console.log('Spell checker language saved to store:', language);
       return true;
+    } catch (error) {
+      console.error('Error saving spell checker language:', error);
+      return false;
     }
-    return false;
   });
 }
 
