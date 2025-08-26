@@ -5,6 +5,7 @@ const {
   app,
   BrowserWindow,
   Menu,
+  MenuItem,
   dialog,
   ipcMain,
   shell
@@ -48,7 +49,8 @@ function createWindow() {
       contextIsolation: false,
       enableRemoteModule: true,
       webSecurity: false,
-      allowRunningInsecureContent: true
+      allowRunningInsecureContent: true,
+      spellcheck: true
     }
   });
 
@@ -65,10 +67,78 @@ function createWindow() {
 
   // Set up event listeners for when the renderer is ready
   mainWindow.webContents.once('did-finish-load', () => {
+    // Configure spell checker languages - get from localStorage or default to en-US
+    mainWindow.webContents
+      .executeJavaScript(
+        `
+      localStorage.getItem('spellCheckLanguage') || 'en-US'
+    `
+      )
+      .then(savedLanguage => {
+        mainWindow.webContents.session.setSpellCheckerLanguages([
+          savedLanguage
+        ]);
+      })
+      .catch(() => {
+        // Fallback if localStorage isn't available yet
+        mainWindow.webContents.session.setSpellCheckerLanguages(['en-US']);
+      });
+
     // Try to open any pending file after a short delay
     setTimeout(() => {
       attemptToOpenPendingFile();
     }, 1000);
+  });
+
+  // Add spell check context menu
+  mainWindow.webContents.on('context-menu', (event, params) => {
+    const menu = new Menu();
+    const window = mainWindow; // Capture reference to avoid loop warning
+
+    // Add spelling suggestions
+    for (const suggestion of params.dictionarySuggestions) {
+      menu.append(
+        new MenuItem({
+          label: suggestion,
+          click: () => window.webContents.replaceMisspelling(suggestion)
+        })
+      );
+    }
+
+    // Add separator if there were suggestions
+    if (params.dictionarySuggestions.length > 0) {
+      menu.append(new MenuItem({ type: 'separator' }));
+    }
+
+    // Add "Add to dictionary" option
+    if (params.misspelledWord) {
+      menu.append(
+        new MenuItem({
+          label: 'Add to dictionary',
+          click: () =>
+            window.webContents.session.addWordToSpellCheckerDictionary(
+              params.misspelledWord
+            )
+        })
+      );
+      menu.append(new MenuItem({ type: 'separator' }));
+    }
+
+    // Add standard context menu options
+    if (params.isEditable) {
+      menu.append(new MenuItem({ label: 'Cut', role: 'cut' }));
+      menu.append(new MenuItem({ label: 'Copy', role: 'copy' }));
+      menu.append(new MenuItem({ label: 'Paste', role: 'paste' }));
+      menu.append(new MenuItem({ type: 'separator' }));
+      menu.append(new MenuItem({ label: 'Select All', role: 'selectAll' }));
+    } else {
+      menu.append(new MenuItem({ label: 'Copy', role: 'copy' }));
+    }
+
+    // Only show menu if it has items
+    if (menu.items.length > 0) {
+      menu.popup({ window });
+    }
   });
 
   // Handle fullscreen events to hide/show menu bar
@@ -1720,6 +1790,10 @@ function createMenu() {
           click: () => mainWindow.webContents.send('menu-template-settings')
         },
         {
+          label: 'Spell Check Settings...',
+          click: () => mainWindow.webContents.send('menu-spell-check-settings')
+        },
+        {
           label: 'GitHub Integration...',
           accelerator: 'CmdOrCtrl+G',
           click: () => mainWindow.webContents.send('menu-github-integration')
@@ -1965,6 +2039,32 @@ function registerIpcHandlers() {
   // Simple ping handler to verify IPC is ready
   ipcMain.handle('ipc-ready', () => {
     return true;
+  });
+
+  // Spell checker language handlers
+  ipcMain.handle('get-available-spell-checker-languages', () => {
+    if (
+      mainWindow &&
+      mainWindow.webContents &&
+      mainWindow.webContents.session
+    ) {
+      return (
+        mainWindow.webContents.session.availableSpellCheckerLanguages || []
+      );
+    }
+    return [];
+  });
+
+  ipcMain.handle('set-spell-checker-languages', (event, languages) => {
+    if (
+      mainWindow &&
+      mainWindow.webContents &&
+      mainWindow.webContents.session
+    ) {
+      mainWindow.webContents.session.setSpellCheckerLanguages(languages);
+      return true;
+    }
+    return false;
   });
 }
 

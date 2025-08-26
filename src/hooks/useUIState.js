@@ -10,6 +10,7 @@ export function useUIState() {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showGitHubIntegration, setShowGitHubIntegration] = useState(false);
   const [showBackupRecovery, setShowBackupRecovery] = useState(false);
+  const [showSpellCheckSettings, setShowSpellCheckSettings] = useState(false);
   const [showFontPreview, setShowFontPreview] = useState(false);
 
   // Current selection states
@@ -219,6 +220,8 @@ export function useUIState() {
     setShowGitHubIntegration,
     showBackupRecovery,
     setShowBackupRecovery,
+    showSpellCheckSettings,
+    setShowSpellCheckSettings,
     showFontPreview,
     setShowFontPreview,
 
