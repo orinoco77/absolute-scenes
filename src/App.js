@@ -12,6 +12,7 @@ import FrontMatterEditor from './components/FrontMatterEditor';
 import GitHubIntegration from './components/GitHubIntegration';
 import LocationEditor from './components/LocationEditor';
 import SceneEditor from './components/SceneEditor';
+import SpellCheckSettings from './components/SpellCheckSettings';
 import StatusBar from './components/StatusBar';
 import TemplateManager from './components/TemplateManager';
 import { useBookState } from './hooks/useBookState';
@@ -103,10 +104,12 @@ function App() {
     showExportDialog,
     showGitHubIntegration,
     showBackupRecovery,
+    showSpellCheckSettings,
     setShowTemplateManager,
     setShowExportDialog,
     setShowGitHubIntegration,
     setShowBackupRecovery,
+    setShowSpellCheckSettings,
     recycleBin,
     showRecycleBin,
     characterRecycleBin,
@@ -527,6 +530,9 @@ function App() {
       'menu-template-settings': () => {
         setActiveTab('settings');
         // Focus on template settings if there's a specific section
+      },
+      'menu-spell-check-settings': () => {
+        setShowSpellCheckSettings(true);
       },
       'menu-github-integration': () => {
         setActiveTab('settings');
@@ -1142,6 +1148,10 @@ function App() {
           onTemplateUpdate={handleTemplateUpdate}
           onClose={() => setShowTemplateManager(false)}
         />
+      )}
+
+      {showSpellCheckSettings && (
+        <SpellCheckSettings onClose={() => setShowSpellCheckSettings(false)} />
       )}
 
       {showExportDialog && (
