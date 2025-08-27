@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import DistractionFreeMode from './DistractionFreeMode';
+import TextEditor from './TextEditor';
 
 function SceneEditor({
   scene,
@@ -61,22 +62,22 @@ function SceneEditor({
     // Handle Shift+Enter for forced line breaks
     if (e.key === 'Enter' && e.shiftKey) {
       e.preventDefault();
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
+      const textEditor = textareaRef.current;
+      const start = textEditor.selectionStart;
+      const end = textEditor.selectionEnd;
 
       // Insert a forced line break that will be visible and preserved in export
       const newContent =
-        textarea.value.substring(0, start) +
+        textEditor.value.substring(0, start) +
         '\n<!--FORCED_BREAK-->\n' + // Special marker for forced breaks
-        textarea.value.substring(end);
+        textEditor.value.substring(end);
 
       onSceneUpdate(scene.id, { content: newContent });
 
       // Move cursor after the marker
       setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + 21, start + 21); // After the full marker
+        textEditor.focus();
+        textEditor.setSelectionRange(start + 21, start + 21); // After the full marker
       }, 0);
     }
   };
@@ -92,25 +93,25 @@ function SceneEditor({
 
   // Collaboration data available for scene assignment
 
-  // Text formatting functions for textarea
+  // Text formatting functions for TextEditor
   const insertMarkdown = (before, after = '') => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selectedText = textarea.value.substring(start, end);
+    const textEditor = textareaRef.current;
+    if (textEditor) {
+      const start = textEditor.selectionStart;
+      const end = textEditor.selectionEnd;
+      const selectedText = textEditor.value.substring(start, end);
       const replacement = before + (selectedText || 'text') + after;
 
       const newContent =
-        textarea.value.substring(0, start) +
+        textEditor.value.substring(0, start) +
         replacement +
-        textarea.value.substring(end);
+        textEditor.value.substring(end);
       onSceneUpdate(scene.id, { content: newContent });
 
       // Restore cursor position
       setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(
+        textEditor.focus();
+        textEditor.setSelectionRange(
           start + before.length,
           start + before.length + (selectedText || 'text').length
         );
@@ -123,21 +124,21 @@ function SceneEditor({
   const makeHeading = () => insertMarkdown('## ', '');
   const insertLineBreak = () => insertMarkdown('\n\n', '');
   const insertForcedLineBreak = () => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
+    const textEditor = textareaRef.current;
+    if (textEditor) {
+      const start = textEditor.selectionStart;
+      const end = textEditor.selectionEnd;
 
       const newContent =
-        textarea.value.substring(0, start) +
+        textEditor.value.substring(0, start) +
         '\n<!--FORCED_BREAK-->\n' +
-        textarea.value.substring(end);
+        textEditor.value.substring(end);
 
       onSceneUpdate(scene.id, { content: newContent });
 
       setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + 21, start + 21); // After the full marker
+        textEditor.focus();
+        textEditor.setSelectionRange(start + 21, start + 21); // After the full marker
       }, 0);
     }
   };
@@ -241,24 +242,27 @@ function SceneEditor({
         </div>
 
         <div className="scene-editor-textarea">
-          <textarea
+          <TextEditor
             ref={textareaRef}
             value={scene.content}
             onChange={handleContentChange}
             onKeyDown={handleKeyDown}
             placeholder="Start writing your scene here..."
-            spellCheck="true"
+            spellCheck={true}
+            rows={20}
+            style={{ minHeight: '400px' }}
           />
         </div>
       </div>
 
       <div className="scene-notes">
         <h4>Scene Notes</h4>
-        <textarea
-          value={scene.notes}
+        <TextEditor
+          value={scene.notes || ''}
           onChange={handleNotesChange}
           placeholder="Notes about this scene..."
-          rows="4"
+          rows={4}
+          spellCheck={true}
         />
       </div>
 

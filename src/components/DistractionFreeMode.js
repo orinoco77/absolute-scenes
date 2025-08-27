@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import './DistractionFreeMode.css';
+import TextEditor from './TextEditor';
 
 function DistractionFreeMode({ scene, onSceneUpdate, onClose, isOpen }) {
   const textareaRef = useRef(null);
@@ -48,14 +49,14 @@ function DistractionFreeMode({ scene, onSceneUpdate, onClose, isOpen }) {
     // Handle Shift+Enter for forced line breaks (same as regular editor)
     if (e.key === 'Enter' && e.shiftKey) {
       e.preventDefault();
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
+      const textEditor = textareaRef.current;
+      const start = textEditor.selectionStart;
+      const end = textEditor.selectionEnd;
 
       const newContent =
-        textarea.value.substring(0, start) +
+        textEditor.value.substring(0, start) +
         '\n<!--FORCED_BREAK-->\n' +
-        textarea.value.substring(end);
+        textEditor.value.substring(end);
 
       setContent(newContent);
       if (scene) {
@@ -64,8 +65,8 @@ function DistractionFreeMode({ scene, onSceneUpdate, onClose, isOpen }) {
 
       // Move cursor after the marker
       setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + 21, start + 21);
+        textEditor.focus();
+        textEditor.setSelectionRange(start + 21, start + 21);
       }, 0);
     }
   };
@@ -92,14 +93,28 @@ function DistractionFreeMode({ scene, onSceneUpdate, onClose, isOpen }) {
 
       {/* Main writing area */}
       <div className="distraction-free-editor">
-        <textarea
+        <TextEditor
           ref={textareaRef}
           value={content}
           onChange={handleContentChange}
           onKeyDown={handleKeyDown}
           placeholder={scene ? 'Continue writing...' : 'Start writing...'}
-          spellCheck="true"
+          spellCheck={true}
           className="distraction-free-textarea"
+          style={{
+            width: '100%',
+            maxWidth: '800px',
+            height: '100%',
+            background: 'transparent',
+            border: 'none',
+            outline: 'none',
+            color: '#e8e8e8',
+            fontSize: '18px',
+            lineHeight: '1.6',
+            fontFamily: 'inherit',
+            resize: 'none',
+            padding: '40px'
+          }}
         />
       </div>
 

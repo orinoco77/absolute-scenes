@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import TextEditor from './TextEditor';
 
 // Available location icons
 const LOCATION_ICONS = [
@@ -154,10 +155,11 @@ function LocationEditor({ location, template: _template, onLocationUpdate }) {
             Describe the location, its appearance, atmosphere, and significance
           </span>
         </div>
-        <textarea
+        <TextEditor
           value={location.description || ''}
           onChange={handleDescriptionChange}
           placeholder="Describe this location in detail. What does it look like? What's the atmosphere? What role does it play in your story?"
+          spellCheck={true}
         />
       </div>
 
@@ -209,11 +211,12 @@ function LocationEditor({ location, template: _template, onLocationUpdate }) {
 
       <div className="location-notes">
         <label>Additional Notes</label>
-        <textarea
+        <TextEditor
           value={location.notes || ''}
           onChange={handleNotesChange}
           placeholder="Additional notes, research, or ideas about this location..."
           rows={4}
+          spellCheck={true}
         />
       </div>
     </div>

@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import TextEditor from './TextEditor';
 
 export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
   const [resolutions, setResolutions] = useState({});
@@ -167,7 +168,7 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
           </button>
 
           {currentResolution?.resolution === 'manual' && (
-            <textarea
+            <TextEditor
               value={currentResolution.resolvedContent}
               onChange={e => handleManualEdit(index, e.target.value)}
               style={{
@@ -178,6 +179,7 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
                 borderRadius: '3px',
                 fontFamily: 'monospace'
               }}
+              spellCheck={true}
             />
           )}
         </div>
