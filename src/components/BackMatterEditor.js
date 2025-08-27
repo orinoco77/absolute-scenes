@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import TextEditor from './TextEditor';
 
 function BackMatterEditor({
   backMatterItem,
@@ -89,7 +90,8 @@ function BackMatterEditor({
     }
   };
 
-  const handleContentChange = newContent => {
+  const handleContentChange = e => {
+    const newContent = e.target.value;
     setContent(newContent);
     onBackMatterUpdate(backMatterItem.id, {
       ...backMatterItem,
@@ -102,9 +104,9 @@ function BackMatterEditor({
     // Handle Shift+Enter for forced line breaks (only for epilogue)
     if (e.key === 'Enter' && e.shiftKey && backMatterItem.type === 'epilogue') {
       e.preventDefault();
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
+      const textEditor = textareaRef.current;
+      const start = textEditor.selectionStart;
+      const end = textEditor.selectionEnd;
       const newContent =
         content.substring(0, start) + '\n' + content.substring(end);
       setContent(newContent);
@@ -115,7 +117,7 @@ function BackMatterEditor({
       });
       // Set cursor position after the inserted newline
       setTimeout(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + 1;
+        textEditor.setSelectionRange(start + 1, start + 1);
       }, 0);
     }
   };
@@ -236,13 +238,14 @@ function BackMatterEditor({
             ' | Shift+Enter: forced line break'}
         </div>
       </div>
-      <textarea
+      <TextEditor
         ref={textareaRef}
         value={content}
-        onChange={e => handleContentChange(e.target.value)}
+        onChange={handleContentChange}
         onKeyDown={handleKeyDown}
         placeholder={typeConfig.placeholder}
         className="back-matter-content-textarea"
+        spellCheck={true}
       />
     </div>
   );

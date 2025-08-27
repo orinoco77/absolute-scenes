@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import TextEditor from './TextEditor';
 
 function BackgroundEditor({ document, template, onDocumentUpdate }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const textareaRef = useRef(null);
 
   // Update local state when document prop changes
   useEffect(() => {
@@ -45,11 +47,11 @@ function BackgroundEditor({ document, template, onDocumentUpdate }) {
   };
 
   const insertFormatting = (prefix, suffix = '') => {
-    const textarea = document.querySelector('.background-content-textarea');
-    if (!textarea) return;
+    const textEditor = textareaRef.current;
+    if (!textEditor) return;
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
+    const start = textEditor.selectionStart;
+    const end = textEditor.selectionEnd;
     const selectedText = content.substring(start, end);
     const newText =
       content.substring(0, start) +
@@ -63,8 +65,8 @@ function BackgroundEditor({ document, template, onDocumentUpdate }) {
 
     // Restore cursor position
     setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+      textEditor.focus();
+      textEditor.setSelectionRange(start + prefix.length, end + prefix.length);
     }, 0);
   };
 
@@ -167,7 +169,8 @@ function BackgroundEditor({ document, template, onDocumentUpdate }) {
           </div>
 
           <div className="background-editor-textarea">
-            <textarea
+            <TextEditor
+              ref={textareaRef}
               value={content}
               onChange={handleContentChange}
               className="background-content-textarea"
@@ -181,6 +184,7 @@ This is your space for:
 • Research and references
 
 Organize your thoughts and keep track of the deeper elements that inform your story."
+              spellCheck={true}
             />
           </div>
         </div>

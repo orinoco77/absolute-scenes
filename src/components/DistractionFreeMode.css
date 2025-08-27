@@ -68,29 +68,44 @@
   min-height: 0; /* Allow flexbox shrinking */
 }
 
-/* The main textarea */
+/* TextEditor container overrides */
+.distraction-free-editor .text-editor-container {
+  width: 100% !important;
+  max-width: 800px !important;
+  height: 100% !important;
+  display: block !important;
+  flex-direction: row !important;
+}
+
+/* The main textarea - override TextEditor styles */
+.distraction-free-textarea textarea,
 .distraction-free-textarea {
-  width: 100%;
-  max-width: 800px; /* Comfortable reading width */
-  height: 100%;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #e8e8e8;
-  font-size: 18px;
-  line-height: 1.6;
-  font-family: inherit;
-  resize: none;
-  padding: 40px;
+  width: 100% !important;
+  max-width: 800px !important; /* Comfortable reading width */
+  height: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #e8e8e8 !important;
+  font-size: 18px !important;
+  line-height: 1.6 !important;
+  font-family: inherit !important;
+  resize: none !important;
+  padding: 40px !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  flex: none !important;
 }
 
+.distraction-free-textarea textarea::placeholder,
 .distraction-free-textarea::placeholder {
-  color: #555;
-  font-style: italic;
+  color: #555 !important;
+  font-style: italic !important;
 }
 
+.distraction-free-textarea textarea:focus,
 .distraction-free-textarea:focus {
-  outline: none;
+  outline: none !important;
 }
 
 /* Word count stats - subtle at bottom */

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import TextEditor from './TextEditor';
 
 function FrontMatterEditor({
   frontMatterItem,
@@ -84,7 +85,8 @@ function FrontMatterEditor({
     }
   };
 
-  const handleContentChange = newContent => {
+  const handleContentChange = e => {
+    const newContent = e.target.value;
     setContent(newContent);
     onFrontMatterUpdate(frontMatterItem.id, {
       ...frontMatterItem,
@@ -101,15 +103,15 @@ function FrontMatterEditor({
       frontMatterItem.type === 'prologue'
     ) {
       e.preventDefault();
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
+      const textEditor = textareaRef.current;
+      const start = textEditor.selectionStart;
+      const end = textEditor.selectionEnd;
 
       // Insert a forced line break that will be visible and preserved in export
       const newContent =
-        textarea.value.substring(0, start) +
+        textEditor.value.substring(0, start) +
         '\n<!--FORCED_BREAK-->\n' + // Special marker for forced breaks
-        textarea.value.substring(end);
+        textEditor.value.substring(end);
 
       setContent(newContent);
       onFrontMatterUpdate(frontMatterItem.id, {
@@ -120,8 +122,8 @@ function FrontMatterEditor({
 
       // Move cursor after the marker
       setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + 21, start + 21); // After the full marker
+        textEditor.focus();
+        textEditor.setSelectionRange(start + 21, start + 21); // After the full marker
       }, 0);
     }
   };
@@ -237,12 +239,13 @@ function FrontMatterEditor({
 
       <div className="map-description">
         <label htmlFor="map-description">Description (optional):</label>
-        <textarea
+        <TextEditor
           id="map-description"
           value={content}
-          onChange={e => handleContentChange(e.target.value)}
+          onChange={handleContentChange}
           placeholder="Add a description or caption for this map..."
           rows={3}
+          spellCheck={true}
         />
       </div>
     </div>
@@ -258,13 +261,14 @@ function FrontMatterEditor({
             ' | Shift+Enter: forced line break'}
         </div>
       </div>
-      <textarea
+      <TextEditor
         ref={textareaRef}
         value={content}
-        onChange={e => handleContentChange(e.target.value)}
+        onChange={handleContentChange}
         onKeyDown={handleKeyDown}
         placeholder={getPlaceholderText()}
         className="front-matter-content-textarea"
+        spellCheck={true}
       />
     </div>
   );

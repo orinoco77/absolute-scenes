@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BOOK_FONTS, getCssFontFamily } from '../utils/fontManager';
+import TextEditor from './TextEditor';
 
 function FontPreview({
   selectedFont,
@@ -171,7 +172,7 @@ function FontPreview({
         >
           Custom preview text:
         </label>
-        <textarea
+        <TextEditor
           value={previewText}
           onChange={e => setPreviewText(e.target.value)}
           style={{
@@ -185,6 +186,7 @@ function FontPreview({
             resize: 'vertical'
           }}
           placeholder="Enter your own text to preview how it looks in the selected font..."
+          spellCheck={false}
         />
       </div>
 

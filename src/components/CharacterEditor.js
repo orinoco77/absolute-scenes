@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import TextEditor from './TextEditor';
 
 function CharacterEditor({
   character,
@@ -60,7 +61,8 @@ function CharacterEditor({
     }
   };
 
-  const handleNotesChange = newNotes => {
+  const handleNotesChange = e => {
+    const newNotes = e.target.value;
     setNotes(newNotes);
     if (character) {
       onCharacterUpdate(character.id, { notes: newNotes });
@@ -189,23 +191,24 @@ function CharacterEditor({
         </div>
 
         <div className="character-editor-textarea">
-          <textarea
+          <TextEditor
             value={content}
             onChange={handleContentChange}
             placeholder="Describe your character here..."
-            spellCheck="true"
+            spellCheck={true}
           />
         </div>
       </div>
 
       <div className="character-notes">
         <label htmlFor="character-notes">Quick Notes & Ideas:</label>
-        <textarea
+        <TextEditor
           id="character-notes"
           value={notes}
-          onChange={e => handleNotesChange(e.target.value)}
+          onChange={handleNotesChange}
           placeholder="Quick notes, character arcs, relationships, or ideas..."
           rows={3}
+          spellCheck={true}
         />
       </div>
     </div>
