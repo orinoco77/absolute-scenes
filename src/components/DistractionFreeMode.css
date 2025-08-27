@@ -10,7 +10,7 @@
   z-index: 10000; /* Above everything */
   display: flex;
   flex-direction: column;
-  font-family: 'Georgia', 'Times New Roman', serif; /* Professional writing font */
+  font-family: var(--editor-font-family, 'Georgia', 'Times New Roman', serif); /* Uses selected editor font */
 }
 
 /* Close button - subtle but accessible */
@@ -89,7 +89,7 @@
   color: #e8e8e8 !important;
   font-size: 18px !important;
   line-height: 1.6 !important;
-  font-family: inherit !important;
+  font-family: var(--editor-font-family, inherit) !important;
   resize: none !important;
   padding: 40px !important;
   border-radius: 0 !important;

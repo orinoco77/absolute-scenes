@@ -384,7 +384,7 @@ input:checked + .toggle-slider:before {
   outline: none;
   transition: border-color 0.2s;
   min-height: 300px;
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-family: var(--editor-font-family, "Monaco", "Menlo", "Ubuntu Mono", monospace);
   font-size: 16px;
   line-height: 1.6;
 }
