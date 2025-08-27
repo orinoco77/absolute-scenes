@@ -365,8 +365,10 @@ describe('LocationEditor Component', () => {
       descriptionTextarea.closest('.scene-editor-textarea')
     ).toBeInTheDocument();
 
-    // Should use TextEditor's consistent styling
-    expect(descriptionTextarea.style.fontFamily).toBe('inherit');
+    // Should use TextEditor's consistent styling with CSS custom property
+    expect(descriptionTextarea.style.fontFamily).toBe(
+      'var(--editor-font-family, inherit)'
+    );
     expect(descriptionTextarea.style.fontSize).toBe(''); // TextEditor applies this but test environment may not reflect it
     expect(descriptionTextarea.style.lineHeight).toBe('1.5');
   });

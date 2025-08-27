@@ -8,6 +8,7 @@ import BookStructure from './components/BookStructure';
 import CharacterEditor from './components/CharacterEditor';
 import CharacterThreadVisualization from './components/CharacterThreadVisualization';
 import ExportDialog from './components/ExportDialog';
+import FontSettings from './components/FontSettings';
 import FrontMatterEditor from './components/FrontMatterEditor';
 import GitHubIntegration from './components/GitHubIntegration';
 import LocationEditor from './components/LocationEditor';
@@ -21,8 +22,10 @@ import { EventHandlerService } from './services/EventHandlerService';
 import { GitHubSyncService } from './services/GitHubSyncService';
 import { SaveService } from './services/SaveService';
 import { initializeFontSystem } from './utils/fontManager';
+import { initializeFontSettings } from './utils/fontSettingsManager';
 import './styles/App.css';
 import './styles/back-matter.css';
+import './styles/font-settings.css';
 
 // Create service instances (following Dependency Inversion Principle)
 const saveService = new SaveService();
@@ -105,11 +108,13 @@ function App() {
     showGitHubIntegration,
     showBackupRecovery,
     showSpellCheckSettings,
+    showFontSettings,
     setShowTemplateManager,
     setShowExportDialog,
     setShowGitHubIntegration,
     setShowBackupRecovery,
     setShowSpellCheckSettings,
+    setShowFontSettings,
     recycleBin,
     showRecycleBin,
     characterRecycleBin,
@@ -144,6 +149,7 @@ function App() {
   // Initialize font system
   useEffect(() => {
     initializeFontSystem();
+    initializeFontSettings();
 
     // Expose hasUnsavedChanges to Electron main process
     eventHandlerService.exposeToElectron(
@@ -533,6 +539,9 @@ function App() {
       },
       'menu-spell-check-settings': () => {
         setShowSpellCheckSettings(true);
+      },
+      'menu-font-settings': () => {
+        setShowFontSettings(true);
       },
       'menu-github-integration': () => {
         setActiveTab('settings');
@@ -1152,6 +1161,10 @@ function App() {
 
       {showSpellCheckSettings && (
         <SpellCheckSettings onClose={() => setShowSpellCheckSettings(false)} />
+      )}
+
+      {showFontSettings && (
+        <FontSettings onClose={() => setShowFontSettings(false)} />
       )}
 
       {showExportDialog && (

@@ -1122,7 +1122,7 @@ body {
   border: none;
   border-radius: 4px;
   padding: 1rem;
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-family: var(--editor-font-family, "Monaco", "Menlo", "Ubuntu Mono", monospace);
   font-size: 16px;
   line-height: 1.6;
   resize: none;
@@ -1147,7 +1147,7 @@ body {
   border-top: none;
   border-radius: 0 0 4px 4px;
   padding: 1rem;
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-family: var(--editor-font-family, "Monaco", "Menlo", "Ubuntu Mono", monospace);
   font-size: 16px;
   line-height: 1.6;
   resize: none;
@@ -2430,7 +2430,7 @@ body {
   outline: none;
   transition: border-color 0.2s;
   min-height: 300px;
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-family: var(--editor-font-family, "Monaco", "Menlo", "Ubuntu Mono", monospace);
   font-size: 16px;
   line-height: 1.6;
 }
@@ -2567,7 +2567,7 @@ body {
   resize: vertical;
   outline: none;
   transition: border-color 0.2s;
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-family: var(--editor-font-family, "Monaco", "Menlo", "Ubuntu Mono", monospace);
   line-height: 1.6;
 }
 
@@ -3190,7 +3190,7 @@ body {
   border: none;
   border-radius: 4px;
   padding: 1rem;
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-family: var(--editor-font-family, "Monaco", "Menlo", "Ubuntu Mono", monospace);
   font-size: 16px;
   line-height: 1.6;
   resize: none;
@@ -3336,7 +3336,7 @@ body {
   border-top: none;
   border-radius: 0 0 4px 4px;
   padding: 1rem;
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-family: var(--editor-font-family, "Monaco", "Menlo", "Ubuntu Mono", monospace);
   font-size: 16px;
   line-height: 1.6;
   resize: none;

@@ -1822,6 +1822,10 @@ function createMenu() {
           click: () => mainWindow.webContents.send('menu-spell-check-settings')
         },
         {
+          label: 'Font Settings...',
+          click: () => mainWindow.webContents.send('menu-font-settings')
+        },
+        {
           label: 'GitHub Integration...',
           accelerator: 'CmdOrCtrl+G',
           click: () => mainWindow.webContents.send('menu-github-integration')

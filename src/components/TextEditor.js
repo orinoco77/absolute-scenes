@@ -562,7 +562,7 @@ const TextEditor = forwardRef(
           style={{
             width: '100%',
             resize: 'vertical',
-            fontFamily: 'inherit',
+            fontFamily: 'var(--editor-font-family, inherit)',
             fontSize: 'inherit',
             lineHeight: '1.5',
             padding: '8px',
