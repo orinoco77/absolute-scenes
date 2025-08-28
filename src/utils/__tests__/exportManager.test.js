@@ -197,7 +197,7 @@ describe('exportManager', () => {
       }
     });
 
-    // Restore default return values
+    // Restore default mock implementations
     mockPdfInstance.internal.getNumberOfPages.mockReturnValue(1);
     mockPdfInstance.getTextWidth.mockReturnValue(50);
     mockPdfInstance.splitTextToSize.mockImplementation(text => [text]);
@@ -380,15 +380,47 @@ describe('exportManager', () => {
     });
 
     it('adds page numbers', async () => {
-      mockPdf.internal.getNumberOfPages.mockReturnValue(2);
+      // Create a mock that simulates multiple pages being added during PDF generation
+      let pageCount = 1;
+      mockPdf.addPage.mockImplementation(() => {
+        pageCount++;
+      });
+      mockPdf.internal.getNumberOfPages.mockImplementation(() => pageCount);
 
-      await exportToPDF(mockBook, mockOptions);
+      // Mock getTextWidth to return reasonable values for pagination calculations
+      mockPdf.getTextWidth.mockImplementation(text => {
+        if (!text) return 0;
+        return text.length * 6; // Rough character width estimation
+      });
 
-      expect(mockPdf.text).toHaveBeenCalledWith(
-        '2',
-        expect.any(Number),
-        expect.any(Number)
+      // Add more content to force multiple pages
+      const multiPageBook = {
+        ...mockBook,
+        chapters: [
+          ...mockBook.chapters,
+          {
+            title: 'Chapter Three',
+            scenes: [
+              {
+                title: 'Long Scene',
+                content:
+                  'This is a very long scene with lots of content. '.repeat(200) // Long content to force page breaks
+              }
+            ]
+          }
+        ]
+      };
+
+      await exportToPDF(multiPageBook, mockOptions);
+
+      // Check that page numbers were added (should find at least page "2")
+      const textCalls = mockPdf.text.mock.calls;
+      const pageNumberCalls = textCalls.filter(
+        call => typeof call[0] === 'string' && /^\d+$/.test(call[0])
       );
+
+      expect(pageNumberCalls.length).toBeGreaterThan(0);
+      expect(pageNumberCalls.some(call => call[0] === '2')).toBe(true);
     });
 
     it('saves PDF with correct filename', async () => {

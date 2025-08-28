@@ -371,13 +371,15 @@ function renderFormattedTextToPDF(
 
     // Check if we need a new page
     if (currentY + lineHeight > pageHeight - bottomMargin) {
-      pdf.addPage();
       if (updateMarginsCallback) {
         const margins = updateMarginsCallback();
         if (margins) {
           x = margins.left;
           currentMaxWidth = margins.contentWidth;
         }
+      } else {
+        // Fallback to simple page addition if no callback provided
+        pdf.addPage();
       }
       currentY = topMargin;
     }
@@ -607,6 +609,25 @@ export async function exportToPDF(book, options = {}) {
     const pageWidth = actualPageSize.width;
     const pageHeight = actualPageSize.height;
 
+    // PROACTIVE ILLUSTRATION SYSTEM - Reserve illustration pages before any content processing
+    const illustrationPages = new Set();
+    const sortedIllustrations = (book.illustrations || [])
+      .filter(ill => ill.pageNumber !== null && ill.imageData)
+      .sort((a, b) => a.pageNumber - b.pageNumber);
+
+    // Reserve all illustration page numbers
+    sortedIllustrations.forEach(illustration => {
+      illustrationPages.add(illustration.pageNumber);
+    });
+
+    // Debug logging for illustration page reservation
+    if (sortedIllustrations.length > 0) {
+      console.log(
+        'Reserved illustration pages:',
+        Array.from(illustrationPages).sort((a, b) => a - b)
+      );
+    }
+
     // Verify page size matches expectation
     const expectedDimensions = getPageDimensions(template.pageSize || 'letter');
     const expectedWidth = expectedDimensions.width;
@@ -624,7 +645,7 @@ export async function exportToPDF(book, options = {}) {
           actual: { width: pageWidth, height: pageHeight },
           difference: { width: widthDiff, height: heightDiff }
         });
-      } else {
+        // Page size matches expected dimensions - no action needed
       }
     }
 
@@ -655,17 +676,136 @@ export async function exportToPDF(book, options = {}) {
 
     let currentY = topMargin;
 
-    // Track chapter opening pages and blank pages during generation
-    const chapterOpeningPages = new Set();
-    const blankPages = new Set();
+    // Track logical page numbers vs physical PDF pages for illustration system
+    let logicalPageNumber = 1; // The page number content "thinks" it's on
+    const logicalToPhysicalPageMap = new Map(); // Maps logical page -> physical PDF page
+    const physicalToLogicalPageMap = new Map(); // Maps physical PDF page -> logical page
 
-    // Function to mark a page as a chapter opening
+    // Track chapter opening pages and blank pages during generation
+    const chapterOpeningPages = new Set(); // Uses physical page numbers
+    const blankPages = new Set(); // Uses physical page numbers
+
+    // Function to advance to next logical page, handling illustration page insertions
+    const advanceToNextLogicalPage = () => {
+      logicalPageNumber++;
+
+      // Check if this logical page is reserved for an illustration
+      while (illustrationPages.has(logicalPageNumber)) {
+        const currentLogicalPage = logicalPageNumber; // Capture for closure
+        // Debug: Log illustration insertion
+        console.log(
+          `Inserting illustration at logical page ${currentLogicalPage}`
+        );
+
+        // Find the illustration for this page
+        const illustration = sortedIllustrations.find(
+          ill => ill.pageNumber === currentLogicalPage
+        );
+        if (illustration) {
+          // Add new physical page for the illustration
+          pdf.addPage();
+          const physicalPageNum = pdf.internal.getNumberOfPages();
+
+          // Update page mappings
+          logicalToPhysicalPageMap.set(currentLogicalPage, physicalPageNum);
+          physicalToLogicalPageMap.set(physicalPageNum, currentLogicalPage);
+
+          // Insert the illustration on this page
+          insertIllustrationOnCurrentPage(illustration);
+
+          // Continue to next logical page
+          logicalPageNumber++;
+        } else {
+          // Safety break if illustration not found
+          console.error(
+            `Illustration not found for reserved page ${currentLogicalPage}`
+          );
+          break;
+        }
+      }
+
+      // Add regular content page
+      pdf.addPage();
+      const physicalPageNum = pdf.internal.getNumberOfPages();
+      logicalToPhysicalPageMap.set(logicalPageNumber, physicalPageNum);
+      physicalToLogicalPageMap.set(physicalPageNum, logicalPageNumber);
+
+      updateMarginsForPage();
+      currentY = topMargin;
+    };
+
+    // Function to insert illustration on the current page
+    const insertIllustrationOnCurrentPage = illustration => {
+      try {
+        const pageMargins = getPageMargins(
+          template,
+          pdf.internal.getNumberOfPages()
+        );
+        const illustrationWidth =
+          pageWidth - pageMargins.left - pageMargins.right;
+        const maxIllustrationHeight =
+          pageHeight - pageMargins.top - pageMargins.bottom;
+
+        // Use 80% of available space for the illustration (leave some margin)
+        const finalWidth = illustrationWidth * 0.8;
+        const finalHeight = maxIllustrationHeight * 0.8;
+
+        // Center the illustration on the page
+        const illustrationX =
+          pageMargins.left + (illustrationWidth - finalWidth) / 2;
+        const illustrationY =
+          pageMargins.top + (maxIllustrationHeight - finalHeight) / 2;
+
+        // Add the image - jsPDF will handle aspect ratio automatically when we specify both width and height
+        pdf.addImage(
+          illustration.imageData,
+          'JPEG',
+          illustrationX,
+          illustrationY,
+          finalWidth,
+          finalHeight
+        );
+
+        // Add caption if present
+        if (illustration.caption && illustration.caption.trim()) {
+          const captionY = illustrationY + finalHeight + 20; // 20pt below image
+          if (captionY + 30 < pageHeight - pageMargins.bottom) {
+            // Ensure caption fits
+            pdf.setFont(mapFontForPDF(template.fontFamily), 'italic');
+            pdf.setFontSize(template.fontSize * 0.8);
+
+            const captionLines = pdf.splitTextToSize(
+              illustration.caption.trim(),
+              illustrationWidth
+            );
+            let currentCaptionY = captionY;
+
+            captionLines.forEach(line => {
+              const lineWidth = pdf.getTextWidth(line);
+              const centerX =
+                pageMargins.left + (illustrationWidth - lineWidth) / 2;
+              safeText(pdf, line, centerX, currentCaptionY);
+              currentCaptionY += template.fontSize * template.lineHeight * 0.8;
+            });
+          }
+        }
+
+        // Success: Log illustration completion
+        console.log(
+          `✓ Illustration inserted on logical page ${illustration.pageNumber} (physical page ${pdf.internal.getNumberOfPages()})`
+        );
+      } catch (error) {
+        console.error('Error inserting illustration:', error);
+      }
+    };
+
+    // Function to mark a page as a chapter opening (uses physical page numbers)
     const markChapterPage = () => {
       const currentPageNumber = pdf.internal.getNumberOfPages();
       chapterOpeningPages.add(currentPageNumber);
     };
 
-    // Function to mark a page as blank
+    // Function to mark a page as blank (uses physical page numbers)
     const markBlankPage = () => {
       const currentPageNumber = pdf.internal.getNumberOfPages();
       blankPages.add(currentPageNumber);
@@ -711,6 +851,11 @@ export async function exportToPDF(book, options = {}) {
     const hasTitlePage =
       (book.title && book.title.trim()) || (book.author && book.author.trim());
     if (hasTitlePage) {
+      // Initialize page mapping for title page (page 1)
+      const titlePhysicalPage = pdf.internal.getNumberOfPages();
+      logicalToPhysicalPageMap.set(1, titlePhysicalPage);
+      physicalToLogicalPageMap.set(titlePhysicalPage, 1);
+
       currentY = pageHeight / 2 - 100; // Center vertically
 
       if (book.title) {
@@ -742,15 +887,17 @@ export async function exportToPDF(book, options = {}) {
         safeText(pdf, authorText, authorX, currentY);
       }
 
-      // Start new page for content
-      pdf.addPage();
-      updateMarginsForPage();
-      currentY = topMargin;
+      // Advance to next logical page for content using the new system
+      advanceToNextLogicalPage();
 
       // If chapters start on new pages, this page will become blank, so mark it
       if (template.chapterHeader.pageBreak) {
         markBlankPage();
       }
+    } else {
+      // No title page - initialize logical page 1 as the first physical page
+      logicalToPhysicalPageMap.set(1, 1);
+      physicalToLogicalPageMap.set(1, 1);
     }
 
     // Set content font
@@ -764,18 +911,14 @@ export async function exportToPDF(book, options = {}) {
           return; // Skip empty front matter items
         }
 
-        // Start new page for each front matter item
-        pdf.addPage();
-        updateMarginsForPage();
-        currentY = topMargin;
+        // Use the new page advancement system for front matter
+        advanceToNextLogicalPage();
 
-        // Force front matter to start on right-hand (odd) page
-        const currentPageNumber = pdf.internal.getNumberOfPages();
-        if (currentPageNumber % 2 === 0) {
+        // Force front matter to start on right-hand (odd) page if needed
+        const currentPhysicalPageNumber = pdf.internal.getNumberOfPages();
+        if (currentPhysicalPageNumber % 2 === 0) {
           markBlankPage(); // Mark current page as blank
-          pdf.addPage(); // Add the actual front matter page
-          updateMarginsForPage();
-          currentY = topMargin;
+          advanceToNextLogicalPage(); // Add the actual front matter page
         }
 
         // Mark this as front matter page
@@ -792,9 +935,7 @@ export async function exportToPDF(book, options = {}) {
             currentY += lineHeight;
             // Check if we need a new page
             if (currentY + lineHeight > pageHeight - bottomMargin) {
-              pdf.addPage();
-              updateMarginsForPage();
-              currentY = topMargin;
+              advanceToNextLogicalPage();
               markFrontMatterPage();
               break; // Stop adding line breaks if we hit a new page
             }
@@ -817,9 +958,7 @@ export async function exportToPDF(book, options = {}) {
               wrappedLines.forEach(wrappedLine => {
                 // Check if we need a new page
                 if (currentY + lineHeight > pageHeight - bottomMargin) {
-                  pdf.addPage();
-                  updateMarginsForPage();
-                  currentY = topMargin;
+                  advanceToNextLogicalPage();
                   markFrontMatterPage(); // Mark continuation pages as front matter too
                 }
 
@@ -833,9 +972,7 @@ export async function exportToPDF(book, options = {}) {
             } else {
               // Handle blank lines - advance to next line
               if (currentY + lineHeight > pageHeight - bottomMargin) {
-                pdf.addPage();
-                updateMarginsForPage();
-                currentY = topMargin;
+                advanceToNextLogicalPage();
                 markFrontMatterPage(); // Mark continuation pages as front matter too
               }
               currentY += lineHeight;
@@ -856,9 +993,7 @@ export async function exportToPDF(book, options = {}) {
                 currentY + template.chapterHeader.fontSize * 2 >
                 pageHeight - bottomMargin
               ) {
-                pdf.addPage();
-                updateMarginsForPage();
-                currentY = topMargin;
+                advanceToNextLogicalPage();
                 markFrontMatterPage();
                 break; // Stop adding line breaks if we hit a new page
               }
@@ -869,9 +1004,7 @@ export async function exportToPDF(book, options = {}) {
               currentY + template.chapterHeader.fontSize * 2 >
               pageHeight - bottomMargin
             ) {
-              pdf.addPage();
-              updateMarginsForPage();
-              currentY = topMargin;
+              advanceToNextLogicalPage();
               markFrontMatterPage();
             }
 
@@ -933,9 +1066,7 @@ export async function exportToPDF(book, options = {}) {
               if (trimmedParagraph) {
                 // Check if we need a new page
                 if (currentY + lineHeight > pageHeight - bottomMargin) {
-                  pdf.addPage();
-                  updateMarginsForPage();
-                  currentY = topMargin;
+                  advanceToNextLogicalPage();
                   markFrontMatterPage();
                 }
 
@@ -955,7 +1086,7 @@ export async function exportToPDF(book, options = {}) {
                   bottomMargin,
                   topMargin,
                   () => {
-                    updateMarginsForPage();
+                    advanceToNextLogicalPage();
                     markFrontMatterPage(); // Mark continuation pages as front matter too
                     return {
                       left: leftMargin,
@@ -1009,9 +1140,7 @@ export async function exportToPDF(book, options = {}) {
                     // Render current line
                     if (currentLineWords.length > 0) {
                       if (currentY + lineHeight > pageHeight - bottomMargin) {
-                        pdf.addPage();
-                        updateMarginsForPage();
-                        currentY = topMargin;
+                        advanceToNextLogicalPage();
                         markFrontMatterPage();
                       }
 
@@ -1036,9 +1165,7 @@ export async function exportToPDF(book, options = {}) {
                 // Render remaining words in the last line of paragraph
                 if (currentLineWords.length > 0) {
                   if (currentY + lineHeight > pageHeight - bottomMargin) {
-                    pdf.addPage();
-                    updateMarginsForPage();
-                    currentY = topMargin;
+                    advanceToNextLogicalPage();
                     markFrontMatterPage();
                   }
 
@@ -1098,18 +1225,14 @@ export async function exportToPDF(book, options = {}) {
           .filter(Boolean);
 
         if (partChapters.length > 0) {
-          // Add part page (always on odd page, followed by blank page)
-          pdf.addPage();
-          updateMarginsForPage();
-          currentY = topMargin;
+          // Add part page using the new system
+          advanceToNextLogicalPage();
 
           // Force part to start on right-hand (odd) page
           const currentPageNumber = pdf.internal.getNumberOfPages();
           if (currentPageNumber % 2 === 0) {
             markBlankPage(); // Mark current page as blank
-            pdf.addPage(); // Add the actual part page
-            updateMarginsForPage();
-            currentY = topMargin;
+            advanceToNextLogicalPage(); // Add the actual part page
           }
 
           // Position part title 1/3 to 1/2 way down the page (approximately 40%)
@@ -1131,8 +1254,7 @@ export async function exportToPDF(book, options = {}) {
           });
 
           // Add blank page after part page so first chapter starts on odd page
-          pdf.addPage();
-          updateMarginsForPage();
+          advanceToNextLogicalPage();
           markBlankPage();
 
           // Process chapters in this part
@@ -1195,9 +1317,7 @@ export async function exportToPDF(book, options = {}) {
         }
 
         if (shouldAddPageBreak) {
-          pdf.addPage();
-          updateMarginsForPage();
-          currentY = topMargin;
+          advanceToNextLogicalPage();
 
           // Force chapter to start on right-hand (odd) page if requested
           if (template.chapterHeader.startOnRightPage) {
@@ -1206,9 +1326,7 @@ export async function exportToPDF(book, options = {}) {
             // If current page is even (left-hand), mark it as blank and add a page for the chapter
             if (currentPageNumber % 2 === 0) {
               markBlankPage(); // Mark current page as blank
-              pdf.addPage(); // Add the actual chapter page
-              updateMarginsForPage();
-              currentY = topMargin;
+              advanceToNextLogicalPage(); // Add the actual chapter page
             }
           }
 
@@ -1229,9 +1347,7 @@ export async function exportToPDF(book, options = {}) {
               currentY + template.chapterHeader.fontSize * 2 >
               pageHeight - bottomMargin
             ) {
-              pdf.addPage();
-              updateMarginsForPage();
-              currentY = topMargin;
+              advanceToNextLogicalPage();
               break; // Stop adding line breaks if we hit a new page
             }
           }
@@ -1242,9 +1358,7 @@ export async function exportToPDF(book, options = {}) {
           currentY + template.chapterHeader.fontSize * 2 >
           pageHeight - bottomMargin
         ) {
-          pdf.addPage();
-          updateMarginsForPage();
-          currentY = topMargin;
+          advanceToNextLogicalPage();
         }
 
         const chapterHeaderText = generateChapterHeader(chapter, chapterNumber);
@@ -1288,9 +1402,7 @@ export async function exportToPDF(book, options = {}) {
         if (options.includeSceneTitles && scene.title) {
           // Check if we need a new page for the scene title
           if (currentY + lineHeight * 2 > pageHeight - bottomMargin) {
-            pdf.addPage();
-            updateMarginsForPage();
-            currentY = topMargin;
+            advanceToNextLogicalPage();
           }
 
           pdf.setFont(pdfFont, 'bold');
@@ -1343,9 +1455,7 @@ export async function exportToPDF(book, options = {}) {
                       currentY + estimatedHeight >
                       pageHeight - bottomMargin
                     ) {
-                      pdf.addPage();
-                      updateMarginsForPage();
-                      currentY = topMargin;
+                      advanceToNextLogicalPage();
                     }
 
                     // Render the verse block
@@ -1360,7 +1470,16 @@ export async function exportToPDF(book, options = {}) {
                       pageHeight,
                       bottomMargin,
                       topMargin,
-                      updateMarginsForPage,
+                      () => {
+                        advanceToNextLogicalPage();
+                        return {
+                          left: leftMargin,
+                          right: rightMargin,
+                          top: topMargin,
+                          bottom: bottomMargin,
+                          contentWidth: contentWidth
+                        };
+                      },
                       'left', // Always left-align verse
                       false, // Never apply first paragraph rules
                       'separated', // No indentation for verse
@@ -1379,9 +1498,7 @@ export async function exportToPDF(book, options = {}) {
                 // Original verse rendering without block grouping
                 // Check if we need a new page
                 if (currentY + lineHeight > pageHeight - bottomMargin) {
-                  pdf.addPage();
-                  updateMarginsForPage();
-                  currentY = topMargin;
+                  advanceToNextLogicalPage();
                 }
 
                 // Parse markdown BEFORE any text processing
@@ -1399,7 +1516,16 @@ export async function exportToPDF(book, options = {}) {
                   pageHeight,
                   bottomMargin,
                   topMargin,
-                  updateMarginsForPage,
+                  () => {
+                    advanceToNextLogicalPage();
+                    return {
+                      left: leftMargin,
+                      right: rightMargin,
+                      top: topMargin,
+                      bottom: bottomMargin,
+                      contentWidth: contentWidth
+                    };
+                  },
                   'left', // Always left-align verse
                   false, // Never apply first paragraph rules
                   'separated', // No indentation for verse
@@ -1433,9 +1559,7 @@ export async function exportToPDF(book, options = {}) {
               if (trimmedParagraph) {
                 // Check if we need a new page
                 if (currentY + lineHeight > pageHeight - bottomMargin) {
-                  pdf.addPage();
-                  updateMarginsForPage();
-                  currentY = topMargin;
+                  advanceToNextLogicalPage();
                 }
 
                 // Parse markdown BEFORE any text processing
@@ -1453,7 +1577,16 @@ export async function exportToPDF(book, options = {}) {
                   pageHeight,
                   bottomMargin,
                   topMargin,
-                  updateMarginsForPage,
+                  () => {
+                    advanceToNextLogicalPage();
+                    return {
+                      left: leftMargin,
+                      right: rightMargin,
+                      top: topMargin,
+                      bottom: bottomMargin,
+                      contentWidth: contentWidth
+                    };
+                  },
                   template.textAlign || 'justified',
                   paragraphIndex === 0, // isFirstParagraph
                   template.paragraphStyle || 'indented', // paragraphStyle
@@ -1480,9 +1613,7 @@ export async function exportToPDF(book, options = {}) {
 
           // Check if we need a new page for scene break
           if (currentY + lineHeight > pageHeight - bottomMargin) {
-            pdf.addPage();
-            updateMarginsForPage();
-            currentY = topMargin;
+            advanceToNextLogicalPage();
           }
 
           const sceneBreak = '* * *';
@@ -1504,18 +1635,14 @@ export async function exportToPDF(book, options = {}) {
           return; // Skip disabled or empty back matter items
         }
 
-        // Start new page for each back matter item
-        pdf.addPage();
-        updateMarginsForPage();
-        currentY = topMargin;
+        // Use the new page advancement system for back matter
+        advanceToNextLogicalPage();
 
         // Force back matter to start on right-hand (odd) page
         const currentPageNumber = pdf.internal.getNumberOfPages();
         if (currentPageNumber % 2 === 0) {
           markBlankPage(); // Mark current page as blank
-          pdf.addPage(); // Add the actual back matter page
-          updateMarginsForPage();
-          currentY = topMargin;
+          advanceToNextLogicalPage(); // Add the actual back matter page
         }
 
         // Mark this as back matter page
@@ -1536,9 +1663,7 @@ export async function exportToPDF(book, options = {}) {
               currentY + template.chapterHeader.fontSize * 2 >
               pageHeight - bottomMargin
             ) {
-              pdf.addPage();
-              updateMarginsForPage();
-              currentY = topMargin;
+              advanceToNextLogicalPage();
               markBackMatterPage();
               break; // Stop adding line breaks if we hit a new page
             }
@@ -1549,9 +1674,7 @@ export async function exportToPDF(book, options = {}) {
             currentY + template.chapterHeader.fontSize * 2 >
             pageHeight - bottomMargin
           ) {
-            pdf.addPage();
-            updateMarginsForPage();
-            currentY = topMargin;
+            advanceToNextLogicalPage();
             markBackMatterPage();
           }
 
@@ -1597,9 +1720,7 @@ export async function exportToPDF(book, options = {}) {
 
             // Check if image fits on current page
             if (currentY + imgHeight > pageHeight - bottomMargin) {
-              pdf.addPage();
-              updateMarginsForPage();
-              currentY = topMargin;
+              advanceToNextLogicalPage();
               markBackMatterPage();
             }
 
@@ -1629,9 +1750,7 @@ export async function exportToPDF(book, options = {}) {
                 if (paragraph.trim()) {
                   // Check if we need a new page
                   if (currentY + lineHeight > pageHeight - bottomMargin) {
-                    pdf.addPage();
-                    updateMarginsForPage();
-                    currentY = topMargin;
+                    advanceToNextLogicalPage();
                     markBackMatterPage();
                   }
 
@@ -1651,7 +1770,7 @@ export async function exportToPDF(book, options = {}) {
                     bottomMargin,
                     topMargin,
                     () => {
-                      updateMarginsForPage();
+                      advanceToNextLogicalPage();
                       markBackMatterPage();
                       return {
                         left: leftMargin,
@@ -1691,7 +1810,7 @@ export async function exportToPDF(book, options = {}) {
                 bottomMargin,
                 topMargin,
                 () => {
-                  updateMarginsForPage();
+                  advanceToNextLogicalPage();
                   markBackMatterPage();
                   return {
                     left: leftMargin,
@@ -1719,9 +1838,7 @@ export async function exportToPDF(book, options = {}) {
             if (paragraph.trim()) {
               // Check if we need a new page
               if (currentY + lineHeight > pageHeight - bottomMargin) {
-                pdf.addPage();
-                updateMarginsForPage();
-                currentY = topMargin;
+                advanceToNextLogicalPage();
                 markBackMatterPage();
               }
 
@@ -1749,7 +1866,7 @@ export async function exportToPDF(book, options = {}) {
                 bottomMargin,
                 topMargin,
                 () => {
-                  updateMarginsForPage();
+                  advanceToNextLogicalPage();
                   markBackMatterPage();
                   return {
                     left: leftMargin,
@@ -1791,7 +1908,7 @@ export async function exportToPDF(book, options = {}) {
       // Skip running headers on blank pages
       const isBlankPage = blankPages.has(i);
 
-      // Add running headers
+      // Add running headers (now including illustration pages)
       if (
         template.runningHeaders?.enabled &&
         !isFirstPage &&
@@ -1837,24 +1954,30 @@ export async function exportToPDF(book, options = {}) {
 
       // Add page numbers (skip on title page)
       if (!(i === 1 && hasTitlePage)) {
-        // Make page number font size proportional to body text (70% of body text, min 8pt, max 11pt)
-        const pageNumberSize = Math.max(8, Math.min(11, fontSize * 0.7));
-        pdf.setFontSize(pageNumberSize);
-        pdf.setFont(pdfFont, 'normal');
-        const pageNumberText = i.toString();
-        const pageNumberWidth = pdf.getTextWidth(pageNumberText);
+        // Use logical page number for display, but physical page for positioning
+        const logicalPageNum = physicalToLogicalPageMap.get(i) || i;
 
-        // Get margins for this specific page
-        const pageMargins = getPageMargins(template, i);
-        const pageContentWidth =
-          pageWidth - pageMargins.left - pageMargins.right;
+        // Show page numbers on all pages including illustration pages
+        {
+          // Make page number font size proportional to body text (70% of body text, min 8pt, max 11pt)
+          const pageNumberSize = Math.max(8, Math.min(11, fontSize * 0.7));
+          pdf.setFontSize(pageNumberSize);
+          pdf.setFont(pdfFont, 'normal');
+          const pageNumberText = logicalPageNum.toString();
+          const pageNumberWidth = pdf.getTextWidth(pageNumberText);
 
-        // Center page number within content area and respect bottom margin
-        const pageNumberX =
-          pageMargins.left + (pageContentWidth - pageNumberWidth) / 2;
-        const pageNumberY = pageHeight - pageMargins.bottom + 18; // Position within bottom margin area
+          // Get margins for this specific page
+          const pageMargins = getPageMargins(template, i);
+          const pageContentWidth =
+            pageWidth - pageMargins.left - pageMargins.right;
 
-        safeText(pdf, pageNumberText, pageNumberX, pageNumberY);
+          // Center page number within content area and respect bottom margin
+          const pageNumberX =
+            pageMargins.left + (pageContentWidth - pageNumberWidth) / 2;
+          const pageNumberY = pageHeight - pageMargins.bottom + 18; // Position within bottom margin area
+
+          safeText(pdf, pageNumberText, pageNumberX, pageNumberY);
+        }
       }
     }
 

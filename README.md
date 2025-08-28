@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.81<!--/VERSION--> | **Tests:** <!--TESTS-->974/974<!--/TESTS--> ✅ |
-**Last Updated:** <!--DATE-->2025-08-27<!--/DATE-->
+**Version:** <!--VERSION-->1.3.82<!--/VERSION--> | **Tests:** <!--TESTS-->N/A/N/A<!--/TESTS--> ✅ |
+**Last Updated:** <!--DATE-->2025-08-28<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -284,9 +284,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->974/974<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->N/A/N/A<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->98<!--/COMMITS--> | **Latest:** <!--COMMIT-->47c6c47 - Fix test running too quickly (3 hours ago)<!--/COMMIT-->
+<!--COMMITS-->99<!--/COMMITS--> | **Latest:** <!--COMMIT-->64e5e4d - Add font selection for all text areas (29 hours ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.81<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.3.81<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.3.82<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.82<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-08-27<!--/DATE--> | Build <!--COMMIT-->47c6c47 - Fix test running too quickly (3 hours ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-08-28<!--/DATE--> | Build <!--COMMIT-->64e5e4d - Add font selection for all text areas (29 hours ago)<!--/COMMIT-->_

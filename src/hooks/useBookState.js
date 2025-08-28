@@ -21,6 +21,7 @@ const createDefaultBook = () => ({
     }
   ],
   backMatter: [], // Optional back matter sections
+  illustrations: [], // Full-page illustrations with page assignments
   characters: [],
   characterDetectionBlacklist: [],
   locations: [],
@@ -611,6 +612,44 @@ export const useBookState = (initialBook = null) => {
     [setBook]
   );
 
+  // Illustration operations
+  const addIllustration = useCallback(
+    illustration => {
+      setBook(prev => ({
+        ...prev,
+        illustrations: [...(prev.illustrations || []), illustration],
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+    },
+    [setBook]
+  );
+
+  const updateIllustration = useCallback(
+    (illustrationId, updatedIllustration) => {
+      setBook(prev => ({
+        ...prev,
+        illustrations: (prev.illustrations || []).map(ill =>
+          ill.id === illustrationId ? updatedIllustration : ill
+        ),
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+    },
+    [setBook]
+  );
+
+  const deleteIllustration = useCallback(
+    illustrationId => {
+      setBook(prev => ({
+        ...prev,
+        illustrations: (prev.illustrations || []).filter(
+          ill => ill.id !== illustrationId
+        ),
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+    },
+    [setBook]
+  );
+
   // Recovery operations
   const recoverBook = useCallback(
     recoveredBookData => {
@@ -762,6 +801,14 @@ export const useBookState = (initialBook = null) => {
     [book.backMatter]
   );
 
+  const getCurrentIllustration = useCallback(
+    illustrationId => {
+      if (!illustrationId || !book.illustrations) return null;
+      return book.illustrations.find(ill => ill.id === illustrationId) || null;
+    },
+    [book.illustrations]
+  );
+
   return {
     book,
     bookRef,
@@ -802,6 +849,11 @@ export const useBookState = (initialBook = null) => {
     updateBackMatter,
     deleteBackMatter,
 
+    // Illustration operations
+    addIllustration,
+    updateIllustration,
+    deleteIllustration,
+
     // Recovery operations
     recoverBook,
     resetBook,
@@ -812,6 +864,7 @@ export const useBookState = (initialBook = null) => {
     getCurrentDocument,
     getCurrentLocation,
     getCurrentFrontMatter,
-    getCurrentBackMatter
+    getCurrentBackMatter,
+    getCurrentIllustration
   };
 };

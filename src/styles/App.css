@@ -1,3 +1,5 @@
+@import './illustrations.css';
+
 /* Scene List Drag and Drop Styles */
 .drag-handle {
   cursor: grab;
@@ -1032,10 +1034,22 @@ body {
   font-size: 0.9rem;
 }
 
+.main-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
 .editor-container {
   flex: 1;
   padding: 1rem;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
 .editor-loading {
@@ -2340,9 +2354,9 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 20px;
   background: white;
-  overflow-y: auto;
+  overflow: hidden;
+  height: 100%;
 }
 
 .front-matter-header {
@@ -2418,11 +2432,11 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-bottom: 20px;
+  margin-bottom: 0px;
 }
 
 .front-matter-content-textarea {
-  flex: 1;
+  flex: 1 !important;
   resize: none;
   border: 1px solid #ddd;
   border-radius: 0 0 8px 8px;
@@ -2762,7 +2776,12 @@ body {
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   width: 100%;
+  /* Ensure smooth scrolling */
+  scroll-behavior: smooth;
+  /* Add padding for better scroll experience */
+  padding-bottom: 20px;
 }
 
 .accordion-section {
@@ -2779,7 +2798,8 @@ body {
 
 /* Only the active section should expand */
 .accordion-section.active-section {
-  flex: 1;
+  /* Allow natural expansion but don't force it to fill all space */
+  flex: 0 1 auto;
   min-height: 0;
   width: 100%;
 }
@@ -2831,18 +2851,15 @@ body {
 
 .accordion-content {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background: white;
   width: 100%;
   min-width: 0;
-}
-
-/* Only the active section should expand */
-.accordion-section.active-section {
-  flex: 1;
-  min-height: 0;
+  /* Add max-height to prevent content from growing too large */
+  max-height: 60vh;
 }
 
 .location-title-inputs {

@@ -152,6 +152,21 @@ function generateHTML(book, options = {}) {
     h1 { font-size: ${template.fontSize * 1.8}pt; }
     h2 { font-size: ${template.fontSize * 1.5}pt; }
     h3 { font-size: ${template.fontSize * 1.3}pt; }
+    .illustration { 
+      page-break-before: always; 
+      text-align: center; 
+      margin: 2em 0;
+    }
+    .illustration img { 
+      max-width: 100%; 
+      max-height: 80vh; 
+      height: auto; 
+    }
+    .illustration-caption { 
+      font-style: italic; 
+      margin-top: 1em; 
+      font-size: ${template.fontSize * 0.9}pt; 
+    }
     </style>
   `;
 
@@ -200,13 +215,49 @@ function generateHTML(book, options = {}) {
     content += '</div>';
   }
 
+  // Get sorted illustrations for insertion at specific positions
+  const sortedIllustrations = (book.illustrations || [])
+    .filter(ill => ill.pageNumber !== null && ill.imageData)
+    .sort((a, b) => a.pageNumber - b.pageNumber);
+
+  let illustrationIndex = 0;
+  let currentPageEstimate = 1; // Rough estimate of current page
+
+  // Helper function to insert illustrations up to a certain page
+  const insertIllustrationsUpToPage = targetPage => {
+    while (
+      illustrationIndex < sortedIllustrations.length &&
+      sortedIllustrations[illustrationIndex].pageNumber <= targetPage
+    ) {
+      const illustration = sortedIllustrations[illustrationIndex];
+
+      content += '<div class="illustration">';
+      content += `<img src="${illustration.imageData}" alt="${illustration.altText || illustration.title || 'Illustration'}" />`;
+
+      if (illustration.caption && illustration.caption.trim()) {
+        const formattedCaption = parseMarkdownToHTML(
+          illustration.caption.trim()
+        );
+        content += `<div class="illustration-caption">${formattedCaption}</div>`;
+      }
+
+      content += '</div>';
+      illustrationIndex++;
+      currentPageEstimate++;
+    }
+  };
+
   // Chapters and content
   book.chapters.forEach((chapter, chapterIndex) => {
     const chapterNumber = chapterIndex + 1;
 
+    // Insert illustrations that should appear before this chapter
+    insertIllustrationsUpToPage(currentPageEstimate + 2);
+
     // Add chapter header
     const chapterHeaderText = generateChapterHeader(chapter, chapterNumber);
     content += `<h1 class="chapter-header">${chapterHeaderText}</h1>`;
+    currentPageEstimate++; // Chapter headers typically start new pages
 
     // Add scenes
     chapter.scenes.forEach((scene, sceneIndex) => {
@@ -250,6 +301,16 @@ function generateHTML(book, options = {}) {
         }
       }
 
+      // Estimate page progression (rough calculation)
+      if (scene.content) {
+        const wordCount = scene.content.split(/\s+/).length;
+        const wordsPerPage = 250; // Rough estimate
+        currentPageEstimate += Math.ceil(wordCount / wordsPerPage);
+      }
+
+      // Check for illustrations that might appear after this scene
+      insertIllustrationsUpToPage(currentPageEstimate);
+
       // Add scene break if not the last scene in the chapter
       if (
         options.includeSceneBreaks &&
@@ -259,6 +320,9 @@ function generateHTML(book, options = {}) {
       }
     });
   });
+
+  // Insert any remaining illustrations
+  insertIllustrationsUpToPage(999);
 
   content += '</body></html>';
   return content;
