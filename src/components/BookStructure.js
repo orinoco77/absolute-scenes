@@ -3,6 +3,7 @@ import BackgroundList from './BackgroundList';
 import BackMatterList from './BackMatterList';
 import CharacterList from './CharacterList';
 import FrontMatterList from './FrontMatterList';
+import IllustrationList from './IllustrationList';
 import LocationList from './LocationList';
 import SceneList from './SceneList';
 
@@ -173,6 +174,14 @@ function BookStructure({
   onBackMatterToggle,
   onBackMatterReorder,
 
+  // Illustration props
+  illustrations,
+  currentIllustrationId,
+  onIllustrationSelect,
+  onIllustrationAdd,
+  onIllustrationDelete,
+  onIllustrationUpdate,
+
   authorName = '', // Add author name prop
 
   // Collaboration props
@@ -238,6 +247,13 @@ function BookStructure({
       backMatter.length > 0
     ) {
       onBackMatterSelect(backMatter[0].id);
+    } else if (
+      tabId === 'illustrations' &&
+      !currentIllustrationId &&
+      illustrations &&
+      illustrations.length > 0
+    ) {
+      onIllustrationSelect(illustrations[0].id);
     }
   };
 
@@ -315,6 +331,21 @@ function BookStructure({
           onBackMatterToggle={onBackMatterToggle}
           onBackMatterReorder={onBackMatterReorder}
           authorName={authorName}
+        />
+      )
+    },
+    {
+      id: 'illustrations',
+      label: 'Illustrations',
+      icon: '🎨',
+      component: (
+        <IllustrationList
+          illustrations={illustrations}
+          currentIllustrationId={currentIllustrationId}
+          onIllustrationSelect={onIllustrationSelect}
+          onIllustrationAdd={onIllustrationAdd}
+          onIllustrationDelete={onIllustrationDelete}
+          onIllustrationUpdate={onIllustrationUpdate}
         />
       )
     },

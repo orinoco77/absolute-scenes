@@ -11,6 +11,7 @@ import ExportDialog from './components/ExportDialog';
 import FontSettings from './components/FontSettings';
 import FrontMatterEditor from './components/FrontMatterEditor';
 import GitHubIntegration from './components/GitHubIntegration';
+import IllustrationEditor from './components/IllustrationEditor';
 import LocationEditor from './components/LocationEditor';
 import SceneEditor from './components/SceneEditor';
 import SpellCheckSettings from './components/SpellCheckSettings';
@@ -79,7 +80,11 @@ function App() {
     getCurrentDocument,
     getCurrentLocation,
     getCurrentFrontMatter,
-    getCurrentBackMatter
+    getCurrentBackMatter,
+    addIllustration,
+    updateIllustration,
+    deleteIllustration,
+    getCurrentIllustration
   } = bookState;
 
   const {
@@ -93,6 +98,7 @@ function App() {
     currentFolderId,
     currentFrontMatterId,
     currentBackMatterId,
+    currentIllustrationId,
     setActiveTab,
     setCurrentSceneId,
     setCurrentChapterId,
@@ -103,6 +109,7 @@ function App() {
     setCurrentFolderId,
     setCurrentFrontMatterId,
     setCurrentBackMatterId,
+    setCurrentIllustrationId,
     showTemplateManager,
     showExportDialog,
     showGitHubIntegration,
@@ -750,6 +757,23 @@ function App() {
             setCurrentBackMatterId(null);
           }
         }
+      },
+      illustration: {
+        add: illustration => {
+          addIllustration(illustration);
+          markAsChanged();
+        },
+        update: (illustrationId, updates) => {
+          updateIllustration(illustrationId, updates);
+          markAsChanged();
+        },
+        delete: illustrationId => {
+          deleteIllustration(illustrationId);
+          markAsChanged();
+          if (currentIllustrationId === illustrationId) {
+            setCurrentIllustrationId(null);
+          }
+        }
       }
     }),
     [
@@ -786,6 +810,11 @@ function App() {
       addBackMatter,
       updateBackMatter,
       deleteBackMatter,
+      addIllustration,
+      updateIllustration,
+      deleteIllustration,
+      currentIllustrationId,
+      setCurrentIllustrationId,
       markAsChanged
     ]
   );
@@ -849,6 +878,7 @@ function App() {
   const currentLocation = getCurrentLocation(currentLocationId);
   const currentFrontMatter = getCurrentFrontMatter(currentFrontMatterId);
   const currentBackMatter = getCurrentBackMatter(currentBackMatterId);
+  const currentIllustration = getCurrentIllustration(currentIllustrationId);
 
   // Render main editor based on active tab (following Open/Closed Principle)
   const renderMainEditor = () => {
@@ -966,6 +996,14 @@ function App() {
             backMatterItem={currentBackMatter}
             onBackMatterUpdate={contentHandlers.backMatter.update}
             authorName={book.author}
+          />
+        );
+
+      case 'illustrations':
+        return (
+          <IllustrationEditor
+            illustration={currentIllustration}
+            onIllustrationUpdate={contentHandlers.illustration.update}
           />
         );
 
@@ -1143,12 +1181,18 @@ function App() {
           onBackMatterUpdate={contentHandlers.backMatter.update}
           onBackMatterToggle={() => {}} // TODO: Implement toggle
           onBackMatterReorder={() => {}} // TODO: Implement reorder
+          illustrations={book.illustrations || []}
+          currentIllustrationId={currentIllustrationId}
+          onIllustrationSelect={setCurrentIllustrationId}
+          onIllustrationAdd={contentHandlers.illustration.add}
+          onIllustrationDelete={contentHandlers.illustration.delete}
+          onIllustrationUpdate={contentHandlers.illustration.update}
           authorName={book.author}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
 
-        {renderMainEditor()}
+        <div className="main-content-area">{renderMainEditor()}</div>
       </div>
 
       {showTemplateManager && (

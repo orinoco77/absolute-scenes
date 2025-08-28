@@ -146,6 +146,29 @@ p, div {
     font-size: 1.6em;
   }
 }
+
+/* Illustrations */
+.illustration {
+  text-align: center;
+  margin: 2em 0;
+  page-break-before: always;
+  -webkit-column-break-before: always;
+  break-before: page;
+}
+
+.illustration img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.illustration-caption {
+  font-style: italic;
+  margin-top: 1em;
+  font-size: 0.9em;
+  text-align: center;
+}
 `;
     };
 
@@ -262,12 +285,71 @@ p, div {
       spineItems.push(`    <itemref idref="title"/>`);
     }
 
-    // Process each chapter
+    // Process illustrations and add them as separate files
+    const sortedIllustrations = (book.illustrations || [])
+      .filter(ill => ill.pageNumber !== null && ill.imageData)
+      .sort((a, b) => a.pageNumber - b.pageNumber);
+
+    const illustrationFiles = [];
+    sortedIllustrations.forEach((illustration, index) => {
+      const illustrationId = `illustration-${index + 1}`;
+      const filename = `illustration-${index + 1}.xhtml`;
+
+      // Create illustration XHTML file
+      const illustrationContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>${illustration.title || `Illustration ${index + 1}`}</title>
+  <link rel="stylesheet" type="text/css" href="styles.css"/>
+</head>
+<body>
+  <div class="illustration">
+    <img src="${illustration.imageData}" alt="${illustration.altText || illustration.title || 'Illustration'}" />
+    ${
+      illustration.caption && illustration.caption.trim()
+        ? `<div class="illustration-caption">${parseMarkdownToHTML(illustration.caption.trim())}</div>`
+        : ''
+    }
+  </div>
+</body>
+</html>`;
+
+      oebps.file(filename, illustrationContent);
+      illustrationFiles.push({
+        filename,
+        illustrationId,
+        title: illustration.title || `Illustration ${index + 1}`,
+        pageNumber: illustration.pageNumber
+      });
+
+      // Add to manifest
+      manifestItems.push(
+        `    <item id="${illustrationId}" href="${filename}" media-type="application/xhtml+xml"/>`
+      );
+    });
+
+    // Process each chapter with illustrations
+    let currentPageEstimate = titlePageContent ? 2 : 1; // Start after title page
+    let illustrationIndex = 0;
+
     book.chapters.forEach((chapter, chapterIndex) => {
       const chapterNumber = chapterIndex + 1;
       const chapterHeaderText = generateChapterHeader(chapter, chapterNumber);
       const filename = createSafeFilename(chapter.title, chapterIndex);
       const chapterId = generateId('chapter', chapterIndex);
+
+      // Insert illustrations that should appear before this chapter
+      while (
+        illustrationIndex < illustrationFiles.length &&
+        illustrationFiles[illustrationIndex].pageNumber <= currentPageEstimate
+      ) {
+        spineItems.push(
+          `    <itemref idref="${illustrationFiles[illustrationIndex].illustrationId}"/>`
+        );
+        illustrationIndex++;
+        currentPageEstimate++;
+      }
 
       // Generate chapter content
       let chapterContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -345,7 +427,25 @@ p, div {
       <navLabel><text>${chapterHeaderText}</text></navLabel>
       <content src="${filename}"/>
     </navPoint>`);
+
+      // Estimate page progression for this chapter
+      let chapterWordCount = 0;
+      chapter.scenes.forEach(scene => {
+        if (scene.content) {
+          chapterWordCount += scene.content.split(/\s+/).length;
+        }
+      });
+      const wordsPerPage = 300; // Rough estimate for ebooks
+      currentPageEstimate += Math.ceil(chapterWordCount / wordsPerPage);
     });
+
+    // Add any remaining illustrations to the spine
+    while (illustrationIndex < illustrationFiles.length) {
+      spineItems.push(
+        `    <itemref idref="${illustrationFiles[illustrationIndex].illustrationId}"/>`
+      );
+      illustrationIndex++;
+    }
 
     // 7. Generate content.opf (main metadata file)
     const currentDate = new Date().toISOString().split('T')[0];

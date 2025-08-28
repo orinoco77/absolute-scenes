@@ -24,6 +24,7 @@ export function useUIState() {
   const [currentFolderId, setCurrentFolderId] = useState('default-bg');
   const [currentFrontMatterId, setCurrentFrontMatterId] = useState(null);
   const [currentBackMatterId, setCurrentBackMatterId] = useState(null);
+  const [currentIllustrationId, setCurrentIllustrationId] = useState(null);
   const [activeTab, setActiveTab] = useState('manuscript');
 
   // Recycle bin state
@@ -208,6 +209,7 @@ export function useUIState() {
     setCurrentFolderId(bookData.backgroundFolders?.[0]?.id || 'default-bg');
     setCurrentFrontMatterId(null);
     setCurrentBackMatterId(null);
+    setCurrentIllustrationId(null);
     setCurrentFilePath(filePath);
     setHasUnsavedChanges(false);
   }, []);
@@ -248,6 +250,8 @@ export function useUIState() {
     setCurrentFrontMatterId,
     currentBackMatterId,
     setCurrentBackMatterId,
+    currentIllustrationId,
+    setCurrentIllustrationId,
     activeTab,
     setActiveTab,
 
