@@ -49,6 +49,7 @@ function App() {
     updateScene,
     addScene,
     deleteScene,
+    moveSceneBetweenChapters,
     updateChapter,
     addChapter,
     deleteChapter,
@@ -61,6 +62,9 @@ function App() {
     addPart,
     updatePart,
     deletePart,
+    moveChapterToPart,
+    addChapterToPart,
+    removeChapterFromPart,
     addDocument,
     updateDocument,
     deleteDocument,
@@ -567,6 +571,9 @@ function App() {
         ) {
           emptyRecycleBin();
         }
+      },
+      'menu-new-book': () => {
+        _handleNewBook();
       }
     });
 
@@ -1111,10 +1118,22 @@ function App() {
           onReorderParts={() => {}} // TODO: Implement reordering
           onReorderChaptersInPart={() => {}} // TODO: Implement reordering
           onReorderScenesInChapter={() => {}} // TODO: Implement reordering
-          onMoveSceneBetweenChapters={() => {}} // TODO: Implement moving
-          onMoveChapterToPart={() => {}} // TODO: Implement moving
-          onAddChapterToPart={() => {}} // TODO: Implement adding
-          onRemoveChapterFromPart={() => {}} // TODO: Implement removing
+          onMoveSceneBetweenChapters={(sceneId, fromChapterId, toChapterId) => {
+            moveSceneBetweenChapters(sceneId, fromChapterId, toChapterId);
+            markAsChanged();
+          }}
+          onMoveChapterToPart={(chapterId, fromPartId, toPartId) => {
+            moveChapterToPart(chapterId, fromPartId, toPartId);
+            markAsChanged();
+          }}
+          onAddChapterToPart={(chapterId, toPartId) => {
+            addChapterToPart(chapterId, toPartId);
+            markAsChanged();
+          }}
+          onRemoveChapterFromPart={(chapterId, fromPartId) => {
+            removeChapterFromPart(chapterId, fromPartId);
+            markAsChanged();
+          }}
           recycleBin={recycleBin}
           showRecycleBin={showRecycleBin}
           onToggleRecycleBin={() => setShowRecycleBin(!showRecycleBin)}

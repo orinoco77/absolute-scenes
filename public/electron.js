@@ -1964,12 +1964,20 @@ function registerIpcHandlers() {
           mainWindow.focus();
         }
 
+        // Bring window to front and ensure it's focused before showing dialog
+        if (mainWindow) {
+          mainWindow.moveTop();
+          mainWindow.focus();
+          mainWindow.show();
+        }
+
         const result = await dialog.showSaveDialog(mainWindow, {
           defaultPath: existingFilePath || undefined,
           filters: [
             { name: 'Book Files', extensions: ['book'] },
             { name: 'JSON Files', extensions: ['json'] }
-          ]
+          ],
+          properties: ['createDirectory'] // Allow creating directories if needed
         });
 
         if (!result.canceled && result.filePath) {
@@ -2041,12 +2049,20 @@ function registerIpcHandlers() {
           mainWindow.focus();
         }
 
+        // Bring window to front and ensure it's focused before showing dialog
+        if (mainWindow) {
+          mainWindow.moveTop();
+          mainWindow.focus();
+          mainWindow.show();
+        }
+
         const result = await dialog.showSaveDialog(mainWindow, {
           defaultPath: suggestedFilename || 'recovered-book.book',
           filters: [
             { name: 'Book Files', extensions: ['book'] },
             { name: 'JSON Files', extensions: ['json'] }
-          ]
+          ],
+          properties: ['createDirectory'] // Allow creating directories if needed
         });
 
         if (!result.canceled && result.filePath) {
@@ -2098,6 +2114,138 @@ function registerIpcHandlers() {
     } catch (error) {
       console.error('Error saving spell checker language:', error);
       return false;
+    }
+  });
+
+  // Handler for PDF export with proper save dialog
+  ipcMain.handle(
+    'save-pdf-dialog',
+    async (event, pdfDataUrl, suggestedFilename) => {
+      try {
+        // Bring window to front and ensure it's focused before showing dialog
+        if (mainWindow) {
+          mainWindow.moveTop();
+          mainWindow.focus();
+          mainWindow.show();
+        }
+
+        const result = await dialog.showSaveDialog(mainWindow, {
+          defaultPath: suggestedFilename || 'book.pdf',
+          filters: [{ name: 'PDF Files', extensions: ['pdf'] }],
+          properties: ['createDirectory'] // Allow creating directories if needed
+        });
+
+        if (!result.canceled && result.filePath) {
+          // Convert the base64 data URL to buffer and write to file
+          let base64Data;
+          if (pdfDataUrl.startsWith('data:')) {
+            // Handle data URL format (data:application/pdf;base64,...)
+            base64Data = pdfDataUrl.split(',')[1];
+          } else {
+            // Handle direct base64 data
+            base64Data = pdfDataUrl;
+          }
+
+          const buffer = Buffer.from(base64Data, 'base64');
+          await fs.writeFile(result.filePath, buffer);
+
+          return {
+            success: true,
+            filePath: result.filePath,
+            message: `PDF saved successfully to ${result.filePath}`
+          };
+        }
+
+        return { success: false, message: 'Save was cancelled' };
+      } catch (error) {
+        console.error('Error in save-pdf-dialog:', error);
+        return { success: false, error: error.message };
+      }
+    }
+  );
+
+  // Handler for HTML export with proper save dialog
+  ipcMain.handle(
+    'save-html-dialog',
+    async (event, htmlContent, suggestedFilename) => {
+      try {
+        // Bring window to front and ensure it's focused before showing dialog
+        if (mainWindow) {
+          mainWindow.moveTop();
+          mainWindow.focus();
+          mainWindow.show();
+        }
+
+        const result = await dialog.showSaveDialog(mainWindow, {
+          defaultPath: suggestedFilename || 'book.html',
+          filters: [{ name: 'HTML Files', extensions: ['html', 'htm'] }],
+          properties: ['createDirectory']
+        });
+
+        if (!result.canceled && result.filePath) {
+          await fs.writeFile(result.filePath, htmlContent, 'utf8');
+
+          return {
+            success: true,
+            filePath: result.filePath,
+            message: `HTML saved successfully to ${result.filePath}`
+          };
+        }
+
+        return { success: false, message: 'Save was cancelled' };
+      } catch (error) {
+        console.error('Error in save-html-dialog:', error);
+        return { success: false, error: error.message };
+      }
+    }
+  );
+
+  // Handler for EPUB export with proper save dialog
+  ipcMain.handle(
+    'save-epub-dialog',
+    async (event, epubBlob, suggestedFilename) => {
+      try {
+        // Bring window to front and ensure it's focused before showing dialog
+        if (mainWindow) {
+          mainWindow.moveTop();
+          mainWindow.focus();
+          mainWindow.show();
+        }
+
+        const result = await dialog.showSaveDialog(mainWindow, {
+          defaultPath: suggestedFilename || 'book.epub',
+          filters: [{ name: 'EPUB Files', extensions: ['epub'] }],
+          properties: ['createDirectory']
+        });
+
+        if (!result.canceled && result.filePath) {
+          // Convert base64 blob data to buffer
+          const buffer = Buffer.from(epubBlob, 'base64');
+          await fs.writeFile(result.filePath, buffer);
+
+          return {
+            success: true,
+            filePath: result.filePath,
+            message: `EPUB saved successfully to ${result.filePath}`
+          };
+        }
+
+        return { success: false, message: 'Save was cancelled' };
+      } catch (error) {
+        console.error('Error in save-epub-dialog:', error);
+        return { success: false, error: error.message };
+      }
+    }
+  );
+
+  // Handler for showing notifications
+  ipcMain.on('show-notification', (event, { title, body }) => {
+    const { Notification } = require('electron');
+
+    if (Notification.isSupported()) {
+      new Notification({ title, body }).show();
+    } else {
+      console.log(`Notification: ${title} - ${body}`);
     }
   });
 }

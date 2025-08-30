@@ -94,6 +94,11 @@ function SceneList({
       return { valid: draggedItem.chapterId === target.chapterId };
     }
 
+    // Allow scene-to-chapter drops (for moving scenes between chapters)
+    if (draggedItem.type === 'scene' && target.type === 'chapter') {
+      return { valid: true };
+    }
+
     // Allow chapter-to-part drops (for adding chapters to parts)
     if (draggedItem.type === 'chapter' && target.type === 'part') {
       return { valid: true };
@@ -159,6 +164,14 @@ function SceneList({
         dropData.fromIndex = fromIndex;
         dropData.toIndex = toIndex;
       }
+    } else if (draggedItem.type === 'scene' && target.type === 'chapter') {
+      // Only create operation if moving to a different chapter
+      if (draggedItem.chapterId !== target.id) {
+        dropData.operation = 'moveSceneBetweenChapters';
+        dropData.sceneId = draggedItem.id;
+        dropData.fromChapterId = draggedItem.chapterId;
+        dropData.toChapterId = target.id;
+      }
     }
 
     return dropData;
@@ -168,7 +181,16 @@ function SceneList({
   const handleSceneListReorder = dropData => {
     const { operation, fromIndex, toIndex } = dropData;
 
-    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return;
+    // Only check fromIndex/toIndex for reordering operations, not for move operations
+    if (
+      (operation === 'reorderParts' ||
+        operation === 'reorderChapters' ||
+        operation === 'reorderChaptersInPart' ||
+        operation === 'reorderScenesInChapter') &&
+      (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex)
+    ) {
+      return;
+    }
 
     switch (operation) {
       case 'reorderParts':
@@ -192,6 +214,13 @@ function SceneList({
         break;
       case 'addChapterToPart':
         onAddChapterToPart(dropData.draggedItem.id, dropData.toPartId);
+        break;
+      case 'moveSceneBetweenChapters':
+        onMoveSceneBetweenChapters(
+          dropData.sceneId,
+          dropData.fromChapterId,
+          dropData.toChapterId
+        );
         break;
       default:
         break;

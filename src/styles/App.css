@@ -2763,20 +2763,20 @@ body {
 .book-structure {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
   background: white;
   width: 410px;
   min-width: 410px;
   max-width: 410px;
   flex-shrink: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .accordion-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* Remove height constraint to allow natural expansion */
   width: 100%;
   /* Ensure smooth scrolling */
   scroll-behavior: smooth;
@@ -2850,16 +2850,15 @@ body {
 }
 
 .accordion-content {
-  flex: 1;
-  overflow-y: auto;
+  /* Remove flex: 1 to allow natural expansion */
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background: white;
   width: 100%;
   min-width: 0;
-  /* Add max-height to prevent content from growing too large */
-  max-height: 60vh;
+  /* Allow content to expand naturally without height constraints */
+  padding-bottom: 1rem;
 }
 
 .location-title-inputs {

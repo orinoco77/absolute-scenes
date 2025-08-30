@@ -222,6 +222,51 @@ export const useBookState = (initialBook = null) => {
     [setBook]
   );
 
+  const moveSceneBetweenChapters = useCallback(
+    (sceneId, fromChapterId, toChapterId) => {
+      setBook(prev => {
+        let sceneToMove = null;
+
+        // First, find and remove the scene from its current chapter
+        const updatedChapters = prev.chapters.map(chapter => {
+          if (chapter.id === fromChapterId) {
+            const sceneIndex = chapter.scenes.findIndex(s => s.id === sceneId);
+            if (sceneIndex !== -1) {
+              sceneToMove = chapter.scenes[sceneIndex];
+              return {
+                ...chapter,
+                scenes: chapter.scenes.filter(s => s.id !== sceneId)
+              };
+            }
+          }
+          return chapter;
+        });
+
+        // Then add the scene to the target chapter
+        if (sceneToMove) {
+          const finalChapters = updatedChapters.map(chapter => {
+            if (chapter.id === toChapterId) {
+              return {
+                ...chapter,
+                scenes: [...chapter.scenes, sceneToMove]
+              };
+            }
+            return chapter;
+          });
+
+          return {
+            ...prev,
+            chapters: finalChapters,
+            metadata: { ...prev.metadata, modified: new Date().toISOString() }
+          };
+        }
+
+        return prev; // No changes if scene not found
+      });
+    },
+    [setBook]
+  );
+
   // Chapter operations
   const updateChapter = useCallback(
     (chapterId, updates) => {
@@ -418,6 +463,92 @@ export const useBookState = (initialBook = null) => {
         parts: prev.parts.filter(p => p.id !== partId),
         metadata: { ...prev.metadata, modified: new Date().toISOString() }
       }));
+    },
+    [setBook]
+  );
+
+  // Chapter-to-part operations
+  const moveChapterToPart = useCallback(
+    (chapterId, fromPartId, toPartId) => {
+      setBook(prev => {
+        const newParts = prev.parts.map(part => {
+          if (part.id === fromPartId) {
+            // Remove chapter from current part
+            return {
+              ...part,
+              chapterIds: part.chapterIds.filter(id => id !== chapterId)
+            };
+          } else if (part.id === toPartId) {
+            // Add chapter to new part if not already there
+            if (!part.chapterIds.includes(chapterId)) {
+              return {
+                ...part,
+                chapterIds: [...part.chapterIds, chapterId]
+              };
+            }
+            // Return unchanged part if chapter already exists
+            return part;
+          }
+          return part;
+        });
+
+        return {
+          ...prev,
+          parts: newParts,
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        };
+      });
+    },
+    [setBook]
+  );
+
+  const addChapterToPart = useCallback(
+    (chapterId, toPartId) => {
+      setBook(prev => {
+        const newParts = prev.parts.map(part => {
+          if (part.id === toPartId) {
+            // Add chapter to part if not already there
+            if (!part.chapterIds.includes(chapterId)) {
+              return {
+                ...part,
+                chapterIds: [...part.chapterIds, chapterId]
+              };
+            }
+            // Return unchanged part if chapter already exists
+            return part;
+          }
+          return part;
+        });
+
+        return {
+          ...prev,
+          parts: newParts,
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        };
+      });
+    },
+    [setBook]
+  );
+
+  const removeChapterFromPart = useCallback(
+    (chapterId, fromPartId) => {
+      setBook(prev => {
+        const newParts = prev.parts.map(part => {
+          if (part.id === fromPartId) {
+            return {
+              ...part,
+              chapterIds: part.chapterIds.filter(id => id !== chapterId)
+            };
+          }
+          return part;
+        });
+
+        return {
+          ...prev,
+          parts: newParts,
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        };
+      });
     },
     [setBook]
   );
@@ -824,6 +955,7 @@ export const useBookState = (initialBook = null) => {
     updateScene,
     addScene,
     deleteScene,
+    moveSceneBetweenChapters,
     updateChapter,
     addChapter,
     deleteChapter,
@@ -836,6 +968,9 @@ export const useBookState = (initialBook = null) => {
     addPart,
     updatePart,
     deletePart,
+    moveChapterToPart,
+    addChapterToPart,
+    removeChapterFromPart,
     addDocument,
     updateDocument,
     deleteDocument,
