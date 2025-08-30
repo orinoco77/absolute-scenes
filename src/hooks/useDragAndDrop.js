@@ -78,7 +78,9 @@ export function useDragAndDrop({
       setDragOverTarget(null);
       setDragInvalidTarget(null);
 
-      if (!draggedItem || !target || draggedItem.id === target.id) return;
+      if (!draggedItem || !target || draggedItem.id === target.id) {
+        return;
+      }
 
       // Use custom validation if provided
       if (validateDrop && !validateDrop(draggedItem, target).valid) {

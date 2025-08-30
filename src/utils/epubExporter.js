@@ -502,8 +502,61 @@ ${navItems.join('\n')}
       }
     });
 
-    // 10. Download the file
+    // 10. Save the file
     const filename = `${book.title || 'Book'}.epub`;
+
+    // Check if we're in Electron environment and use native save dialog
+    const isElectron =
+      typeof window !== 'undefined' && typeof window.require === 'function';
+
+    if (isElectron) {
+      try {
+        const electron = window.require('electron');
+        const { ipcRenderer } = electron;
+
+        // Convert blob to base64 for Electron save
+        const reader = new FileReader();
+        const base64Data = await new Promise((resolve, reject) => {
+          reader.onload = () => {
+            // Remove the data URL prefix to get just the base64 data
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        // Use Electron's native save dialog (this will appear on top)
+        const result = await ipcRenderer.invoke(
+          'save-epub-dialog',
+          base64Data,
+          filename
+        );
+
+        if (result.success) {
+          console.log(`✓ EPUB export complete: ${result.filePath}`);
+
+          // Show success notification
+          ipcRenderer.send('show-notification', {
+            title: 'Export Complete',
+            body: result.message
+          });
+          return;
+        } else {
+          throw new Error(
+            result.error || result.message || 'Save was cancelled'
+          );
+        }
+      } catch (electronError) {
+        console.warn(
+          'Electron save failed, falling back to browser save:',
+          electronError
+        );
+        // Continue to browser fallback below
+      }
+    }
+
+    // Browser environment or Electron fallback - use original method
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement('a');
@@ -528,6 +581,8 @@ ${navItems.join('\n')}
     setTimeout(() => {
       URL.revokeObjectURL(url);
     }, 1000);
+
+    console.log(`✓ EPUB export complete: ${filename}`);
   } catch (error) {
     console.error('EPUB export failed:', error);
 

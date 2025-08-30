@@ -39,11 +39,52 @@ function parseVerseToHTML(text) {
 export async function exportToHTML(book, options = {}) {
   try {
     const htmlContent = generateHTML(book, options);
+    const filename = `${book.title || 'Book'}.html`;
+
+    // Check if we're in Electron environment and use native save dialog
+    const isElectron =
+      typeof window !== 'undefined' && typeof window.require === 'function';
+
+    if (isElectron) {
+      try {
+        const electron = window.require('electron');
+        const { ipcRenderer } = electron;
+
+        // Use Electron's native save dialog (this will appear on top)
+        const result = await ipcRenderer.invoke(
+          'save-html-dialog',
+          htmlContent,
+          filename
+        );
+
+        if (result.success) {
+          console.log(`✓ HTML export complete: ${result.filePath}`);
+
+          // Show success notification
+          ipcRenderer.send('show-notification', {
+            title: 'Export Complete',
+            body: result.message
+          });
+          return;
+        } else {
+          throw new Error(
+            result.error || result.message || 'Save was cancelled'
+          );
+        }
+      } catch (electronError) {
+        console.warn(
+          'Electron save failed, falling back to browser save:',
+          electronError
+        );
+        // Continue to browser fallback below
+      }
+    }
+
+    // Browser environment or Electron fallback - use original method
+    console.log(`Attempting to save HTML: ${filename}`);
+
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
-
-    const filename = `${book.title || 'Book'}.html`;
-    console.log(`Attempting to save HTML: ${filename}`);
 
     const a = document.createElement('a');
     a.href = url;

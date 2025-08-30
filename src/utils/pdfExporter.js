@@ -1984,27 +1984,62 @@ export async function exportToPDF(book, options = {}) {
     // Save the PDF with proper error handling
     const filename = `${book.title || 'Book'}.pdf`;
 
-    // Check for potential file access issues
-    const accessCheck = checkFileAccess(filename);
-    if (accessCheck.warning) {
-      console.warn(accessCheck.message);
-      // Could show a warning dialog here if desired
-    }
+    // Check if we're in Electron environment and use native save dialog
+    const isElectron =
+      typeof window !== 'undefined' && typeof window.require === 'function';
 
-    pdf.save(filename);
-
-    // Optional: Show user notification of success
-    if (typeof window !== 'undefined' && window.electron) {
-      // In Electron, we could show a native notification
+    if (isElectron) {
       try {
-        const { ipcRenderer } = window.require('electron');
-        ipcRenderer.send('show-notification', {
-          title: 'Export Complete',
-          body: `PDF saved as ${filename}`
-        });
-      } catch (e) {
-        // Fallback silently if electron APIs not available
+        const electron = window.require('electron');
+        const { ipcRenderer } = electron;
+
+        // Get PDF as data URL for Electron save
+        const pdfDataUrl = pdf.output('dataurlstring');
+
+        // Use Electron's native save dialog (this will appear on top)
+        const result = await ipcRenderer.invoke(
+          'save-pdf-dialog',
+          pdfDataUrl,
+          filename
+        );
+
+        if (result.success) {
+          console.log(`✓ PDF export complete: ${result.filePath}`);
+
+          // Show success notification
+          ipcRenderer.send('show-notification', {
+            title: 'Export Complete',
+            body: result.message
+          });
+        } else {
+          throw new Error(
+            result.error || result.message || 'Save was cancelled'
+          );
+        }
+      } catch (electronError) {
+        console.warn(
+          'Electron save failed, falling back to browser save:',
+          electronError
+        );
+
+        // Check for potential file access issues
+        const accessCheck = checkFileAccess(filename);
+        if (accessCheck.warning) {
+          console.warn(accessCheck.message);
+        }
+
+        // Fallback to browser save
+        pdf.save(filename);
       }
+    } else {
+      // Browser environment - use original method
+      // Check for potential file access issues
+      const accessCheck = checkFileAccess(filename);
+      if (accessCheck.warning) {
+        console.warn(accessCheck.message);
+      }
+
+      pdf.save(filename);
     }
   } catch (error) {
     console.error('PDF export failed:', error);
