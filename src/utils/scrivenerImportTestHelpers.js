@@ -1,7 +1,7 @@
 // Test helpers for Scrivener import functionality
 // These functions extract the core logic from electron.js to make it testable
 
-const { DOMParser } = require('xmldom');
+const { DOMParser } = require('@xmldom/xmldom');
 
 // Extract parseCompileSettings function
 function parseCompileSettings(compileXmlContent) {

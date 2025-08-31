@@ -11,7 +11,7 @@ const mockDocument = {
   parseFromString: jest.fn()
 };
 
-jest.mock('xmldom', () => ({
+jest.mock('@xmldom/xmldom', () => ({
   DOMParser: jest.fn(() => mockDocument)
 }));
 

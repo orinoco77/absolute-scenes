@@ -1,6 +1,6 @@
 {
     "name": "absolute-scenes",
-    "version": "1.3.84",
+    "version": "1.3.85",
     "description": "A scene-based book writing application",
     "main": "public/electron.js",
     "homepage": "./",
@@ -25,6 +25,7 @@
         "prepare": "husky"
     },
     "dependencies": {
+        "@xmldom/xmldom": "^0.8.11",
         "electron-store": "^10.1.0",
         "html2canvas": "^1.4.1",
         "jspdf": "^3.0.2",
@@ -33,8 +34,7 @@
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-scripts": "^5.0.1",
-        "simple-git": "^3.19.1",
-        "xmldom": "^0.6.0"
+        "simple-git": "^3.19.1"
     },
     "devDependencies": {
         "@babel/preset-env": "^7.28.0",
