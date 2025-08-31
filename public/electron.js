@@ -44,6 +44,13 @@ function createWindow() {
   // Load spell check language from storage before creating window
   const { session } = require('electron');
 
+  // Configure the session to allow localStorage
+  const ses = session.fromPartition('persist:absolutescenes');
+  ses.setPermissionRequestHandler((webContents, permission, callback) => {
+    // Allow all permissions including localStorage access
+    callback(true);
+  });
+
   // Get saved language or default to en-US
   let savedLanguage = 'en-US';
   try {
@@ -56,17 +63,16 @@ function createWindow() {
 
   console.log('Setting spell checker language at startup:', savedLanguage);
 
-  // Set spell checker language on default session BEFORE creating window
-  const availableLanguages =
-    session.defaultSession.availableSpellCheckerLanguages;
+  // Set spell checker language on the configured session BEFORE creating window
+  const availableLanguages = ses.availableSpellCheckerLanguages;
   if (availableLanguages.includes(savedLanguage)) {
-    session.defaultSession.setSpellCheckerEnabled(true);
-    session.defaultSession.setSpellCheckerLanguages([savedLanguage]);
+    ses.setSpellCheckerEnabled(true);
+    ses.setSpellCheckerLanguages([savedLanguage]);
     console.log('Spell checker language set to:', savedLanguage);
   } else {
     console.warn('Language not available:', savedLanguage, 'using en-US');
-    session.defaultSession.setSpellCheckerEnabled(true);
-    session.defaultSession.setSpellCheckerLanguages(['en-US']);
+    ses.setSpellCheckerEnabled(true);
+    ses.setSpellCheckerLanguages(['en-US']);
   }
 
   mainWindow = new BrowserWindow({
@@ -78,7 +84,10 @@ function createWindow() {
       enableRemoteModule: true,
       webSecurity: false,
       allowRunningInsecureContent: true,
-      spellcheck: true
+      spellcheck: true,
+      // Additional settings for localStorage access
+      partition: 'persist:absolutescenes',
+      experimentalFeatures: true
     }
   });
 

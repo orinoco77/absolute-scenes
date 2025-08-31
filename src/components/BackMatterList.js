@@ -1,4 +1,4 @@
-import { useDragAndDrop } from '../hooks/useDragAndDrop';
+import { sortBackMatter } from '../utils/frontMatterUtils';
 
 function BackMatterList({
   backMatter = [],
@@ -8,36 +8,8 @@ function BackMatterList({
   onBackMatterDelete,
   onBackMatterUpdate: _onBackMatterUpdate,
   onBackMatterToggle,
-  onBackMatterReorder,
   authorName = ''
 }) {
-  // Handle reordering back matter items
-  const handleBackMatterReorder = ({ draggedItem, target }) => {
-    if (!draggedItem || !target || draggedItem.id === target.id) return;
-
-    const fromIndex = backMatter.findIndex(item => item.id === draggedItem.id);
-    const toIndex = backMatter.findIndex(item => item.id === target.id);
-
-    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-      onBackMatterReorder(fromIndex, toIndex);
-    }
-  };
-
-  // Initialize drag and drop functionality
-  const {
-    draggedItem: _draggedItem,
-    dragOverTarget,
-    handleDragStart,
-    handleDragOver,
-    handleDragEnter,
-    handleDragLeave,
-    handleDrop,
-    handleDragEnd,
-    isValidDropTarget: _isValidDropTarget
-  } = useDragAndDrop({
-    onReorder: handleBackMatterReorder
-  });
-
   // Predefined back matter types with their default configurations
   const backMatterTypes = {
     epilogue: {
@@ -160,11 +132,7 @@ For more information, visit [website] or follow on [social media platforms].`;
     onBackMatterAdd(newItem);
   };
 
-  const sortedBackMatter = [...backMatter].sort((a, b) => {
-    const aOrder = backMatter.findIndex(item => item.id === a.id);
-    const bOrder = backMatter.findIndex(item => item.id === b.id);
-    return aOrder - bOrder;
-  });
+  const sortedBackMatter = sortBackMatter(backMatter);
 
   // Get enabled back matter types for the add dropdown
   const enabledTypes = new Set(backMatter.map(item => item.type));
@@ -219,28 +187,15 @@ For more information, visit [website] or follow on [social media platforms].`;
               icon: '📑',
               title: item.type
             };
-            const isDraggedOver = dragOverTarget?.id === item.id;
-
             return (
               <div
                 key={item.id}
                 className={`front-matter-item ${
                   item.id === currentBackMatterId ? 'active' : ''
-                } ${isDraggedOver ? 'drag-over' : ''} ${!item.enabled ? 'disabled' : ''}`}
+                } ${!item.enabled ? 'disabled' : ''}`}
                 onClick={() => onBackMatterSelect(item.id)}
-                draggable
-                onDragStart={e => handleDragStart(e, item)}
-                onDragEnd={handleDragEnd}
-                onDragOver={handleDragOver}
-                onDragEnter={e => handleDragEnter(e, item)}
-                onDragLeave={handleDragLeave}
-                onDrop={e => handleDrop(e, item)}
               >
                 <div className="front-matter-content">
-                  <span className="drag-handle" title="Drag to reorder">
-                    ⋮⋮
-                  </span>
-
                   <div className="front-matter-icon">{typeConfig.icon}</div>
 
                   <div className="front-matter-details">

@@ -4,8 +4,10 @@
 .back-matter-list {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: hidden;
+  min-height: 300px;
+  max-height: none;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .back-matter-header {

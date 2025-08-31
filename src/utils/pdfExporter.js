@@ -906,7 +906,9 @@ export async function exportToPDF(book, options = {}) {
 
     // Front Matter Processing
     if (book.frontMatter && book.frontMatter.length > 0) {
-      book.frontMatter.forEach(frontMatterItem => {
+      const { sortFrontMatter } = await import('./frontMatterUtils');
+      const sortedFrontMatter = sortFrontMatter(book.frontMatter);
+      sortedFrontMatter.forEach(frontMatterItem => {
         if (!frontMatterItem.content || !frontMatterItem.content.trim()) {
           return; // Skip empty front matter items
         }
@@ -1627,7 +1629,9 @@ export async function exportToPDF(book, options = {}) {
 
     // Back Matter Processing
     if (book.backMatter && book.backMatter.length > 0) {
-      book.backMatter.forEach(backMatterItem => {
+      const { sortBackMatter } = await import('./frontMatterUtils');
+      const sortedBackMatter = sortBackMatter(book.backMatter);
+      sortedBackMatter.forEach(backMatterItem => {
         if (
           !backMatterItem.enabled ||
           (!backMatterItem.content && !backMatterItem.imageData)
