@@ -71,10 +71,26 @@ export class GitHubSyncService {
    * Check if GitHub sync should be performed
    */
   shouldSyncToGitHub(bookData) {
-    return (
-      bookData?.github?.repository != null &&
-      typeof bookData.github.repository === 'string' &&
-      bookData.github.repository.trim() !== ''
-    );
+    // Handle both old string format and new object format
+    const repository = bookData?.github?.repository;
+    if (!repository) {
+      return false;
+    }
+
+    // New object format - check if it has a valid name
+    if (typeof repository === 'object') {
+      return (
+        repository.name != null &&
+        typeof repository.name === 'string' &&
+        repository.name.trim() !== ''
+      );
+    }
+
+    // Legacy string format support
+    if (typeof repository === 'string') {
+      return repository.trim() !== '';
+    }
+
+    return false;
   }
 }

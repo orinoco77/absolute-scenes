@@ -274,10 +274,20 @@ jest.mock('../components/GitHubIntegration', () => {
   }) {
     return (
       <div data-testid="github-integration">
-        <div data-testid="current-repo">{currentRepo || 'no repo'}</div>
+        <div data-testid="current-repo">
+          {currentRepo
+            ? typeof currentRepo === 'string'
+              ? currentRepo
+              : currentRepo.full_name
+            : 'no repo'}
+        </div>
         <div data-testid="github-book-title">{book?.title}</div>
         <button
-          onClick={() => onGitHubSettingsUpdate({ repository: 'test/repo' })}
+          onClick={() =>
+            onGitHubSettingsUpdate({
+              repository: { name: 'repo', full_name: 'test/repo' }
+            })
+          }
         >
           Update GitHub Settings
         </button>
