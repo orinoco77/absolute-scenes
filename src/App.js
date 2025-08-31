@@ -211,6 +211,27 @@ function App() {
     autoSelectFirstBackMatter(book);
   }, [activeTab, currentBackMatterId, book.backMatter]);
 
+  // GitHub sync handler (following Single Responsibility Principle)
+  const handleGitHubSync = useCallback(
+    async (filePath, saveTime, bookData = null) => {
+      const dataToSync = bookData || book;
+
+      await gitHubSyncService.syncWithGitHub({
+        bookData: dataToSync,
+        filePath,
+        saveTime,
+        onOperationUpdate: setCurrentOperation,
+        onSyncSuccess: syncTime => {
+          updateGitHubSyncStatus({ lastSyncTime: syncTime });
+        },
+        onSyncError: error => {
+          alert(error);
+        }
+      });
+    },
+    [book, updateGitHubSyncStatus]
+  );
+
   // Save operation handlers (following Single Responsibility Principle)
   const handleSaveBook = useCallback(async () => {
     if (saveService.isSaveInProgress()) {
@@ -246,7 +267,7 @@ function App() {
     });
 
     return result;
-  }, [book, currentFilePath]);
+  }, [book, currentFilePath, handleGitHubSync]);
 
   const _handleSaveAsBook = useCallback(async () => {
     if (saveService.isSaveInProgress()) {
@@ -281,7 +302,7 @@ function App() {
     });
 
     return result;
-  }, [book]);
+  }, [book, handleGitHubSync]);
 
   // Utility functions
   const emptyRecycleBin = useCallback(() => {
@@ -295,27 +316,6 @@ function App() {
   const handleExportBook = useCallback(() => {
     setShowExportDialog(true);
   }, [setShowExportDialog]);
-
-  // GitHub sync handler (following Single Responsibility Principle)
-  const handleGitHubSync = useCallback(
-    async (filePath, saveTime, bookData = null) => {
-      const dataToSync = bookData || book;
-
-      await gitHubSyncService.syncWithGitHub({
-        bookData: dataToSync,
-        filePath,
-        saveTime,
-        onOperationUpdate: setCurrentOperation,
-        onSyncSuccess: syncTime => {
-          updateGitHubSyncStatus({ lastSyncTime: syncTime });
-        },
-        onSyncError: error => {
-          alert(error);
-        }
-      });
-    },
-    [book, updateGitHubSyncStatus]
-  );
 
   // Create debounced save function
   const debouncedSave = useMemo(

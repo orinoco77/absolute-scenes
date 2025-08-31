@@ -16,7 +16,7 @@ describe('GitHubSyncService', () => {
     it('returns true when book has valid GitHub repository', () => {
       const bookWithGitHub = {
         github: {
-          repository: 'user/repo'
+          repository: { name: 'repo', full_name: 'user/repo' }
         }
       };
 
@@ -98,10 +98,24 @@ describe('GitHubSyncService', () => {
 
     it('returns true for valid repository configurations', () => {
       const validConfigs = [
-        { github: { repository: 'user/repo' } },
-        { github: { repository: 'organization/project-name' } },
-        { github: { repository: 'user/repo-with-dashes_and_underscores' } },
-        { github: { repository: '  user/repo  ' } } // Should trim whitespace
+        { github: { repository: { name: 'repo', full_name: 'user/repo' } } },
+        {
+          github: {
+            repository: {
+              name: 'project-name',
+              full_name: 'organization/project-name'
+            }
+          }
+        },
+        {
+          github: {
+            repository: {
+              name: 'repo-with-dashes_and_underscores',
+              full_name: 'user/repo-with-dashes_and_underscores'
+            }
+          }
+        },
+        { github: { repository: { name: 'repo', full_name: '  user/repo  ' } } } // Should trim whitespace
       ];
 
       validConfigs.forEach(config => {
@@ -145,7 +159,9 @@ describe('GitHubSyncService', () => {
 
     it('handles minimal valid parameters', async () => {
       const mockParams = {
-        bookData: { github: { repository: 'user/repo' } },
+        bookData: {
+          github: { repository: { name: 'repo', full_name: 'user/repo' } }
+        },
         filePath: '/test/book.book',
         saveTime: '2023-01-01T12:00:00.000Z'
       };
