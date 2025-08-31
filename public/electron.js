@@ -1,6 +1,7 @@
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
+const { DOMParser } = require('@xmldom/xmldom');
 const {
   app,
   BrowserWindow,
@@ -10,7 +11,6 @@ const {
   ipcMain,
   shell
 } = require('electron');
-const { DOMParser } = require('xmldom');
 
 let mainWindow;
 let pendingFileToOpen = null; // Store file path to open once app is ready

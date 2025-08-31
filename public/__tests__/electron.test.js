@@ -99,7 +99,7 @@ jest.mock('fs', () => mockFsSync, { virtual: true });
 
 jest.mock('path', () => mockPath);
 
-jest.mock('xmldom', () => ({
+jest.mock('@xmldom/xmldom', () => ({
   DOMParser: jest.fn(() => mockDOMParser)
 }));
 
