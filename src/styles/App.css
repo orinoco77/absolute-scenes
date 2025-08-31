@@ -2158,8 +2158,21 @@ body {
 .front-matter-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: hidden;
+  min-height: 400px;
+  max-height: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+}
+
+.back-matter-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+  max-height: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
 }
 
 .front-matter-item {
@@ -2859,6 +2872,7 @@ body {
   min-width: 0;
   /* Allow content to expand naturally without height constraints */
   padding-bottom: 1rem;
+  min-height: 250px;
 }
 
 .location-title-inputs {

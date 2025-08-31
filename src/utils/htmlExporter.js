@@ -256,6 +256,37 @@ function generateHTML(book, options = {}) {
     content += '</div>';
   }
 
+  // Front Matter Processing
+  if (book.frontMatter && book.frontMatter.length > 0) {
+    const { sortFrontMatter } = require('./frontMatterUtils');
+    const sortedFrontMatter = sortFrontMatter(book.frontMatter);
+
+    sortedFrontMatter.forEach(frontMatterItem => {
+      if (!frontMatterItem.content || !frontMatterItem.content.trim()) {
+        return; // Skip empty front matter items
+      }
+
+      content += `<div class="front-matter ${frontMatterItem.type}">`;
+      if (frontMatterItem.title) {
+        content += `<div class="front-matter-title">${frontMatterItem.title}</div>`;
+      }
+
+      // Handle different front matter types
+      if (frontMatterItem.type === 'map' && frontMatterItem.imageData) {
+        content += `<div class="front-matter-map">`;
+        content += `<img src="${frontMatterItem.imageData}" alt="${frontMatterItem.title || 'Map'}" />`;
+        content += `</div>`;
+      } else {
+        const formattedContent = parseMarkdownToHTML(
+          frontMatterItem.content.trim()
+        );
+        content += `<div class="front-matter-content">${formattedContent}</div>`;
+      }
+
+      content += '</div>';
+    });
+  }
+
   // Get sorted illustrations for insertion at specific positions
   const sortedIllustrations = (book.illustrations || [])
     .filter(ill => ill.pageNumber !== null && ill.imageData)

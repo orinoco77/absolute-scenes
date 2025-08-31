@@ -1,4 +1,4 @@
-import { useDragAndDrop } from '../hooks/useDragAndDrop';
+import { sortFrontMatter } from '../utils/frontMatterUtils';
 
 function FrontMatterList({
   frontMatter,
@@ -8,36 +8,8 @@ function FrontMatterList({
   onFrontMatterDelete,
   onFrontMatterUpdate: _onFrontMatterUpdate,
   onFrontMatterToggle,
-  onFrontMatterReorder,
   authorName = '' // Add author name prop
 }) {
-  // Handle reordering front matter items
-  const handleFrontMatterReorder = ({ draggedItem, target }) => {
-    if (!draggedItem || !target || draggedItem.id === target.id) return;
-
-    const fromIndex = frontMatter.findIndex(item => item.id === draggedItem.id);
-    const toIndex = frontMatter.findIndex(item => item.id === target.id);
-
-    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-      onFrontMatterReorder(fromIndex, toIndex);
-    }
-  };
-
-  // Initialize drag and drop functionality
-  const {
-    draggedItem: _draggedItem,
-    dragOverTarget,
-    handleDragStart,
-    handleDragOver,
-    handleDragEnter,
-    handleDragLeave,
-    handleDrop,
-    handleDragEnd,
-    isValidDropTarget: _isValidDropTarget
-  } = useDragAndDrop({
-    onReorder: handleFrontMatterReorder
-  });
-
   // Predefined front matter types with their default configurations
   const frontMatterTypes = {
     copyright: {
@@ -163,33 +135,21 @@ Printed in [Country]`;
             </p>
           </div>
         ) : (
-          frontMatter.map(item => {
+          sortFrontMatter(frontMatter).map(item => {
             const typeConfig = frontMatterTypes[item.type] || {
               icon: '📄',
               title: item.type
             };
-            const isDraggedOver = dragOverTarget?.id === item.id;
-
             return (
               <div
                 key={item.id}
                 className={`front-matter-item ${
                   item.id === currentFrontMatterId ? 'active' : ''
-                } ${isDraggedOver ? 'drag-over' : ''} ${!item.enabled ? 'disabled' : ''}`}
+                } ${!item.enabled ? 'disabled' : ''}`}
                 onClick={() => onFrontMatterSelect(item.id)}
-                draggable
-                onDragStart={e => handleDragStart(e, item)}
-                onDragEnd={handleDragEnd}
-                onDragOver={handleDragOver}
-                onDragEnter={e => handleDragEnter(e, item)}
-                onDragLeave={handleDragLeave}
-                onDrop={e => handleDrop(e, item)}
+                draggable={false}
               >
                 <div className="front-matter-content">
-                  <span className="drag-handle" title="Drag to reorder">
-                    ⋮⋮
-                  </span>
-
                   <div className="front-matter-icon">{typeConfig.icon}</div>
 
                   <div className="front-matter-details">

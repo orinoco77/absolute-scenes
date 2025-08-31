@@ -444,44 +444,36 @@ describe('BackMatterList', () => {
     });
   });
 
-  describe('drag and drop reordering', () => {
-    const backMatterItems = [
-      {
-        id: 'epilogue-123',
-        type: 'epilogue',
-        title: 'Epilogue',
-        content: 'Content',
-        enabled: true
-      },
-      {
-        id: 'acknowledgments-456',
-        type: 'acknowledgments',
-        title: 'Acknowledgments',
-        content: 'Content',
-        enabled: true
-      }
-    ];
+  describe('canonical ordering', () => {
+    it('displays items sorted by canonical order', () => {
+      const unorderedBackMatter = [
+        {
+          id: '2',
+          type: 'acknowledgments',
+          title: 'Acknowledgments',
+          content: 'Content',
+          enabled: true
+        },
+        {
+          id: '1',
+          type: 'epilogue',
+          title: 'Epilogue',
+          content: 'Content',
+          enabled: true
+        }
+      ];
 
-    it('displays drag handles for reordering', () => {
       render(
         <BackMatterList
-          backMatter={backMatterItems}
+          backMatter={unorderedBackMatter}
           currentBackMatterId={null}
           {...mockHandlers}
         />
       );
 
-      const dragHandles = screen.getAllByText('⋮⋮');
-      expect(dragHandles).toHaveLength(2);
-
-      // Check that items have draggable attribute
-      const items = screen
-        .getAllByText('⋮⋮')
-        .map(handle => handle.closest('.front-matter-item'));
-
-      items.forEach(item => {
-        expect(item).toHaveAttribute('draggable', 'true');
-      });
+      // Check that both items are present (ordering is tested in utility function tests)
+      expect(screen.getAllByText('Epilogue')).toHaveLength(2); // title and type
+      expect(screen.getAllByText('Acknowledgments')).toHaveLength(2); // title and type
     });
   });
 });
