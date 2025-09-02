@@ -556,6 +556,7 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+
 - **v1.3.96**: Bump vite from 7.1.4 to 7.1.5
 - **v1.3.91**: Vite migration
 - **v1.3.87**: Fixes for left-nav usability
@@ -570,4 +571,5 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-09-15<!--/DATE--> | Build <!--COMMIT-->6ef2558 - Bump vite from 7.1.4 to 7.1.5 (39 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-09-15<!--/DATE--> | Build <!--COMMIT-->6ef2558 - Bump vite from 7.1.4
+to 7.1.5 (39 minutes ago)<!--/COMMIT-->_
