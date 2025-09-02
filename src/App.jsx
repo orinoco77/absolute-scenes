@@ -1,22 +1,22 @@
 /* eslint-disable no-console */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useCallback, useMemo } from 'react';
-import BackgroundEditor from './components/BackgroundEditor';
-import BackMatterEditor from './components/BackMatterEditor';
-import BackupRecovery from './components/BackupRecovery';
-import BookStructure from './components/BookStructure';
-import CharacterEditor from './components/CharacterEditor';
-import CharacterThreadVisualization from './components/CharacterThreadVisualization';
-import ExportDialog from './components/ExportDialog';
-import FontSettings from './components/FontSettings';
-import FrontMatterEditor from './components/FrontMatterEditor';
-import GitHubIntegration from './components/GitHubIntegration';
-import IllustrationEditor from './components/IllustrationEditor';
-import LocationEditor from './components/LocationEditor';
-import SceneEditor from './components/SceneEditor';
-import SpellCheckSettings from './components/SpellCheckSettings';
-import StatusBar from './components/StatusBar';
-import TemplateManager from './components/TemplateManager';
+import BackgroundEditor from './components/BackgroundEditor.jsx';
+import BackMatterEditor from './components/BackMatterEditor.jsx';
+import BackupRecovery from './components/BackupRecovery.jsx';
+import BookStructure from './components/BookStructure.jsx';
+import CharacterEditor from './components/CharacterEditor.jsx';
+import CharacterThreadVisualization from './components/CharacterThreadVisualization.jsx';
+import ExportDialog from './components/ExportDialog.jsx';
+import FontSettings from './components/FontSettings.jsx';
+import FrontMatterEditor from './components/FrontMatterEditor.jsx';
+import GitHubIntegration from './components/GitHubIntegration.jsx';
+import IllustrationEditor from './components/IllustrationEditor.jsx';
+import LocationEditor from './components/LocationEditor.jsx';
+import SceneEditor from './components/SceneEditor.jsx';
+import SpellCheckSettings from './components/SpellCheckSettings.jsx';
+import StatusBar from './components/StatusBar.jsx';
+import TemplateManager from './components/TemplateManager.jsx';
 import { useBookState } from './hooks/useBookState';
 import { useUIState } from './hooks/useUIState';
 import { EventHandlerService } from './services/EventHandlerService';

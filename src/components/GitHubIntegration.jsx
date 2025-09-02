@@ -221,8 +221,9 @@ function GitHubIntegration({
 
       // If we have a repository, check for other contributors
       if (currentRepository) {
-        const contributors =
-          await GitHubService.getRepositoryContributors(currentRepository);
+        const contributors = await GitHubService.getRepositoryContributors(
+          currentRepository.full_name
+        );
         // Found contributors for collaboration detection
 
         const otherAuthors = contributors
@@ -248,13 +249,17 @@ function GitHubIntegration({
         });
 
         if (allAuthors.length > 1) {
-          onStatusMessage(
-            `Collaboration enabled! Found ${allAuthors.length} contributors: ${allAuthors.join(', ')}`
-          );
+          if (onStatusMessage) {
+            onStatusMessage(
+              `Collaboration enabled! Found ${allAuthors.length} contributors: ${allAuthors.join(', ')}`
+            );
+          }
         } else {
-          onStatusMessage(
-            'Single author detected - collaboration features remain hidden'
-          );
+          if (onStatusMessage) {
+            onStatusMessage(
+              'Single author detected - collaboration features remain hidden'
+            );
+          }
         }
       } else {
         // No repository yet - single author for now
