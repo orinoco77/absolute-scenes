@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.87<!--/VERSION--> | **Tests:** <!--TESTS-->1025/1025<!--/TESTS--> ✅ |
-**Last Updated:** <!--DATE-->2025-08-31<!--/DATE-->
+**Version:** <!--VERSION-->1.3.87<!--/VERSION--> | **Tests:** <!--TESTS-->1025/1025<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2025-08-31<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -556,6 +556,7 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+
 - **v1.3.85**: Fix for xmldom security issue
 - **v1.3.83**: fix for regression of chapter and scene drag and drop functionality
 - **v1.3.82**: Illustrations
@@ -570,4 +571,5 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-08-31<!--/DATE--> | Build <!--COMMIT-->0ae1e79 - Fixed github integration on save (4 hours ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-08-31<!--/DATE--> | Build <!--COMMIT-->0ae1e79 - Fixed github
+integration on save (4 hours ago)<!--/COMMIT-->_
