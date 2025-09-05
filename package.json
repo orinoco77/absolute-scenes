@@ -46,7 +46,7 @@
         "auto-version-js": "^0.3.10",
         "babel-jest": "^30.0.5",
         "cross-env": "^7.0.3",
-        "electron": "^28.3.3",
+        "electron": "^35.7.5",
         "electron-builder": "^24.0.0",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
