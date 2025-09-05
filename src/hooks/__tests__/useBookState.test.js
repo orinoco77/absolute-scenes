@@ -634,24 +634,33 @@ describe('useBookState', () => {
           part1Id = result.current.addPart();
         });
 
-        // Small delay to ensure unique IDs
-        await new Promise(resolve => setTimeout(resolve, 1));
+        // Longer delay to ensure unique IDs in CI environments
+        await new Promise(resolve => setTimeout(resolve, 10));
 
         act(() => {
           part2Id = result.current.addPart();
         });
 
-        await new Promise(resolve => setTimeout(resolve, 1));
+        await new Promise(resolve => setTimeout(resolve, 10));
 
         act(() => {
           chapterId = result.current.addChapter();
         });
+
+        await new Promise(resolve => setTimeout(resolve, 10));
+
+        // Verify IDs are unique
+        expect(part1Id).not.toBe(part2Id);
+        expect(chapterId).not.toBe(part1Id);
+        expect(chapterId).not.toBe(part2Id);
 
         // Verify parts are empty initially
         let book = result.current.book;
         let part1 = book.parts.find(p => p.id === part1Id);
         let part2 = book.parts.find(p => p.id === part2Id);
 
+        expect(part1).toBeDefined();
+        expect(part2).toBeDefined();
         expect(part1.chapterIds).toHaveLength(0);
         expect(part2.chapterIds).toHaveLength(0);
 
