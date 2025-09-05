@@ -556,6 +556,7 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+
 - **v1.3.87**: Fixes for left-nav usability
 - **v1.3.86**: Fixed github integration on save
 - **v1.3.85**: Fix for xmldom security issue
@@ -570,4 +571,5 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-09-05<!--/DATE--> | Build <!--COMMIT-->95b85bb - Fixes for build (10 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-09-05<!--/DATE--> | Build <!--COMMIT-->95b85bb - Fixes for build (10
+minutes ago)<!--/COMMIT-->_
