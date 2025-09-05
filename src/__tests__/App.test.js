@@ -6,7 +6,7 @@ import {
   // act imported but not used after removing unnecessary wrappers
 } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import App from '../App';
+import App from '../App.jsx';
 import { saveBook } from '../utils/fileOperations';
 // saveBookToFile imported but not used in these tests
 

@@ -4,7 +4,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { act } from 'react';
-import App from '../App';
+import App from '../App.jsx';
 
 // Integration tests for drag and drop functionality
 // These test the complete flow from UI interaction to state change

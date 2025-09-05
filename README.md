@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.87<!--/VERSION--> | **Tests:** <!--TESTS-->1025/1025<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2025-08-31<!--/DATE-->
+**Version:** <!--VERSION-->1.3.91<!--/VERSION--> | **Tests:** <!--TESTS-->1025/1025<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2025-09-05<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -286,7 +286,7 @@ Access via the 🔗 GitHub Integration button:
 
 **Code Quality:** <!--TESTS-->1025/1025<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->105<!--/COMMITS--> | **Latest:** <!--COMMIT-->0ae1e79 - Fixed github integration on save (4 hours ago)<!--/COMMIT-->
+<!--COMMITS-->107<!--/COMMITS--> | **Latest:** <!--COMMIT-->020e37f - Removed some unnecessary files (4 hours ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.87<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.3.87<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.3.91<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.91<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -556,12 +556,11 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
-
+- **v1.3.87**: Fixes for left-nav usability
+- **v1.3.86**: Fixed github integration on save
 - **v1.3.85**: Fix for xmldom security issue
 - **v1.3.83**: fix for regression of chapter and scene drag and drop functionality
 - **v1.3.82**: Illustrations
-- **v1.3.81**: Add font selection for all text areas
-- **v1.3.80**: Fix test running too quickly
 <!--/VERSION_HISTORY-->
 
 ---
@@ -571,5 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-08-31<!--/DATE--> | Build <!--COMMIT-->0ae1e79 - Fixed github
-integration on save (4 hours ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-09-05<!--/DATE--> | Build <!--COMMIT-->020e37f - Removed some unnecessary files (4 hours ago)<!--/COMMIT-->_

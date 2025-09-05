@@ -466,24 +466,29 @@ describe('EventHandlerService', () => {
   });
 
   describe('exposeToElectron', () => {
-    it('creates electronAPI object if it does not exist', () => {
-      delete window.electronAPI;
+    it('creates mock electronAPI object if electronAPI does not exist', () => {
+      // Set window.electronAPI to null to simulate browser environment
+      window.electronAPI = null;
+      delete window._mockElectronAPI;
+      delete window._electronAPIExtensions;
 
       const mockFunction = jest.fn();
       service.exposeToElectron('testFunction', mockFunction);
 
-      expect(window.electronAPI).toBeDefined();
-      expect(window.electronAPI.testFunction).toBe(mockFunction);
+      expect(window._mockElectronAPI).toBeDefined();
+      expect(window._mockElectronAPI.testFunction).toBe(mockFunction);
     });
 
-    it('adds function to existing electronAPI object', () => {
+    it('stores function in extensions when electronAPI exists', () => {
       window.electronAPI = { existingFunction: jest.fn() };
+      delete window._electronAPIExtensions;
 
       const mockFunction = jest.fn();
       service.exposeToElectron('testFunction', mockFunction);
 
       expect(window.electronAPI.existingFunction).toBeDefined();
-      expect(window.electronAPI.testFunction).toBe(mockFunction);
+      expect(window._electronAPIExtensions).toBeDefined();
+      expect(window._electronAPIExtensions.testFunction).toBe(mockFunction);
     });
   });
 

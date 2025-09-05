@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import TextEditor from '../TextEditor';
+import TextEditor from '../TextEditor.jsx';
 
 describe('TextEditor', () => {
   let mockOnChange;
