@@ -154,8 +154,37 @@ export class EventHandlerService {
    * Expose function to Electron main process
    */
   exposeToElectron(functionName, fn) {
-    window.electronAPI = window.electronAPI || {};
-    window.electronAPI[functionName] = fn;
+    // Check if we're running in Electron (electronAPI exists)
+    if (typeof window !== 'undefined' && window.electronAPI) {
+      // Running in Electron context
+      if (
+        functionName === 'hasUnsavedChanges' &&
+        window.electronAPI.setHasUnsavedChanges
+      ) {
+        // Use the dedicated setter for hasUnsavedChanges
+        window.electronAPI.setHasUnsavedChanges(fn);
+      } else {
+        // For other functions, store in extensions
+        // eslint-disable-next-line no-console
+        console.log(
+          `Storing ${functionName} in extensions due to read-only electronAPI`
+        );
+        window._electronAPIExtensions = window._electronAPIExtensions || {};
+        window._electronAPIExtensions[functionName] = fn;
+      }
+    } else {
+      // Running in browser (Vite dev server) - create fallback API
+      if (!window._mockElectronAPI) {
+        window._mockElectronAPI = {
+          hasUnsavedChanges: null
+        };
+      }
+      window._mockElectronAPI[functionName] = fn;
+      // eslint-disable-next-line no-console
+      console.log(
+        `Mock electronAPI: Set ${functionName} function (running in browser)`
+      );
+    }
   }
 
   /**

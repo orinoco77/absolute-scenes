@@ -81,13 +81,14 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true,
-      webSecurity: false,
-      allowRunningInsecureContent: true,
+      enableRemoteModule: false,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
       spellcheck: true,
       // Additional settings for localStorage access
       partition: 'persist:absolutescenes',
-      experimentalFeatures: true
+      experimentalFeatures: false
+      // preload: path.join(__dirname, 'preload.js') // Disable preload with contextIsolation false
     }
   });
 
@@ -104,23 +105,7 @@ function createWindow() {
 
   // Set up event listeners for when the renderer is ready
   mainWindow.webContents.once('did-finish-load', () => {
-    // Configure spell checker languages - get from localStorage or default to en-US
-    mainWindow.webContents
-      .executeJavaScript(
-        `
-      localStorage.getItem('spellCheckLanguage') || 'en-US'
-    `
-      )
-      .then(savedLanguage => {
-        mainWindow.webContents.session.setSpellCheckerLanguages([
-          savedLanguage
-        ]);
-      })
-      .catch(() => {
-        // Fallback if localStorage isn't available yet
-        mainWindow.webContents.session.setSpellCheckerLanguages(['en-US']);
-      });
-
+    // Spell checker language will be handled through IPC in preload script
     // Try to open any pending file after a short delay
     setTimeout(() => {
       attemptToOpenPendingFile();
@@ -187,18 +172,7 @@ function createWindow() {
     mainWindow.setMenuBarVisibility(true);
   });
 
-  // Listen for fullscreen change events from renderer (for distraction-free mode)
-  mainWindow.webContents.on('dom-ready', () => {
-    mainWindow.webContents.executeJavaScript(`
-      document.addEventListener('fullscreenchange', () => {
-        const { ipcRenderer } = require('electron');
-        if (!document.fullscreenElement) {
-          // Exiting fullscreen - ensure menu is visible
-          ipcRenderer.send('fullscreen-exited');
-        }
-      });
-    `);
-  });
+  // Fullscreen handling is now done via preload script
 
   // Handle manual fullscreen exit
   ipcMain.on('fullscreen-exited', () => {
@@ -219,10 +193,16 @@ function createWindow() {
 // Handle New Book menu item with unsaved changes check
 async function handleNewBook() {
   try {
-    // Check if there are unsaved changes in the React app
-    const hasUnsavedChanges = await mainWindow.webContents.executeJavaScript(`
-      window.electronAPI && window.electronAPI.hasUnsavedChanges ? window.electronAPI.hasUnsavedChanges() : false
-    `);
+    // Check if there are unsaved changes in the React app via IPC
+    let hasUnsavedChanges = false;
+    try {
+      hasUnsavedChanges = await mainWindow.webContents.executeJavaScript(`
+        window.electronAPI && window.electronAPI.hasUnsavedChanges ? window.electronAPI.hasUnsavedChanges() : false
+      `);
+    } catch (error) {
+      console.log('Could not check unsaved changes, proceeding with new book');
+      hasUnsavedChanges = false;
+    }
 
     if (hasUnsavedChanges) {
       const response = await dialog.showMessageBox(mainWindow, {
@@ -253,10 +233,16 @@ async function handleNewBook() {
 // Handle window close with unsaved changes check
 async function handleWindowClose() {
   try {
-    // Check if there are unsaved changes in the React app
-    const hasUnsavedChanges = await mainWindow.webContents.executeJavaScript(`
-      window.electronAPI && window.electronAPI.hasUnsavedChanges ? window.electronAPI.hasUnsavedChanges() : false
-    `);
+    // Check if there are unsaved changes in the React app via IPC
+    let hasUnsavedChanges = false;
+    try {
+      hasUnsavedChanges = await mainWindow.webContents.executeJavaScript(`
+        window.electronAPI && window.electronAPI.hasUnsavedChanges ? window.electronAPI.hasUnsavedChanges() : false
+      `);
+    } catch (error) {
+      console.log('Could not check unsaved changes, proceeding with close');
+      hasUnsavedChanges = false;
+    }
 
     if (hasUnsavedChanges) {
       const response = await dialog.showMessageBox(mainWindow, {
