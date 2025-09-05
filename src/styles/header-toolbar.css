@@ -1,0 +1,196 @@
+/* Header and Toolbar Styles */
+.book-info input {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  margin-right: 1rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid #34495e;
+}
+
+.book-info input::placeholder {
+  color: #bdc3c7;
+}
+
+.book-title {
+  font-weight: bold;
+  font-size: 1.5rem !important;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toolbar button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toolbar button:hover {
+  background: #2980b9;
+}
+
+.toolbar button:focus {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Icon Button Styling */
+.icon-button {
+  min-width: 44px !important;
+  height: 44px !important;
+  padding: 8px !important;
+  border-radius: 8px !important;
+  font-size: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  transition: all 0.2s ease !important;
+  background: #3498db !important;
+  border: 1px solid #2980b9 !important;
+}
+
+.icon-button:hover {
+  background: #2980b9 !important;
+  border-color: #21618c !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3) !important;
+}
+
+.icon-button:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2) !important;
+}
+
+/* Header buttons styling */
+.header-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.add-chapter-btn,
+.add-scene-btn,
+.recycle-bin-btn {
+  background: #2196f3;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.add-chapter-btn:hover,
+.add-scene-btn:hover,
+.recycle-bin-btn:hover {
+  background: #1976d2;
+}
+
+.add-scene-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.add-scene-btn:disabled:hover {
+  background: #ccc;
+}
+
+.add-scene-btn,
+.add-chapter-btn {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  flex: 1;
+}
+
+.add-chapter-btn {
+  background: #3498db;
+}
+
+.add-scene-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Enhanced button styles for Parts */
+.header-buttons .secondary-btn {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.header-buttons .secondary-btn:hover {
+  background-color: #e0e0e0;
+  border-color: #ccc;
+}
+
+.header-buttons button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  border: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.header-buttons .primary-btn {
+  background: #2196f3;
+  color: white;
+}
+
+.header-buttons .primary-btn:hover {
+  background: #1976d2;
+}
+
+.header-buttons .secondary-btn {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.header-buttons .secondary-btn:hover {
+  background: #d0d0d0;
+}
+
+.header-buttons .secondary-btn.has-items {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.header-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f5f5f5;
+  color: #999;
+}
+
+.header-buttons button:disabled:hover {
+  background: #f5f5f5;
+  color: #999;
+}
+
+/* Distraction-Free Mode toolbar styles */
+.toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background: #ddd;
+  margin: 0 8px;
+}

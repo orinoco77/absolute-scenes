@@ -1,0 +1,174 @@
+/* Unified Tab Styles - Apply to all tabs */
+.tab-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+  background: white;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-list-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tab-list-header h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.tab-description {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.tab-content-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Special padding for chapters container */
+.tab-list .tab-content-container.chapters-container {
+  padding: 0 0 1rem 0;
+}
+
+/* Special handling for locations container */
+.tab-list .tab-content-container.locations-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+}
+
+.locations-container .locations-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.locations-container .empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.locations-container .location-recycle-bin {
+  flex-shrink: 0;
+  border-top: 1px solid #e0e0e0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.tab-info-section {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  border: 1px solid #e9ecef;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tab-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.tab-stat {
+  font-size: 0.9rem;
+  color: #666;
+  display: flex;
+  justify-content: space-between;
+}
+
+.tab-stat .stat-label {
+  font-weight: 500;
+}
+
+.tab-stat .stat-value {
+  color: #2196f3;
+  font-weight: 600;
+}
+
+.tab-help-section {
+  padding: 1rem;
+  background: #e3f2fd;
+  border-radius: 0.5rem;
+  border: 1px solid #bbdefb;
+  margin: 1rem 0 0 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tab-help-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.tab-help-section ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+.tab-help-section li {
+  margin-bottom: 0.25rem;
+}
+
+.tab-coming-soon {
+  padding: 0.75rem;
+  background: #fff3cd;
+  border-radius: 0.5rem;
+  border: 1px solid #ffeaa7;
+  font-size: 0.8rem;
+  color: #856404;
+  margin: 1rem 0 0 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tab-coming-soon strong {
+  color: #b8860b;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-style: italic;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.9rem;
+}

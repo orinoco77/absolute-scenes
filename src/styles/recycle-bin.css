@@ -1,0 +1,207 @@
+/* Recycle Bin Styles */
+.recycle-bin-btn {
+  position: relative;
+}
+
+.recycle-bin-btn.has-items {
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+}
+
+.recycle-bin {
+  margin-top: 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  flex-shrink: 0;
+  max-height: 300px;
+  overflow: auto;
+  border-top: 1px solid #e5e7eb;
+  background-color: #fafafa;
+  margin-top: auto;
+  position: relative;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.recycle-bin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.recycle-bin-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.recycle-bin-controls {
+  display: flex;
+  gap: 8px;
+  gap: 0.5rem;
+}
+
+.empty-bin-btn,
+.close-bin-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-size: 12px;
+  transition: background-color 0.2s;
+  border: 1px solid #ddd;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.empty-bin-btn {
+  color: #f44336;
+}
+
+.empty-bin-btn:hover {
+  background-color: #ffebee;
+  background: #fff3cd;
+  border-color: #ffeaa7;
+  color: #856404;
+}
+
+.close-bin-btn {
+  color: #666;
+}
+
+.close-bin-btn:hover {
+  background-color: #e0e0e0;
+  background: #ffebee;
+  border-color: #ffcdd2;
+  color: #c62828;
+}
+
+.recycle-bin-content {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.empty-bin {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+}
+
+.recycle-bin-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  background-color: white;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.recycle-bin-item:last-child {
+  border-bottom: none;
+}
+
+.recycle-item-content {
+  flex: 1;
+}
+
+.recycle-item-title {
+  font-weight: bold;
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 2px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.recycle-item-meta {
+  font-size: 11px;
+  color: #666;
+  display: flex;
+  gap: 10px;
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.recycle-item-actions {
+  display: flex;
+  gap: 4px;
+  gap: 0.25rem;
+}
+
+.restore-btn,
+.permanent-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 2px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.restore-btn {
+  color: #4caf50;
+}
+
+.restore-btn:hover {
+  background-color: #e8f5e8;
+}
+
+.permanent-delete-btn {
+  color: #f44336;
+}
+
+.permanent-delete-btn:hover {
+  background-color: #ffebee;
+}
+
+/* Location Recycle Bin */
+.location-recycle-bin {
+  margin-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1rem;
+  flex-shrink: 0;
+  border-top: 1px solid #e0e0e0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Recycle bin specific improvements */
+.recycle-bin {
+  border-radius: 0.5rem 0.5rem 0 0;
+}
