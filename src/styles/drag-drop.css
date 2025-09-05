@@ -1,0 +1,49 @@
+/* Scene List Drag and Drop Styles */
+.drag-handle {
+  cursor: grab;
+  color: #999;
+  font-size: 12px;
+  margin-right: 8px;
+  user-select: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.chapter-group.drag-over,
+.scene-item.drag-over {
+  border: 2px dashed #2196f3;
+  background-color: #f0f8ff;
+}
+
+/* Visual feedback for invalid drop targets */
+.chapter-group.drag-invalid,
+.scene-item.drag-invalid {
+  border: 2px dashed #f44336;
+  background-color: #ffebee;
+  cursor: not-allowed;
+}
+
+.part-group.drag-over {
+  border: 2px dashed #2196f3;
+  background-color: #e3f2fd;
+}
+
+.part-group.drag-invalid {
+  border: 2px dashed #f44336;
+  background-color: #ffebee;
+  cursor: not-allowed;
+}
+
+.front-matter-item.drag-over {
+  border: 2px dashed #2196f3;
+  background: #f0f8ff;
+}
+
+/* Ensure drag and drop still works with flexbox layout */
+.chapter-group,
+.scene-item,
+.character-item {
+  flex-shrink: 0;
+}

@@ -1,0 +1,391 @@
+/* Scenes and Chapters Styles */
+.scene-list {
+  width: 410px;
+  background: white;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+}
+
+.scene-list-header {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.current-chapter-indicator {
+  background: #e8f5e8;
+  border: 1px solid #c3e6cb;
+  padding: 0.5rem;
+  border-radius: 4px;
+  color: #155724;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: #e3f2fd;
+  border-radius: 0.25rem;
+  border: 1px solid #bbdefb;
+}
+
+.current-chapter-indicator small {
+  font-size: 0.8rem;
+  color: #1976d2;
+  font-size: 0.85rem;
+}
+
+.current-chapter-indicator strong {
+  color: #0d47a1;
+}
+
+.chapters-container {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 120px; /* Add space for dropdown menus */
+  scroll-behavior: smooth;
+}
+
+.chapter-group {
+  border-bottom: 1px solid #eee;
+  margin-bottom: 16px;
+  border: 2px solid #e3f2fd;
+  border-radius: 8px;
+  background-color: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.chapter-header {
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  cursor: move;
+}
+
+.chapter-header:hover {
+  background: #e9ecef;
+}
+
+.chapter-header.active-chapter {
+  background: #e3f2fd;
+  border-left: 3px solid #2196f3;
+}
+
+.chapter-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.chapter-toggle {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.chapter-title {
+  font-weight: bold;
+  flex: 1;
+  min-width: 0;
+  margin: 0 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.chapter-title-edit {
+  font-weight: bold;
+  background: white;
+  border: 1px solid #ddd;
+  padding: 0.25rem;
+  border-radius: 2px;
+  flex: 1;
+}
+
+.chapter-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.75rem;
+  color: #666;
+  min-width: 80px;
+  gap: 10px;
+  font-size: 11px;
+  color: #666;
+  margin-right: 10px;
+}
+
+.scene-count,
+.word-count {
+  line-height: 1.2;
+}
+
+.chapter-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 2px;
+  opacity: 0.6;
+  padding: 4px;
+  border-radius: 2px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.chapter-delete:hover {
+  background: #dc3545;
+  opacity: 1;
+  background-color: #ffebee;
+}
+
+.scenes-in-chapter {
+  background: white;
+}
+
+.empty-chapter {
+  padding: 1rem 2rem;
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  background: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+}
+
+.scenes {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.scene-item {
+  padding: 0.75rem 1rem 0.75rem 2rem;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: move;
+  position: relative;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  background-color: white;
+  transition: all 0.2s;
+}
+
+.scene-item:hover {
+  background: #f8f9fa;
+  background-color: #f8f9fa;
+}
+
+.scene-item.active {
+  background: #e8f5e8;
+  border-left: 3px solid #27ae60;
+  background-color: #e3f2fd;
+  border-left: 3px solid #2196f3;
+}
+
+.scene-number {
+  background: #e9ecef;
+  color: #495057;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.scene-controls {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.scene-content {
+  flex: 1;
+  min-width: 0;
+  margin-left: 8px;
+}
+
+.scene-title {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: #333;
+  font-weight: bold;
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.scene-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #666;
+  font-size: 11px;
+  color: #666;
+  display: flex;
+  gap: 10px;
+}
+
+.scene-date {
+  color: #888;
+}
+
+.scene-word-count {
+  color: #666;
+  font-weight: 500;
+}
+
+.scene-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.scene-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-size: 12px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.scene-actions button:hover {
+  opacity: 1;
+  background-color: #f0f0f0;
+}
+
+.move-scene-btn {
+  color: #2196f3;
+}
+
+.delete-scene-btn {
+  color: #f44336;
+}
+
+/* Move menu styles */
+.move-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 150px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.move-menu.show-above {
+  top: auto;
+  bottom: 100%;
+}
+
+.move-menu-title {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #666;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+}
+
+.move-menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.move-menu-item:hover {
+  background-color: #f0f0f0;
+}
+
+/* Chapter Move Menu */
+.move-chapter-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-size: 12px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  color: #2196f3;
+  margin-right: 8px;
+}
+
+.move-chapter-btn:hover {
+  opacity: 1;
+  background-color: rgba(33, 150, 243, 0.1);
+}
+
+.chapter-move-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 180px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.chapter-move-menu .move-menu-title {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #666;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+}
+
+.chapter-move-menu .move-menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.chapter-move-menu .move-menu-item:hover {
+  background-color: #f0f0f0;
+}
+
+.chapter-move-menu .move-menu-item.remove-from-part {
+  color: #f44336;
+  border-top: 1px solid #eee;
+}
+
+.chapter-move-menu .move-menu-item.remove-from-part:hover {
+  background-color: #ffebee;
+}

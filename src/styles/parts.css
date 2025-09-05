@@ -1,0 +1,168 @@
+/* Parts Functionality Styles */
+.part-group {
+  margin-bottom: 16px;
+  border: 2px solid #e3f2fd;
+  border-radius: 8px;
+  background-color: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.part-group.drag-over {
+  border: 2px dashed #2196f3;
+  background-color: #e3f2fd;
+}
+
+.part-group.drag-invalid {
+  border: 2px dashed #f44336;
+  background-color: #ffebee;
+  cursor: not-allowed;
+}
+
+.part-header {
+  cursor: move;
+  padding: 12px;
+  background-color: #e3f2fd;
+  border-bottom: 1px solid #bbdefb;
+  border-radius: 6px 6px 0 0;
+  transition: background-color 0.2s;
+}
+
+.part-header:hover {
+  background-color: #bbdefb;
+}
+
+.part-header.active-part {
+  background-color: #2196f3;
+  color: white;
+}
+
+.part-header-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.part-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px;
+  border-radius: 2px;
+  transition: background-color 0.2s;
+}
+
+.part-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.part-title {
+  flex: 1;
+  font-weight: bold;
+  font-size: 16px;
+  color: #1565c0;
+}
+
+.part-header.active-part .part-title {
+  color: white;
+}
+
+.part-title-edit {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: white;
+}
+
+.part-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 12px;
+  color: #666;
+  margin-left: auto;
+  margin-right: 12px;
+  min-width: 80px;
+}
+
+.part-header.active-part .part-meta {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.part-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 2px;
+  font-size: 14px;
+  opacity: 0.7;
+  transition: all 0.2s;
+}
+
+.part-delete:hover {
+  opacity: 1;
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.chapters-in-part {
+  padding: 0;
+  background-color: white;
+  border-radius: 0 0 6px 6px;
+}
+
+.chapters-in-part .chapter-group {
+  margin-bottom: 0;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  border-radius: 0;
+}
+
+.chapters-in-part .chapter-group:last-child {
+  border-bottom: none;
+}
+
+.empty-part {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin: 8px;
+}
+
+/* Unassigned Chapters Section */
+.unassigned-chapters-section {
+  margin-top: 20px;
+  padding: 12px;
+  border: 2px dashed #ff9800;
+  border-radius: 8px;
+  background-color: #fff8e1;
+}
+
+.unassigned-header {
+  margin-bottom: 12px;
+}
+
+.unassigned-header h4 {
+  margin: 0 0 4px 0;
+  color: #ef6c00;
+  font-size: 14px;
+}
+
+.unassigned-header p {
+  margin: 0;
+  font-size: 12px;
+  color: #bf360c;
+  font-style: italic;
+}
+
+.unassigned-chapters-section .chapter-group {
+  margin-bottom: 8px;
+  border: 1px solid #ffb74d;
+  background-color: white;
+}

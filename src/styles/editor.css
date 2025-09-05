@@ -1,0 +1,212 @@
+/* Editor Styles */
+.scene-editor {
+  flex: 1;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  overflow-y: scroll;
+}
+
+.no-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  font-size: 1.2rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.scene-header {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scene-title-input {
+  font-size: 1.5rem;
+  font-weight: bold;
+  border: none;
+  background: transparent;
+  flex: 1;
+}
+
+.scene-stats {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.main-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.editor-container {
+  flex: 1;
+  padding: 1rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.editor-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  color: #666;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.fallback-editor {
+  height: calc(60vh - 3rem);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.editor-toolbar {
+  background: #f5f5f5;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  font-size: 0.85rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.format-btn {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  min-width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.format-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.format-btn:active {
+  background: #dee2e6;
+  transform: translateY(1px);
+}
+
+.distraction-free-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-size: 14px;
+}
+
+.distraction-free-btn:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.format-help {
+  margin-left: auto;
+  color: #6c757d;
+  font-style: italic;
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.fallback-editor textarea {
+  flex: 1;
+  border: none;
+  border-radius: 4px;
+  padding: 1rem;
+  font-family: var(--editor-font-family, "Monaco", "Menlo", "Ubuntu Mono", monospace);
+  font-size: 16px;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  background: white;
+}
+
+.fallback-editor textarea:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.scene-editor-textarea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.scene-editor-textarea textarea {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  padding: 1rem;
+  font-family: var(--editor-font-family, "Monaco", "Menlo", "Ubuntu Mono", monospace);
+  font-size: 16px;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  background: white;
+  min-height: calc(60vh - 3rem);
+}
+
+.scene-editor-textarea textarea:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.scene-notes {
+  padding-top: 0rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 0rem;
+  border-top: 1px solid #eee;
+  margin-bottom: 1rem;
+}
+
+.scene-notes textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-family: inherit;
+  resize: vertical;
+}
