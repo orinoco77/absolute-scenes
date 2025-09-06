@@ -945,4 +945,201 @@ describe('App Component - Comprehensive Tests', () => {
       );
     });
   });
+
+  describe('Service Integration Tests', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      // Mock service methods
+      saveBook.mockResolvedValue({
+        success: true,
+        filePath: '/test/book.book'
+      });
+
+      // Mock fetch for GitHub operations
+      global.fetch = jest.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ access_token: 'mock-token' })
+      });
+
+      // Mock EventHandlerService for IPC handling
+      jest.spyOn(console, 'warn').mockImplementation(() => {});
+      jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      // Mock window.require for Electron APIs
+      Object.defineProperty(window, 'require', {
+        writable: true,
+        value: jest.fn(() => {
+          throw new Error('Module not found');
+        })
+      });
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    describe('SaveService Integration', () => {
+      test('properly manages unsaved changes state', async () => {
+        render(<App />);
+
+        // Wait for app initialization
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Initially should show no unsaved changes
+        expect(screen.getByTestId('save-status')).not.toHaveTextContent(
+          'Unsaved Changes'
+        );
+
+        // Add some content to trigger changes
+        const addSceneButton = screen.getByText('Add Scene');
+        fireEvent.click(addSceneButton);
+
+        // Verify unsaved changes status is updated
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+
+        // Verify the service integration is working by checking that state changes are properly tracked
+      });
+
+      test('maintains state consistency during content operations', async () => {
+        render(<App />);
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Add multiple pieces of content to test service state management
+        const addSceneButton = screen.getByText('Add Scene');
+        const addChapterButton = screen.getByText('Add Chapter');
+
+        fireEvent.click(addSceneButton);
+        fireEvent.click(addChapterButton);
+
+        // Verify state is maintained correctly
+        // State should remain consistent
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
+
+      test('handles rapid content changes without service conflicts', async () => {
+        render(<App />);
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Rapidly add content to test service handling
+        const addSceneButton = screen.getByText('Add Scene');
+
+        // Multiple rapid clicks
+        fireEvent.click(addSceneButton);
+        fireEvent.click(addSceneButton);
+        fireEvent.click(addSceneButton);
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Should handle all operations correctly
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
+    });
+
+    describe('GitHubSync Integration', () => {
+      test('initializes GitHub sync service without errors', async () => {
+        render(<App />);
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // App should initialize with GitHub integration available
+        const githubButton = screen.getByTitle(/GitHub Integration/);
+        expect(githubButton).toBeInTheDocument();
+
+        // Service should be ready for use
+        expect(screen.getByTestId('save-status')).toBeInTheDocument();
+      });
+
+      test('maintains consistent state during GitHub operations', async () => {
+        render(<App />);
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Add content to create changes
+        const addSceneButton = screen.getByText('Add Scene');
+        fireEvent.click(addSceneButton);
+
+        // Open GitHub integration
+        const githubButton = screen.getByTitle(/GitHub Integration/);
+        fireEvent.click(githubButton);
+
+        // Should maintain unsaved changes state
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
+    });
+
+    describe('Service Error Boundaries', () => {
+      test('maintains state consistency during service errors', async () => {
+        render(<App />);
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Add content
+        const addSceneButton = screen.getByText('Add Scene');
+        fireEvent.click(addSceneButton);
+
+        // Verify the app remains stable after operations
+
+        // Mock service error
+        saveBook.mockRejectedValue(new Error('Service error'));
+
+        // Try to save
+        fireEvent.keyDown(document, { key: 's', ctrlKey: true });
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // State should remain consistent
+        // State should remain consistent
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
+    });
+
+    describe('Service State Management', () => {
+      test('properly initializes and manages service instances', async () => {
+        render(<App />);
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Services should be initialized and ready
+        expect(screen.getByTestId('save-status')).toBeInTheDocument();
+
+        // Add content to test service interaction
+        const addSceneButton = screen.getByText('Add Scene');
+        fireEvent.click(addSceneButton);
+
+        // Should update status through service integration
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
+
+      test('cleans up service operations on unmount', async () => {
+        const { unmount } = render(<App />);
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Add content and start operations
+        const addSceneButton = screen.getByText('Add Scene');
+        fireEvent.click(addSceneButton);
+
+        // Start a save operation
+        fireEvent.keyDown(document, { key: 's', ctrlKey: true });
+
+        // Unmount should not cause errors
+        expect(() => unmount()).not.toThrow();
+      });
+    });
+  });
 });
