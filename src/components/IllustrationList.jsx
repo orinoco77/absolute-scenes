@@ -91,19 +91,32 @@ function IllustrationList({
 
   if (illustrations.length === 0) {
     return (
-      <div className="illustration-list">
-        <div className="illustration-header">
-          <h3>📚 Illustrations</h3>
-          <button
-            className="add-illustration-btn"
-            onClick={handleAddIllustration}
-            title="Add new illustration"
-          >
-            ➕ Add Illustration
-          </button>
+      <div className="tab-list">
+        <div className="tab-list-header">
+          <h3>Illustrations</h3>
+          <p className="tab-description">
+            Manage full-page illustrations for your book. Images are embedded
+            and will appear on specific pages in your final export.
+          </p>
+          <div className="header-buttons">
+            <button
+              className="primary-btn"
+              onClick={handleAddIllustration}
+              title="Add new illustration"
+            >
+              <span className="emoji-text">🖼️+ Illustration</span>
+              <span className="dark-text">🖼️+ Illustration</span>
+            </button>
+          </div>
         </div>
 
-        <div className="no-illustrations">
+        <div className="tab-content-container">
+          <div className="empty-state">
+            <p>No illustrations yet. Click "🖼️+ Illustration" to add one.</p>
+          </div>
+        </div>
+
+        <div className="no-illustrations" style={{ display: 'none' }}>
           <div className="illustration-suggestions">
             <h4>Add Full-Page Illustrations</h4>
             <p>
@@ -112,11 +125,9 @@ function IllustrationList({
               adjust your text pagination.
             </p>
             <div className="suggestion-buttons">
-              <button
-                className="suggestion-button"
-                onClick={handleAddIllustration}
-              >
-                📸 Add Illustration
+              <button className="primary-btn" onClick={handleAddIllustration}>
+                <span className="emoji-text">📸 Add Illustration</span>
+                <span className="dark-text">📸 Add Illustration</span>
               </button>
             </div>
           </div>
@@ -126,85 +137,94 @@ function IllustrationList({
   }
 
   return (
-    <div className="illustration-list">
-      <div className="illustration-header">
-        <h3>📚 Illustrations ({illustrations.length})</h3>
-        <button
-          className="add-illustration-btn"
-          onClick={handleAddIllustration}
-          title="Add new illustration"
-        >
-          ➕ Add
-        </button>
+    <div className="tab-list">
+      <div className="tab-list-header">
+        <h3>Illustrations</h3>
+        <p className="tab-description">
+          Manage full-page illustrations for your book. Images are embedded and
+          will appear on specific pages in your final export.
+        </p>
+        <div className="header-buttons">
+          <button
+            className="primary-btn"
+            onClick={handleAddIllustration}
+            title="Add new illustration"
+          >
+            <span className="emoji-text">🖼️+ Illustration</span>
+            <span className="dark-text">🖼️+ Illustration</span>
+          </button>
+        </div>
       </div>
 
-      <div className="illustration-items">
-        {sortedIllustrations.map(illustration => (
-          <div
-            key={illustration.id}
-            className={`illustration-item ${
-              currentIllustrationId === illustration.id ? 'selected' : ''
-            } ${dragOverItem?.id === illustration.id ? 'drag-over' : ''}`}
-            onClick={() => onIllustrationSelect(illustration.id)}
-            draggable
-            onDragStart={e => handleDragStart(e, illustration)}
-            onDragOver={e => handleDragOver(e, illustration)}
-            onDragLeave={handleDragLeave}
-            onDrop={e => handleDrop(e, illustration)}
-          >
-            <span className="drag-handle">⋮⋮</span>
+      <div className="tab-content-container">
+        <div className="illustration-items">
+          {sortedIllustrations.map(illustration => (
+            <div
+              key={illustration.id}
+              className={`illustration-item ${
+                currentIllustrationId === illustration.id ? 'selected' : ''
+              } ${dragOverItem?.id === illustration.id ? 'drag-over' : ''}`}
+              onClick={() => onIllustrationSelect(illustration.id)}
+              draggable
+              onDragStart={e => handleDragStart(e, illustration)}
+              onDragOver={e => handleDragOver(e, illustration)}
+              onDragLeave={handleDragLeave}
+              onDrop={e => handleDrop(e, illustration)}
+            >
+              <span className="drag-handle">⋮⋮</span>
 
-            <div className="illustration-icon">
-              {getIllustrationIcon(illustration)}
-            </div>
+              <div className="illustration-icon">
+                {getIllustrationIcon(illustration)}
+              </div>
 
-            <div className="illustration-details">
-              <div className="illustration-title-row">
-                <div className="illustration-title">{illustration.title}</div>
-                <div className="illustration-actions">
-                  <button
-                    className="delete-button"
-                    onClick={e => {
-                      e.stopPropagation();
-                      if (window.confirm('Delete this illustration?')) {
-                        onIllustrationDelete(illustration.id);
-                      }
-                    }}
-                    title="Delete illustration"
-                  >
-                    🗑️
-                  </button>
+              <div className="illustration-details">
+                <div className="illustration-title-row">
+                  <div className="illustration-title">{illustration.title}</div>
+                  <div className="illustration-actions">
+                    <button
+                      className="delete-button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        if (window.confirm('Delete this illustration?')) {
+                          onIllustrationDelete(illustration.id);
+                        }
+                      }}
+                      title="Delete illustration"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+
+                <div className="illustration-meta">
+                  <span className="illustration-stats">
+                    {getIllustrationStats(illustration)}
+                  </span>
+                  <span className="modified-time">
+                    Modified:{' '}
+                    {new Date(illustration.modified).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
-
-              <div className="illustration-meta">
-                <span className="illustration-stats">
-                  {getIllustrationStats(illustration)}
-                </span>
-                <span className="modified-time">
-                  Modified:{' '}
-                  {new Date(illustration.modified).toLocaleDateString()}
-                </span>
-              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      <div className="illustration-info">
-        <details>
-          <summary>About Illustrations</summary>
-          <div className="info-content">
-            <strong>Full-Page Illustrations</strong> take up entire pages and
-            will push text to subsequent pages.
-            <ul>
-              <li>Assign specific page numbers to control placement</li>
-              <li>Consider impact on chapter start pages (odd/even rules)</li>
-              <li>Images should be high resolution for print quality</li>
-              <li>Add captions and alt text for accessibility</li>
-            </ul>
-          </div>
-        </details>
+        <div className="illustration-info">
+          <details>
+            <summary>About Illustrations</summary>
+            <div className="info-content">
+              <strong>Full-Page Illustrations</strong> take up entire pages and
+              will push text to subsequent pages.
+              <ul>
+                <li>Assign specific page numbers to control placement</li>
+                <li>Consider impact on chapter start pages (odd/even rules)</li>
+                <li>Images should be high resolution for print quality</li>
+                <li>Add captions and alt text for accessibility</li>
+              </ul>
+            </div>
+          </details>
+        </div>
       </div>
     </div>
   );

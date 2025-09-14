@@ -136,8 +136,8 @@
 
 /* Dark Theme - Writer-friendly night mode */
 [data-theme="dark"] {
-  --color-primary: #4a9eff;
-  --color-primary-hover: #357abd;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
   --color-secondary: #1e1e1e;
   --color-secondary-light: #2d2d2d;
   --color-background: #0d1117;
@@ -156,8 +156,8 @@
   /* Borders for dark theme */
   --color-border: #30363d;
   --color-border-dark: #21262d;
-  --color-primary-border: #1f6feb;
-  --color-info-border: #1f6feb;
+  --color-primary-border: #2563eb;
+  --color-info-border: #2563eb;
   --color-success-border: #2ea043;
   --color-warning-border: #d29922;
   --color-error-border: #f85149;
@@ -166,11 +166,11 @@
   --color-success: #3fb950;
   --color-warning: #d29922;
   --color-error: #f85149;
-  --color-info: #58a6ff;
-  
+  --color-info: #2563eb;
+
   /* Background colors for dark theme */
-  --color-primary-background: rgba(88, 166, 255, 0.1);
-  --color-info-background: rgba(88, 166, 255, 0.1);
+  --color-primary-background: rgba(37, 99, 235, 0.1);
+  --color-info-background: rgba(37, 99, 235, 0.1);
   --color-success-background: rgba(63, 185, 80, 0.1);
   --color-warning-background: rgba(210, 153, 34, 0.1);
   --color-error-background: rgba(248, 81, 73, 0.1);

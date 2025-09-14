@@ -184,11 +184,141 @@
 [data-theme="dark"] [style*="background: #fff"],
 [data-theme="dark"] [style*="background-color: #fff"] {
   background: var(--color-surface) !important;
-  color: var(--color-text) !important;
+  color: white !important;
 }
 
 /* Override any remaining black text */
 [data-theme="dark"] [style*="color: black"],
 [data-theme="dark"] [style*="color: #000"] {
-  color: var(--color-text) !important;
+  color: white !important;
+}
+
+/* Rule: Any text on dark backgrounds (darker than #777777) should be white */
+
+/* Text on the main dark theme backgrounds should be white */
+[data-theme="dark"] * {
+  color: white;
+}
+
+/* COMPREHENSIVE: ALL BUTTONS get white text in dark mode */
+[data-theme="dark"] button,
+[data-theme="dark"] .btn,
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .btn-secondary,
+[data-theme="dark"] .btn-success,
+[data-theme="dark"] .btn-warning,
+[data-theme="dark"] .btn-error,
+[data-theme="dark"] .btn-danger,
+[data-theme="dark"] .primary-btn,
+[data-theme="dark"] .secondary-btn,
+[data-theme="dark"] .icon-button,
+[data-theme="dark"] .format-btn,
+[data-theme="dark"] .distraction-free-btn,
+[data-theme="dark"] .close-btn,
+[data-theme="dark"] .accordion-button,
+[data-theme="dark"] .tab-button,
+[data-theme="dark"] .toggle-btn,
+[data-theme="dark"] .toggle-btn.enabled,
+[data-theme="dark"] .toggle-btn.disabled,
+[data-theme="dark"] .delete-btn,
+[data-theme="dark"] .delete-button,
+[data-theme="dark"] .delete-character-btn,
+[data-theme="dark"] .delete-location-btn,
+[data-theme="dark"] .delete-scene-btn,
+[data-theme="dark"] .dropdown-trigger,
+[data-theme="dark"] .permanent-delete-btn,
+[data-theme="dark"] .suggestion-button,
+[data-theme="dark"] .suggestion-buttons,
+[data-theme="dark"] .replace-author-button,
+[data-theme="dark"] .upload-image-btn,
+[data-theme="dark"] .remove-image-btn,
+[data-theme="dark"] .upload-button,
+[data-theme="dark"] .clear-button,
+[data-theme="dark"] .replace-placeholder-button,
+[data-theme="dark"] .replace-image-btn,
+[data-theme="dark"] .upload-btn,
+[data-theme="dark"] .add-location-btn,
+[data-theme="dark"] .add-character-btn,
+[data-theme="dark"] .add-illustration-btn,
+[data-theme="dark"] .add-scene-btn,
+[data-theme="dark"] .add-chapter-btn,
+[data-theme="dark"] .empty-bin-btn,
+[data-theme="dark"] .close-bin-btn,
+[data-theme="dark"] .restore-btn,
+[data-theme="dark"] .recycle-bin-btn,
+[data-theme="dark"] .move-chapter-btn,
+[data-theme="dark"] .move-scene-btn,
+[data-theme="dark"] .save-button,
+[data-theme="dark"] .cancel-button,
+[data-theme="dark"] .button {
+  color: white !important;
+}
+
+/* Fix ALL white and light backgrounds in dark mode - they should be dark */
+[data-theme="dark"] .character-name-edit,
+[data-theme="dark"] .character-editor,
+[data-theme="dark"] .background-editor,
+[data-theme="dark"] .avatar-dropdown,
+[data-theme="dark"] .character-editor-textarea,
+[data-theme="dark"] .background-content-textarea,
+[data-theme="dark"] .chapter-title-edit,
+[data-theme="dark"] .scenes-in-chapter,
+[data-theme="dark"] .scene-item,
+[data-theme="dark"] .scene-actions-dropdown,
+[data-theme="dark"] .chapter-actions-dropdown,
+[data-theme="dark"] .illustration-item,
+[data-theme="dark"] .illustration-editor,
+[data-theme="dark"] .illustration-content,
+[data-theme="dark"] .illustration-upload-area,
+[data-theme="dark"] .illustration-suggestions,
+[data-theme="dark"] .illustration-info,
+[data-theme="dark"] .no-illustration .illustration-info,
+[data-theme="dark"] .suggestion-button,
+[data-theme="dark"] .back-matter-editor,
+[data-theme="dark"] .recycle-bin-item,
+[data-theme="dark"] .part-title-edit,
+[data-theme="dark"] .chapters-in-part,
+[data-theme="dark"] .part-drop-area,
+[data-theme="dark"] .chapter-in-part,
+[data-theme="dark"] .location-actions-dropdown,
+[data-theme="dark"] .location-editor,
+[data-theme="dark"] .location-item,
+[data-theme="dark"] .format-btn,
+[data-theme="dark"] .scene-content-textarea,
+[data-theme="dark"] .background-content-textarea,
+[data-theme="dark"] .editor-textarea {
+  background: var(--color-surface) !important;
+}
+
+/* Override any hardcoded white backgrounds */
+[data-theme="dark"] *[style*="background: white"],
+[data-theme="dark"] *[style*="background-color: white"],
+[data-theme="dark"] *[style*="background: #fff"],
+[data-theme="dark"] *[style*="background-color: #fff"] {
+  background: var(--color-surface) !important;
+}
+
+/* Fix light colored backgrounds that should be dark */
+[data-theme="dark"] *[style*="background: #fff3cd"],
+[data-theme="dark"] *[style*="background-color: #fff3cd"],
+[data-theme="dark"] *[style*="background: #fff8e1"],
+[data-theme="dark"] *[style*="background-color: #fff8e1"],
+[data-theme="dark"] *[style*="background: #f8f9fa"],
+[data-theme="dark"] *[style*="background-color: #f8f9fa"],
+[data-theme="dark"] *[style*="background: #f9fafb"],
+[data-theme="dark"] *[style*="background-color: #f9fafb"],
+[data-theme="dark"] *[style*="background: #fafafa"],
+[data-theme="dark"] *[style*="background-color: #fafafa"] {
+  background: var(--color-surface-alt) !important;
+}
+
+/* Fix character-threads component specifically */
+[data-theme="dark"] .character-threads {
+  background: var(--color-surface) !important;
+}
+
+/* Fix threads visualization elements that might have light backgrounds */
+[data-theme="dark"] .character-threads div,
+[data-theme="dark"] .character-threads svg {
+  background: var(--color-surface) !important;
 }

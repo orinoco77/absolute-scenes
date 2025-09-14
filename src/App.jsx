@@ -547,6 +547,14 @@ function App() {
       'menu-toggle-recycle-bin': () => {
         setShowRecycleBin(!showRecycleBin);
       },
+      'menu-toggle-theme': () => {
+        const themes = themeService.getAvailableThemes();
+        const currentIndex = themes.findIndex(
+          t => t.id === themeService.getCurrentTheme()
+        );
+        const nextIndex = (currentIndex + 1) % themes.length;
+        themeService.setTheme(themes[nextIndex].id);
+      },
       'menu-template-settings': () => {
         setActiveTab('settings');
         // Focus on template settings if there's a specific section
