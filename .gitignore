@@ -171,3 +171,6 @@ absolute_scenes_mobile_new/
 Brother's\ Folly.scriv/
 Fantasy\ Saga.scriv/
 Fantasy\ Saga.book
+
+# Claude's workspace (analysis, notes, state information)
+.claude-workspace/

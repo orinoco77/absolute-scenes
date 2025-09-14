@@ -1,0 +1,28 @@
+/* Theme-specific content overrides */
+
+/* Default: show light theme text (with emojis), hide dark theme text */
+.light-text {
+  display: inline;
+}
+
+.dark-text {
+  display: none;
+}
+
+/* Dark theme overrides - show dark text, hide light text */
+[data-theme="dark"] .light-text {
+  display: none;
+}
+
+[data-theme="dark"] .dark-text {
+  display: inline;
+}
+
+/* Legacy support - treat emoji-text as light-text for existing code */
+.emoji-text {
+  display: inline;
+}
+
+[data-theme="dark"] .emoji-text {
+  display: none;
+}

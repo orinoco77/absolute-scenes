@@ -547,7 +547,14 @@ function SceneList({
           <div className="scenes-in-chapter">
             {chapter.scenes.length === 0 ? (
               <div className="empty-chapter">
-                <span>No scenes yet. Click "📄+ Scene" to add one.</span>
+                <span>
+                  <span className="emoji-text">
+                    No scenes yet. Click "📄+ Scene" to add one.
+                  </span>
+                  <span className="dark-text">
+                    No scenes yet. Click "✍️+ Scene" to add one.
+                  </span>
+                </span>
               </div>
             ) : (
               chapter.scenes.map((scene, sceneIndex) => {
@@ -654,7 +661,8 @@ function SceneList({
                         }}
                         title="Delete scene"
                       >
-                        🗑️
+                        <span className="emoji-text">🗑️</span>
+                        <span className="dark-text">🗑️</span>
                       </button>
                     </div>
 
@@ -718,7 +726,8 @@ function SceneList({
               className="secondary-btn"
               title="Add Parts to organize chapters into larger sections"
             >
-              📚+ Part
+              <span className="emoji-text">📚+ Part</span>
+              <span className="dark-text">📖+ Part</span>
             </button>
           )}
           {usingParts && (
@@ -727,7 +736,8 @@ function SceneList({
               className="primary-btn"
               title="Add Part"
             >
-              📚+ Part
+              <span className="emoji-text">📚+ Part</span>
+              <span className="dark-text">📖+ Part</span>
             </button>
           )}
           <button
@@ -735,7 +745,8 @@ function SceneList({
             className="primary-btn"
             title="Add Chapter"
           >
-            📁+ Chapter
+            <span className="emoji-text">📁+ Chapter</span>
+            <span className="dark-text">📝+ Chapter</span>
           </button>
           <button
             onClick={onSceneAdd}
@@ -747,14 +758,16 @@ function SceneList({
             }
             disabled={!currentChapterId}
           >
-            📄+ Scene
+            <span className="emoji-text">📄+ Scene</span>
+            <span className="dark-text">✍️+ Scene</span>
           </button>
           <button
             onClick={onToggleRecycleBin}
             className={`secondary-btn ${recycleBin.length > 0 ? 'has-items' : ''}`}
             title={`Recycle Bin (${recycleBin.length} items)`}
           >
-            🗑️ ({recycleBin.length})
+            <span className="emoji-text">🗑️ ({recycleBin.length})</span>
+            <span className="dark-text">🗑️ ({recycleBin.length})</span>
           </button>
         </div>
       </div>
@@ -867,7 +880,8 @@ function SceneList({
                         }}
                         title="Delete Part (chapters will remain)"
                       >
-                        🗑️
+                        <span className="emoji-text">🗑️</span>
+                        <span className="dark-text">🗑️</span>
                       </button>
                     </div>
                   </div>
@@ -878,7 +892,9 @@ function SceneList({
                         <div className="empty-part">
                           <span>
                             No chapters assigned. Drag chapters here or click
-                            "📁+ Chapter" to add one.
+                            <span className="emoji-text">"📁+ Chapter"</span>
+                            <span className="dark-text">"📝+ Chapter"</span> to
+                            add one.
                           </span>
                         </div>
                       ) : (

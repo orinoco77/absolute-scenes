@@ -1,39 +1,39 @@
 /* Parts Functionality Styles */
 .part-group {
-  margin-bottom: 16px;
-  border: 2px solid #e3f2fd;
-  border-radius: 8px;
-  background-color: #fafafa;
-  transition: all 0.2s ease;
+  margin-bottom: var(--spacing-md);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius-lg);
+  background-color: var(--color-surface-alt);
+  transition: var(--transition);
 }
 
 .part-group.drag-over {
-  border: 2px dashed #2196f3;
-  background-color: #e3f2fd;
+  border: 2px dashed var(--color-primary);
+  background-color: var(--color-surface);
 }
 
 .part-group.drag-invalid {
-  border: 2px dashed #f44336;
-  background-color: #ffebee;
+  border: 2px dashed var(--color-error);
+  background-color: var(--color-surface);
   cursor: not-allowed;
 }
 
 .part-header {
   cursor: move;
-  padding: 12px;
-  background-color: #e3f2fd;
-  border-bottom: 1px solid #bbdefb;
-  border-radius: 6px 6px 0 0;
-  transition: background-color 0.2s;
+  padding: var(--spacing-sm);
+  background-color: var(--color-surface);
+  border-bottom: var(--border-width) solid var(--color-primary);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  transition: var(--transition);
 }
 
 .part-header:hover {
-  background-color: #bbdefb;
+  background-color: var(--color-surface-alt);
 }
 
 .part-header.active-part {
-  background-color: #2196f3;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
 }
 
 .part-header-content {

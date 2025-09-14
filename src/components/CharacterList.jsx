@@ -45,7 +45,10 @@ function CharacterList({
             className={`secondary-btn ${characterRecycleBin.length > 0 ? 'has-items' : ''}`}
             title={`Character Recycle Bin (${characterRecycleBin.length} items)`}
           >
-            🗑️ ({characterRecycleBin.length})
+            <span className="emoji-text">
+              🗑️ ({characterRecycleBin.length})
+            </span>
+            <span className="dark-text">🗑️ ({characterRecycleBin.length})</span>
           </button>
         </div>
       </div>
@@ -53,7 +56,14 @@ function CharacterList({
       <div className="tab-content-container">
         {characters.length === 0 ? (
           <div className="empty-state">
-            <p>No characters yet. Click "👤+ Character" to add one.</p>
+            <p>
+              <span className="emoji-text">
+                No characters yet. Click "👤+ Character" to add one.
+              </span>
+              <span className="dark-text">
+                No characters yet. Click "👤+ Character" to add one.
+              </span>
+            </p>
           </div>
         ) : (
           characters.map(character => {

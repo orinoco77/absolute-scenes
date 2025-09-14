@@ -7,34 +7,34 @@
 }
 
 .character-list-header {
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
+  padding: var(--spacing-md);
+  border-bottom: var(--border-width) solid var(--color-surface-alt);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
 .character-description {
-  font-size: 0.8rem;
-  color: #666;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
   margin: 0;
   line-height: 1.4;
 }
 
 .add-character-btn {
-  background: #9c27b0;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
   border: none;
-  padding: 0.5rem;
-  border-radius: 4px;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
   flex: 1;
-  transition: background-color 0.2s;
+  transition: var(--transition);
 }
 
 .add-character-btn:hover {
-  background: #7b1fa2;
+  background: var(--color-primary-hover);
 }
 
 .characters-container {
@@ -46,7 +46,7 @@
 
 .empty-characters {
   padding: 1rem 2rem;
-  color: #666;
+  color: var(--color-text-muted);
   font-style: italic;
   text-align: center;
   background: #f9f9f9;
@@ -86,7 +86,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
+  background: var(--color-surface-disabled);
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -99,13 +99,13 @@
 .character-name {
   font-weight: 500;
   margin-bottom: 0.25rem;
-  color: #333;
+  color: var(--color-text);
 }
 
 .character-name-edit {
   font-weight: 500;
   background: white;
-  border: 1px solid #ddd;
+  border: var(--border-width) solid var(--color-border);
   padding: 0.25rem;
   border-radius: 2px;
   width: 100%;
@@ -113,7 +113,7 @@
 
 .character-role {
   font-size: 0.75rem;
-  color: #666;
+  color: var(--color-text-muted);
   margin-bottom: 0.25rem;
 }
 
@@ -121,7 +121,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.7rem;
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .character-actions {
@@ -163,7 +163,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #666;
+  color: var(--color-text-muted);
   text-align: center;
   padding: 2rem;
   font-size: 1.2rem;
@@ -171,7 +171,7 @@
 
 .character-header {
   padding: 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: var(--border-width) solid var(--color-border);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -194,7 +194,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
+  background: var(--color-surface-disabled);
   border-radius: 50%;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -209,7 +209,7 @@
   top: 100%;
   left: 0;
   background: white;
-  border: 1px solid #ddd;
+  border: var(--border-width) solid var(--color-border);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
@@ -253,27 +253,27 @@
 
 .character-name-input:focus {
   outline: none;
-  border-bottom-color: #9c27b0;
+  border-bottom-color: var(--color-accent);
 }
 
 .character-role-input {
   font-size: 1rem;
   border: none;
-  border-bottom: 1px solid #eee;
+  border-bottom: var(--border-width) solid var(--color-border);
   background: transparent;
   padding: 0.25rem 0;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .character-role-input:focus {
   outline: none;
-  border-bottom-color: #9c27b0;
+  border-bottom-color: var(--color-accent);
 }
 
 .character-stats {
   display: flex;
   gap: 1rem;
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
@@ -285,7 +285,7 @@
 
 .character-editor-textarea textarea {
   flex: 1;
-  border: 1px solid #ddd;
+  border: var(--border-width) solid var(--color-border);
   border-top: none;
   border-radius: 0 0 4px 4px;
   padding: 1rem;
@@ -299,7 +299,7 @@
 }
 
 .character-editor-textarea textarea:focus {
-  border-color: #9c27b0;
+  border-color: var(--color-accent);
   box-shadow: 0 0 0 2px rgba(156, 39, 176, 0.2);
 }
 
@@ -312,12 +312,12 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #333;
+  color: var(--color-text);
 }
 
 .character-notes textarea {
   width: 100%;
-  border: 1px solid #ddd;
+  border: var(--border-width) solid var(--color-border);
   border-radius: 4px;
   padding: 0.75rem;
   font-family: inherit;
@@ -327,7 +327,7 @@
 
 .character-notes textarea:focus {
   outline: none;
-  border-color: #9c27b0;
+  border-color: var(--color-accent);
   box-shadow: 0 0 0 2px rgba(156, 39, 176, 0.2);
 }
 
@@ -342,7 +342,7 @@
 
 .background-editor .scene-header {
   padding: 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: var(--border-width) solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -357,7 +357,7 @@
 }
 
 .background-editor .scene-stats {
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
@@ -371,7 +371,7 @@
   height: calc(60vh - 3rem);
   display: flex;
   flex-direction: column;
-  border: 1px solid #ddd;
+  border: var(--border-width) solid var(--color-border);
   border-radius: 4px;
 }
 

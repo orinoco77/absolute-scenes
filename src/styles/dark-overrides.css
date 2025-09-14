@@ -1,0 +1,194 @@
+/* Dark Theme - Make EVERYTHING dark consistently */
+
+/* Force all elements to respect dark theme */
+[data-theme="dark"] * {
+  color-scheme: dark;
+}
+
+/* Dark Theme Body & Root */
+[data-theme="dark"] body {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+/* Ensure all text elements are light in dark theme */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6,
+[data-theme="dark"] p,
+[data-theme="dark"] span,
+[data-theme="dark"] div,
+[data-theme="dark"] label {
+  color: var(--color-text);
+}
+
+/* Force all backgrounds to be dark */
+[data-theme="dark"] .app,
+[data-theme="dark"] .main-content,
+[data-theme="dark"] .editor-area,
+[data-theme="dark"] .scene-editor,
+[data-theme="dark"] .character-editor,
+[data-theme="dark"] .location-editor,
+[data-theme="dark"] .background-editor {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+/* Dark theme cards and panels */
+[data-theme="dark"] .card,
+[data-theme="dark"] .panel,
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] .book-structure {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+/* Dark theme headers and toolbars */
+[data-theme="dark"] .app-header,
+[data-theme="dark"] .toolbar,
+[data-theme="dark"] .header,
+[data-theme="dark"] .tab-list-header,
+[data-theme="dark"] .scene-header,
+[data-theme="dark"] .location-header,
+[data-theme="dark"] .character-header {
+  background: var(--color-secondary);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+/* Dark theme status bars */
+[data-theme="dark"] .status-bar,
+[data-theme="dark"] .footer {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+/* Dark theme list items */
+[data-theme="dark"] .scene-item,
+[data-theme="dark"] .character-item,
+[data-theme="dark"] .location-item,
+[data-theme="dark"] .chapter-group,
+[data-theme="dark"] .part-group {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .scene-item:hover,
+[data-theme="dark"] .character-item:hover,
+[data-theme="dark"] .location-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .scene-item.active,
+[data-theme="dark"] .character-item.active,
+[data-theme="dark"] .location-item.active {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* Dark theme textareas and editors */
+[data-theme="dark"] textarea,
+[data-theme="dark"] .editor-textarea,
+[data-theme="dark"] .scene-content-textarea,
+[data-theme="dark"] .character-editor-textarea textarea,
+[data-theme="dark"] .location-editor-textarea textarea,
+[data-theme="dark"] .background-content-textarea {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+/* Dark theme placeholders */
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--color-text-light);
+  opacity: 1;
+}
+
+/* Dark theme modals and popups */
+[data-theme="dark"] .modal,
+[data-theme="dark"] .popup,
+[data-theme="dark"] .dialog,
+[data-theme="dark"] .dropdown-menu {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+/* Dark theme tabs */
+[data-theme="dark"] .tab-button,
+[data-theme="dark"] .accordion-button {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .tab-button.active,
+[data-theme="dark"] .accordion-button.active {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* Dark theme info sections */
+[data-theme="dark"] .tab-info-section,
+[data-theme="dark"] .tab-help-section,
+[data-theme="dark"] .info-section {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+/* Dark theme empty states */
+[data-theme="dark"] .empty-state,
+[data-theme="dark"] .no-scene,
+[data-theme="dark"] .no-character,
+[data-theme="dark"] .no-location {
+  color: var(--color-text-muted);
+}
+
+/* Dark theme scrollbars */
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--color-surface-alt);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--color-border-dark);
+  border-radius: var(--border-radius);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-light);
+}
+
+/* Dark theme selection */
+[data-theme="dark"] ::selection {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* Override any remaining white backgrounds */
+[data-theme="dark"] [style*="background: white"],
+[data-theme="dark"] [style*="background-color: white"],
+[data-theme="dark"] [style*="background: #fff"],
+[data-theme="dark"] [style*="background-color: #fff"] {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+/* Override any remaining black text */
+[data-theme="dark"] [style*="color: black"],
+[data-theme="dark"] [style*="color: #000"] {
+  color: var(--color-text) !important;
+}

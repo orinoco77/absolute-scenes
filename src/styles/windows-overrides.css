@@ -1,0 +1,180 @@
+/* Windows Theme - Make it look like a native Windows 11 application */
+
+/* Windows 11 Title Bar Style */
+[data-theme="windows"] .app-header {
+  background: var(--color-background);
+  border-bottom: var(--border-width) solid var(--color-border);
+  height: var(--header-height);
+  padding: 0 var(--header-padding-x);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Windows 11 Navigation Rail Style */
+[data-theme="windows"] .book-structure {
+  background: var(--color-surface-alt);
+  border-right: var(--border-width) solid var(--color-border);
+  width: var(--sidebar-width);
+}
+
+/* Windows 11 Content Area */
+[data-theme="windows"] .main-content {
+  background: var(--color-background);
+}
+
+/* Windows 11 Card Style */
+[data-theme="windows"] .card,
+[data-theme="windows"] .scene-item,
+[data-theme="windows"] .character-item,
+[data-theme="windows"] .location-item {
+  background: var(--color-surface);
+  border: var(--card-border-width) solid var(--color-border);
+  border-radius: var(--border-radius); /* 0px for sharp Windows edges */
+  padding: var(--card-padding);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+[data-theme="windows"] .card:hover,
+[data-theme="windows"] .scene-item:hover,
+[data-theme="windows"] .character-item:hover,
+[data-theme="windows"] .location-item:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--color-border-dark);
+  transform: none; /* Windows doesn't use lift animations */
+}
+
+/* Windows 11 List Items */
+[data-theme="windows"] .accordion-button {
+  background: transparent;
+  border: none;
+  border-bottom: var(--border-width) solid var(--color-border);
+  border-radius: 0;
+  padding: var(--sidebar-item-padding-y) var(--sidebar-item-padding-x);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+}
+
+[data-theme="windows"] .accordion-button:hover {
+  background: var(--color-surface-hover);
+}
+
+[data-theme="windows"] .accordion-button.active {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* Windows 11 Toolbar Style */
+[data-theme="windows"] .toolbar {
+  background: var(--color-surface-alt);
+  border-bottom: var(--border-width) solid var(--color-border);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+/* Windows 11 Status Bar */
+[data-theme="windows"] .status-bar {
+  background: var(--color-surface-alt);
+  border-top: var(--border-width) solid var(--color-border);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  height: auto;
+}
+
+/* Windows 11 Modal/Dialog Style */
+[data-theme="windows"] .modal,
+[data-theme="windows"] .dialog {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-xl); /* 2px for Windows */
+  box-shadow: var(--shadow-lg);
+}
+
+/* Windows 11 Focus Rings */
+[data-theme="windows"] *:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px; /* Windows uses inset focus rings */
+}
+
+/* Windows 11 Scrollbars */
+[data-theme="windows"] ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+[data-theme="windows"] ::-webkit-scrollbar-track {
+  background: var(--color-surface-alt);
+}
+
+[data-theme="windows"] ::-webkit-scrollbar-thumb {
+  background: var(--color-border-dark);
+  border-radius: 0;
+  border: 2px solid var(--color-surface-alt);
+}
+
+[data-theme="windows"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-light);
+}
+
+/* Windows 11 Menu/Dropdown Style */
+[data-theme="windows"] .dropdown-menu,
+[data-theme="windows"] .context-menu {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-lg); /* 2px */
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-xs) 0;
+}
+
+[data-theme="windows"] .dropdown-item,
+[data-theme="windows"] .menu-item {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-base);
+  border-radius: 0;
+  transition: var(--transition);
+}
+
+[data-theme="windows"] .dropdown-item:hover,
+[data-theme="windows"] .menu-item:hover {
+  background: var(--color-surface-hover);
+}
+
+/* Windows 11 Typography Adjustments */
+[data-theme="windows"] h1,
+[data-theme="windows"] h2,
+[data-theme="windows"] h3,
+[data-theme="windows"] h4,
+[data-theme="windows"] h5,
+[data-theme="windows"] h6 {
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-semibold); /* Windows uses 600 for headings */
+}
+
+/* Windows 11 Icon Adjustments */
+[data-theme="windows"] .icon {
+  /* Windows uses Segoe Fluent Icons when available */
+  font-family: "Segoe Fluent Icons", var(--font-family-primary);
+}
+
+/* Remove rounded corners from everything in Windows theme */
+[data-theme="windows"] * {
+  /* This is aggressive but ensures Windows sharp aesthetic */
+}
+
+/* Windows 11 specific element overrides */
+[data-theme="windows"] .tab-content-container {
+  border-radius: 0;
+}
+
+[data-theme="windows"] .scene-editor,
+[data-theme="windows"] .character-editor,
+[data-theme="windows"] .location-editor {
+  background: var(--color-background);
+}
+
+[data-theme="windows"] .editor-textarea {
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-surface);
+}

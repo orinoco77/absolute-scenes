@@ -1,7 +1,7 @@
 /* Editor Styles */
 .scene-editor {
   flex: 1;
-  background: white;
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
   overflow-y: scroll;
@@ -13,31 +13,32 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #666;
-  font-size: 1.2rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xl);
   text-align: center;
-  padding: 2rem;
+  padding: var(--spacing-2xl);
 }
 
 .scene-header {
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
+  padding: var(--spacing-md);
+  border-bottom: var(--border-width) solid var(--color-surface-alt);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .scene-title-input {
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   font-weight: bold;
   border: none;
   background: transparent;
   flex: 1;
+  color: var(--color-text);
 }
 
 .scene-stats {
-  color: #666;
-  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
 .main-content-area {

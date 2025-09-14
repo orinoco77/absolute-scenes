@@ -1,15 +1,13 @@
 /* BookStructure component styles */
 .book-structure {
-  width: 300px;
-  background: white;
-  border-right: 1px solid #ddd;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: white;
   width: 410px;
   min-width: 410px;
   max-width: 410px;
+  background: var(--color-surface);
+  border-right: var(--border-width) solid var(--color-text-light);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   flex-shrink: 0;
   overflow-y: auto;
   overflow-x: hidden;
@@ -17,8 +15,8 @@
 
 .book-structure-tabs {
   display: flex;
-  background: #f8f9fa;
-  border-bottom: 1px solid #ddd;
+  background: var(--color-surface-alt);
+  border-bottom: var(--border-width) solid var(--color-text-light);
   flex-shrink: 0;
 }
 
@@ -26,36 +24,38 @@
   flex: 1;
   background: transparent;
   border: none;
-  padding: 12px 8px;
+  padding: var(--spacing-sm) var(--spacing-xs);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition);
   border-bottom: 2px solid transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-xs);
+  color: var(--color-text);
 }
 
 .tab-button:hover {
-  background: #e9ecef;
+  background: var(--color-surface-alt);
 }
 
 .tab-button.active {
-  background: white;
-  border-bottom-color: #2196f3;
-  color: #2196f3;
+  background: var(--color-surface);
+  border-bottom-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .tab-icon {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   line-height: 1;
 }
 
 .tab-label {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: var(--color-text-muted);
 }
 
 .tab-content {

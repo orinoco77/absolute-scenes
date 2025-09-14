@@ -1,0 +1,202 @@
+/* Theme Variables and System */
+
+/* Default Theme Variables (Whimsical - current style) */
+:root {
+  /* Color Palette */
+  --color-primary: #3498db;
+  --color-primary-hover: #2980b9;
+  --color-primary-dark: #2471a3;
+  --color-secondary: #2c3e50;
+  --color-secondary-light: #34495e;
+  --color-accent: #e67e22;
+  --color-accent-hover: #d68910;
+  
+  /* Backgrounds */
+  --color-background: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-surface-alt: #ecf0f1;
+  --color-surface-hover: #e8ecef;
+  --color-surface-disabled: #f8f9fa;
+  
+  /* Text Colors */
+  --color-text: #2c3e50;
+  --color-text-light: #bdc3c7;
+  --color-text-inverse: #ffffff;
+  --color-text-muted: #7f8c8d;
+  --color-text-secondary: #5d6d7e;
+  
+  /* Status Colors */
+  --color-success: #27ae60;
+  --color-warning: #f39c12;
+  --color-error: #e74c3c;
+  --color-info: #3498db;
+  
+  /* Borders */
+  --color-border: #bdc3c7;
+  --color-border-dark: #95a5a6;
+  --color-primary-border: #5dade2;
+  --color-info-border: #5dade2;
+  --color-success-border: #58d68d;
+  --color-warning-border: #f7dc6f;
+  --color-error-border: #ec7063;
+  
+  /* Background colors for status */
+  --color-primary-background: rgba(52, 152, 219, 0.1);
+  --color-info-background: rgba(52, 152, 219, 0.1);
+  --color-success-background: rgba(39, 174, 96, 0.1);
+  --color-warning-background: rgba(243, 156, 18, 0.1);
+  --color-error-background: rgba(231, 76, 60, 0.1);
+  
+  /* Typography */
+  --font-family-primary: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  --font-family-mono: "Courier New", Courier, monospace;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* Spacing Scale */
+  --spacing-xs: 0.25rem;    /* 4px */
+  --spacing-sm: 0.5rem;     /* 8px */
+  --spacing-md: 1rem;       /* 16px */
+  --spacing-lg: 1.5rem;     /* 24px */
+  --spacing-xl: 2rem;       /* 32px */
+  --spacing-2xl: 3rem;      /* 48px */
+  
+  /* Border & Effects */
+  --border-width: 1px;
+  --border-radius-sm: 2px;
+  --border-radius: 4px;
+  --border-radius-lg: 8px;
+  --border-radius-xl: 12px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  
+  /* Transitions */
+  --transition-fast: all 0.1s ease;
+  --transition: all 0.2s ease;
+  --transition-slow: all 0.3s ease;
+  
+  /* Z-index Scale */
+  --z-dropdown: 1000;
+  --z-modal: 1050;
+  --z-tooltip: 1070;
+  
+  /* Button Design Tokens */
+  --button-padding-x: 1rem;
+  --button-padding-y: 0.5rem;
+  --button-padding-sm-x: 0.75rem;
+  --button-padding-sm-y: 0.375rem;
+  --button-padding-lg-x: 1.25rem;
+  --button-padding-lg-y: 0.75rem;
+  --button-border-width: 1px;
+  --button-font-weight: var(--font-weight-medium);
+  --button-text-transform: none;
+  
+  /* Input Design Tokens */
+  --input-padding-x: 0.75rem;
+  --input-padding-y: 0.5rem;
+  --input-border-width: 1px;
+  --input-font-size: var(--font-size-base);
+  
+  /* Card Design Tokens */
+  --card-padding: 1.5rem;
+  --card-border-width: 1px;
+  
+  /* Header Design Tokens */
+  --header-height: 3rem;
+  --header-padding-x: 1rem;
+  
+  /* Sidebar Design Tokens */
+  --sidebar-width: 300px;
+  --sidebar-item-padding-x: 1rem;
+  --sidebar-item-padding-y: 0.75rem;
+}
+
+/* Light Theme (Default - maintains current styling exactly) */
+[data-theme="light"] {
+  /* Already defined in :root above */
+}
+
+
+
+/* Dark Theme - Writer-friendly night mode */
+[data-theme="dark"] {
+  --color-primary: #4a9eff;
+  --color-primary-hover: #357abd;
+  --color-secondary: #1e1e1e;
+  --color-secondary-light: #2d2d2d;
+  --color-background: #0d1117;
+  --color-surface: #161b22;
+  --color-surface-alt: #21262d;
+  --color-surface-hover: #30363d;
+  --color-surface-disabled: #21262d;
+  --color-text: #f0f6fc;
+  --color-text-light: #7d8590;
+  --color-text-inverse: #0d1117;
+  --color-text-muted: #8b949e;
+  --color-text-secondary: #c9d1d9;
+  --color-accent: #ff7b72;
+  --color-accent-hover: #f85149;
+  
+  /* Borders for dark theme */
+  --color-border: #30363d;
+  --color-border-dark: #21262d;
+  --color-primary-border: #1f6feb;
+  --color-info-border: #1f6feb;
+  --color-success-border: #2ea043;
+  --color-warning-border: #d29922;
+  --color-error-border: #f85149;
+  
+  /* Status colors optimized for dark backgrounds */
+  --color-success: #3fb950;
+  --color-warning: #d29922;
+  --color-error: #f85149;
+  --color-info: #58a6ff;
+  
+  /* Background colors for dark theme */
+  --color-primary-background: rgba(88, 166, 255, 0.1);
+  --color-info-background: rgba(88, 166, 255, 0.1);
+  --color-success-background: rgba(63, 185, 80, 0.1);
+  --color-warning-background: rgba(210, 153, 34, 0.1);
+  --color-error-background: rgba(248, 81, 73, 0.1);
+  
+  /* Use same spacing as light theme for consistency */
+  /* Spacing values inherited from :root - no override needed */
+
+  /* Use same border radius as light theme for consistency */
+  /* Border radius values inherited from :root - no override needed */
+
+  /* Use same font sizes as light theme for consistency */
+  /* Font size values inherited from :root - no override needed */
+  
+  /* Dramatic dark theme shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.7);
+  
+  /* Smooth, calming transitions */
+  --transition-fast: all 0.12s ease-out;
+  --transition: all 0.25s ease-out;
+  --transition-slow: all 0.35s ease-out;
+}
+
+/* Theme Transition */
+* {
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+}

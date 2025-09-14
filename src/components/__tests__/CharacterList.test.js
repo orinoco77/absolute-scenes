@@ -94,7 +94,9 @@ describe('CharacterList Component', () => {
 
   test('renders recycle bin button with item count', () => {
     renderComponent({ characterRecycleBin: mockRecycleBin });
-    expect(screen.getByText('🗑️ (2)')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /🗑️.*2.*🗑️.*2/ })
+    ).toBeInTheDocument();
   });
 
   test('calls onCharacterAdd when add character button is clicked', () => {
@@ -222,7 +224,9 @@ describe('CharacterList Component', () => {
   test('shows empty characters message when no characters exist', () => {
     renderComponent({ characters: [] });
     expect(
-      screen.getByText('No characters yet. Click "👤+ Character" to add one.')
+      screen.getAllByText(
+        /No characters yet\. Click.*Character.*to add one\./
+      )[0]
     ).toBeInTheDocument();
   });
 
@@ -230,7 +234,7 @@ describe('CharacterList Component', () => {
     renderComponent({ characterRecycleBin: mockRecycleBin });
 
     // Open recycle bin
-    fireEvent.click(screen.getByText('🗑️ (2)'));
+    fireEvent.click(screen.getByRole('button', { name: /🗑️.*2.*🗑️.*2/ }));
     expect(screen.getByText('🗑️ Character Recycle Bin')).toBeInTheDocument();
   });
 
@@ -250,18 +254,20 @@ describe('CharacterList Component', () => {
     );
 
     // Manually trigger recycle bin visibility
-    fireEvent.click(screen.getByText('🗑️ (2)'));
+    fireEvent.click(screen.getByRole('button', { name: /🗑️.*2.*🗑️.*2/ }));
   });
 
   test('shows empty recycle bin message', () => {
     renderComponent({ characterRecycleBin: [] });
 
     // Simulate showing empty recycle bin
-    fireEvent.click(screen.getByText('🗑️ (0)'));
+    fireEvent.click(screen.getByRole('button', { name: /🗑️.*0.*🗑️.*0/ }));
 
     // The component manages showRecycleBin internally, so we need to check after state change
     // This test verifies the empty state would be shown
-    expect(screen.getByText('🗑️ (0)')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /🗑️.*0.*🗑️.*0/ })
+    ).toBeInTheDocument();
   });
 
   test('calls onRestoreFromRecycleBin when restore button is clicked', () => {
@@ -280,7 +286,7 @@ describe('CharacterList Component', () => {
     };
 
     render(<TestComponentWithRecycleBin />);
-    fireEvent.click(screen.getByText('🗑️ (2)'));
+    fireEvent.click(screen.getByRole('button', { name: /🗑️.*2.*🗑️.*2/ }));
   });
 
   test('calls onPermanentlyDelete when permanent delete button is clicked', () => {
@@ -299,7 +305,7 @@ describe('CharacterList Component', () => {
     };
 
     render(<TestComponentWithRecycleBin />);
-    fireEvent.click(screen.getByText('🗑️ (2)'));
+    fireEvent.click(screen.getByRole('button', { name: /🗑️.*2.*🗑️.*2/ }));
   });
 
   test('empty bin button requires confirmation', () => {
@@ -317,7 +323,7 @@ describe('CharacterList Component', () => {
     };
 
     render(<TestComponentWithRecycleBin />);
-    fireEvent.click(screen.getByText('🗑️ (2)'));
+    fireEvent.click(screen.getByRole('button', { name: /🗑️.*2.*🗑️.*2/ }));
 
     // Confirm is mocked to return true, so the operation should proceed
     expect(window.confirm).toBeDefined();
@@ -370,13 +376,17 @@ describe('CharacterList Component', () => {
 
   test('adds has-items class to recycle bin button when it has items', () => {
     renderComponent({ characterRecycleBin: mockRecycleBin });
-    const recycleBinButton = screen.getByText('🗑️ (2)');
+    const recycleBinButton = screen.getByRole('button', {
+      name: /🗑️.*2.*🗑️.*2/
+    });
     expect(recycleBinButton).toHaveClass('has-items');
   });
 
   test('does not add has-items class when recycle bin is empty', () => {
     renderComponent({ characterRecycleBin: [] });
-    const recycleBinButton = screen.getByText('🗑️ (0)');
+    const recycleBinButton = screen.getByRole('button', {
+      name: /🗑️.*0.*🗑️.*0/
+    });
     expect(recycleBinButton).not.toHaveClass('has-items');
   });
 
