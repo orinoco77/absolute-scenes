@@ -5,8 +5,8 @@
 
 body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f5f5f5;
+  font-family: var(--font-family-primary);
+  background: var(--color-background);
 }
 
 .app {
@@ -17,9 +17,9 @@ body {
 }
 
 .app-header {
-  background: #2c3e50;
-  color: white;
-  padding: 1rem;
+  background: var(--color-secondary);
+  color: var(--color-text-inverse);
+  padding: var(--spacing-md);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -32,12 +32,12 @@ body {
 }
 
 .browser-mode-indicator {
-  background: #e67e22;
-  color: white;
-  padding: 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  margin-left: 1rem;
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-sm);
+  margin-left: var(--spacing-md);
 }
 
 /* Modal styles */
@@ -55,18 +55,19 @@ body {
 }
 
 .modal {
-  background: white;
-  border-radius: 8px;
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  box-shadow: var(--shadow-lg);
 }
 
 .modal-header {
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
+  padding: var(--spacing-md);
+  border-bottom: var(--border-width) solid var(--color-surface-alt);
   display: flex;
   justify-content: space-between;
   align-items: center;

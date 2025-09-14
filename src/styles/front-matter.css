@@ -22,32 +22,32 @@
 .front-matter-item {
   display: flex;
   align-items: center;
-  padding: 12px;
-  border-bottom: 1px solid #e0e0e0;
+  padding: var(--spacing-md);
+  border-bottom: var(--border-width) solid var(--color-border);
   cursor: pointer;
-  transition: all 0.2s;
-  background: white;
+  transition: var(--transition);
+  background: var(--color-surface);
   position: relative;
 }
 
 .front-matter-item:hover {
-  background: #f8f9fa;
+  background: var(--color-surface-alt);
 }
 
 .front-matter-item.active {
-  background: #e3f2fd;
-  border-left: 3px solid #2196f3;
+  background: var(--color-info-background);
+  border-left: 3px solid var(--color-primary);
 }
 
 .front-matter-item.disabled {
   opacity: 0.6;
-  background: #f5f5f5;
+  background: var(--color-surface-disabled);
 }
 
 .front-matter-content {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-md);
   flex: 1;
   min-width: 0;
 }
@@ -59,8 +59,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f0f0f0;
-  border-radius: 8px;
+  background: var(--color-surface-alt);
+  border-radius: var(--border-radius-md);
   flex-shrink: 0;
 }
 
@@ -71,27 +71,27 @@
 
 .front-matter-title {
   font-weight: 600;
-  font-size: 14px;
-  color: #333;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
   margin-bottom: 2px;
 }
 
 .front-matter-type {
-  font-size: 12px;
-  color: #666;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
   margin-bottom: 4px;
 }
 
 .front-matter-meta {
   display: flex;
-  gap: 12px;
-  font-size: 11px;
-  color: #999;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-light);
 }
 
 .front-matter-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -102,28 +102,28 @@
 
 .toggle-btn {
   background: none;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius);
   width: 24px;
   height: 24px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  transition: all 0.2s;
+  font-size: var(--font-size-xs);
+  transition: var(--transition);
 }
 
 .toggle-btn.enabled {
-  background: #4caf50;
-  border-color: #4caf50;
-  color: white;
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: var(--color-text-inverse);
 }
 
 .toggle-btn.disabled {
-  background: #f5f5f5;
-  border-color: #ddd;
-  color: #999;
+  background: var(--color-surface-disabled);
+  border-color: var(--color-border);
+  color: var(--color-text-light);
 }
 
 .delete-btn {
@@ -139,7 +139,7 @@
 
 .delete-btn:hover {
   opacity: 1;
-  background: #ffebee;
+  background: var(--color-error-background);
 }
 
 /* Add Dropdown Styles */
@@ -155,10 +155,10 @@
   position: absolute;
   top: 100%;
   left: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
   z-index: 1000;
   min-width: 200px;
   display: none;
@@ -183,7 +183,7 @@
 }
 
 .dropdown-item:hover:not(.disabled) {
-  background: #f0f0f0;
+  background: var(--color-surface-hover);
 }
 
 .dropdown-item.disabled {
@@ -206,7 +206,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--color-surface);
   overflow: hidden;
   height: 100%;
 }
@@ -258,7 +258,7 @@
 }
 
 .front-matter-title-input:focus {
-  border-bottom-color: #2196f3;
+  border-bottom-color: var(--color-primary);
 }
 
 .front-matter-type-label {
@@ -302,7 +302,7 @@
 }
 
 .front-matter-content-textarea:focus {
-  border-color: #2196f3;
+  border-color: var(--color-primary);
 }
 
 /* Map Editor Styles */
@@ -334,14 +334,14 @@
 }
 
 .upload-btn {
-  background: #2196f3;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
   border: none;
   padding: 10px 20px;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
+  font-size: var(--font-size-sm);
+  transition: var(--transition);
 }
 
 .upload-btn:hover {

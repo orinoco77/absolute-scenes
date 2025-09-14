@@ -701,7 +701,17 @@ function GitHubIntegration({
                       opacity: isValidating || !token.trim() ? 0.7 : 1
                     }}
                   >
-                    {isValidating ? '🔄 Connecting...' : '🚀 Connect to GitHub'}
+                    {isValidating ? (
+                      <>
+                        <span className="emoji-text">🔄 Connecting...</span>
+                        <span className="dark-text">🔄 Connecting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="emoji-text">🚀 Connect to GitHub</span>
+                        <span className="dark-text">🔗 Connect</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -1244,7 +1254,17 @@ function GitHubIntegration({
                           opacity: isSyncing ? 0.7 : 1
                         }}
                       >
-                        {isSyncing ? '🔄 Syncing...' : '💾 Sync Now'}
+                        {isSyncing ? (
+                          <>
+                            <span className="emoji-text">🔄 Syncing...</span>
+                            <span className="dark-text">🔄 Syncing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="emoji-text">💾 Sync Now</span>
+                            <span className="dark-text">💾 Sync</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>

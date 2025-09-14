@@ -22,16 +22,19 @@ import { useUIState } from './hooks/useUIState';
 import { EventHandlerService } from './services/EventHandlerService';
 import { GitHubSyncService } from './services/GitHubSyncService';
 import { SaveService } from './services/SaveService';
+import { ThemeService } from './services/ThemeService';
 import { initializeFontSystem } from './utils/fontManager';
 import { initializeFontSettings } from './utils/fontSettingsManager';
 import './styles/App.css';
 import './styles/back-matter.css';
 import './styles/font-settings.css';
+import './styles/theme-content.css';
 
 // Create service instances (following Dependency Inversion Principle)
 const saveService = new SaveService();
 const gitHubSyncService = new GitHubSyncService();
 const eventHandlerService = new EventHandlerService();
+const themeService = new ThemeService();
 
 function App() {
   // Use custom hooks for state management (following Single Responsibility Principle)
@@ -615,6 +618,38 @@ function App() {
     setCurrentChapterId,
     setCurrentPartId
   ]);
+
+  // Theme cycling for testing (Ctrl+Shift+T)
+  useEffect(() => {
+    const handleKeyDown = event => {
+      if (event.ctrlKey && event.shiftKey && event.key === 'T') {
+        event.preventDefault();
+        const themes = themeService.getAvailableThemes();
+        const currentIndex = themes.findIndex(
+          t => t.id === themeService.getCurrentTheme()
+        );
+        const nextIndex = (currentIndex + 1) % themes.length;
+        themeService.setTheme(themes[nextIndex].id);
+
+        // Show notification (temporary)
+        const notification = document.createElement('div');
+        notification.textContent = `Theme: ${themes[nextIndex].name}`;
+        notification.style.cssText = `
+          position: fixed; top: 20px; right: 20px; z-index: 9999;
+          background: var(--color-primary); color: var(--color-text-inverse);
+          padding: var(--spacing-sm) var(--spacing-md);
+          border-radius: var(--border-radius);
+          font-family: var(--font-family-primary);
+          box-shadow: var(--shadow-lg);
+        `;
+        document.body.appendChild(notification);
+        setTimeout(() => document.body.removeChild(notification), 2000);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Content handlers (following Interface Segregation Principle)
   const contentHandlers = useMemo(

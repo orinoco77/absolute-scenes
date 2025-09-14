@@ -52,7 +52,8 @@ function LocationList({
             className="primary-btn"
             title="Add New Location"
           >
-            + New Location
+            <span className="emoji-text">+ New Location</span>
+            <span className="dark-text">🌍+ Location</span>
           </button>
         </div>
       </div>

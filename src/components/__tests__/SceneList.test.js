@@ -147,13 +147,15 @@ describe('SceneList Component', () => {
 
   test('disables scene add button when no chapter is selected', () => {
     renderComponent({ currentChapterId: null });
-    const addSceneBtn = screen.getByText('📄+ Scene');
+    const addSceneBtn = screen.getByRole('button', { name: /Scene/ });
     expect(addSceneBtn).toBeDisabled();
   });
 
   test('renders recycle bin button with item count', () => {
     renderComponent({ recycleBin: mockRecycleBin });
-    expect(screen.getByText('🗑️ (2)')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /🗑️.*2.*🗑️.*2/ })
+    ).toBeInTheDocument();
   });
 
   test('calls onChapterAdd when add chapter button is clicked', () => {
@@ -170,7 +172,7 @@ describe('SceneList Component', () => {
 
   test('calls onToggleRecycleBin when recycle bin button is clicked', () => {
     renderComponent();
-    fireEvent.click(screen.getByText('🗑️ (0)'));
+    fireEvent.click(screen.getByRole('button', { name: /🗑️.*0.*🗑️.*0/ }));
     expect(mockFunctions.onToggleRecycleBin).toHaveBeenCalled();
   });
 
@@ -565,7 +567,9 @@ describe('SceneList Component', () => {
 
   test('adds has-items class to recycle bin button when it has items', () => {
     renderComponent({ recycleBin: mockRecycleBin });
-    const recycleBinButton = screen.getByText('🗑️ (2)');
+    const recycleBinButton = screen.getByRole('button', {
+      name: /🗑️.*2.*🗑️.*2/
+    });
     expect(recycleBinButton).toHaveClass('has-items');
   });
 

@@ -4,35 +4,30 @@
 }
 
 .recycle-bin-btn.has-items {
-  background-color: #fff3cd;
-  border-color: #ffeaa7;
+  background-color: var(--color-warning-background);
+  border-color: var(--color-warning-border);
 }
 
 .recycle-bin {
-  margin-top: 20px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: #f9f9f9;
+  margin-top: var(--spacing-xl);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+  background-color: var(--color-surface-alt);
   flex-shrink: 0;
   max-height: 300px;
   overflow: auto;
-  border-top: 1px solid #e5e7eb;
-  background-color: #fafafa;
+  border-top: var(--border-width) solid var(--color-border);
   margin-top: auto;
   position: relative;
-  border-radius: 0.5rem 0.5rem 0 0;
 }
 
 .recycle-bin-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
-  background-color: #f5f5f5;
-  border-bottom: 1px solid #ddd;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f8f9fa;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-surface-alt);
+  border-bottom: var(--border-width) solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -40,17 +35,14 @@
 
 .recycle-bin-header h4 {
   margin: 0;
-  font-size: 14px;
-  color: #666;
-  font-size: 0.9rem;
-  color: #666;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
 .recycle-bin-controls {
   display: flex;
-  gap: 8px;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
 .empty-bin-btn,
@@ -71,25 +63,23 @@
 }
 
 .empty-bin-btn {
-  color: #f44336;
+  color: var(--color-error);
 }
 
 .empty-bin-btn:hover {
-  background-color: #ffebee;
-  background: #fff3cd;
-  border-color: #ffeaa7;
-  color: #856404;
+  background: var(--color-error-background);
+  border-color: var(--color-error-border);
+  color: var(--color-error);
 }
 
 .close-bin-btn {
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .close-bin-btn:hover {
-  background-color: #e0e0e0;
-  background: #ffebee;
-  border-color: #ffcdd2;
-  color: #c62828;
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-dark);
+  color: var(--color-text);
 }
 
 .recycle-bin-content {
@@ -175,7 +165,7 @@
 }
 
 .restore-btn {
-  color: #4caf50;
+  color: var(--color-success);
 }
 
 .restore-btn:hover {
