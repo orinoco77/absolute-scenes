@@ -1778,6 +1778,11 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+Shift+R',
           click: () => mainWindow.webContents.send('menu-toggle-recycle-bin')
         },
+        {
+          label: 'Toggle Theme',
+          accelerator: 'CmdOrCtrl+Shift+T',
+          click: () => mainWindow.webContents.send('menu-toggle-theme')
+        },
         { type: 'separator' },
         { label: 'Reload', accelerator: 'CmdOrCtrl+R', role: 'reload' },
         {

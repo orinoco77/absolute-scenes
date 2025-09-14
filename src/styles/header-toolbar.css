@@ -194,3 +194,30 @@
   background: #ddd;
   margin: 0 8px;
 }
+
+/* Dark Theme Overrides */
+[data-theme="dark"] .header-buttons .primary-btn {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+[data-theme="dark"] .header-buttons .primary-btn:hover {
+  background: var(--color-primary-hover);
+}
+
+[data-theme="dark"] .header-buttons .secondary-btn {
+  background: #374151; /* Dark grey background */
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+[data-theme="dark"] .header-buttons .secondary-btn:hover {
+  background: #4B5563; /* Slightly lighter dark grey */
+  border-color: var(--color-border-dark);
+}
+
+[data-theme="dark"] .header-buttons .secondary-btn.has-items {
+  background: #92400e; /* Dark amber background */
+  color: #fbbf24; /* Light amber text */
+  border: 1px solid #d97706;
+}
