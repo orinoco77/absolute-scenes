@@ -305,7 +305,6 @@
 
 .character-notes {
   padding: 1rem;
-  border-top: 1px solid #eee;
 }
 
 .character-notes label {
@@ -334,10 +333,10 @@
 /* Background Editor styles */
 .background-editor {
   flex: 1;
-  background: white;
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
-  overflow-y: scroll;
+  overflow: hidden;
 }
 
 .background-editor .scene-header {
@@ -365,20 +364,23 @@
   flex: 1;
   padding: 1rem;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .background-editor .fallback-editor {
-  height: calc(60vh - 3rem);
+  flex: 1;
   display: flex;
   flex-direction: column;
-  border: var(--border-width) solid var(--color-border);
-  border-radius: 4px;
+  min-height: 0;
 }
 
 .background-editor .background-editor-textarea {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .background-editor .background-content-textarea {
@@ -391,8 +393,10 @@
   line-height: 1.6;
   resize: none;
   outline: none;
-  background: white;
-  min-height: calc(60vh - 3rem);
+  background: var(--color-surface);
+  color: var(--color-text);
+  height: 100%;
+  min-height: 650px;
 }
 
 .background-editor .background-content-textarea:focus {

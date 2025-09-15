@@ -1177,10 +1177,9 @@ function GitHubIntegration({
           ) : (
             <div className="github-connected">
               <div
+                id="github-connection-status"
                 style={{
                   padding: '16px',
-                  background: '#d4edda',
-                  border: '1px solid #c3e6cb',
                   borderRadius: '6px',
                   marginBottom: '20px'
                 }}

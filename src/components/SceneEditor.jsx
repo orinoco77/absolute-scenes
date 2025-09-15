@@ -253,17 +253,17 @@ function SceneEditor({
             style={{ minHeight: '400px' }}
           />
         </div>
-      </div>
 
-      <div className="scene-notes">
-        <h4>Scene Notes</h4>
-        <TextEditor
-          value={scene.notes || ''}
-          onChange={handleNotesChange}
-          placeholder="Notes about this scene..."
-          rows={4}
-          spellCheck={true}
-        />
+        <div className="scene-notes">
+          <h4>Scene Notes</h4>
+          <TextEditor
+            value={scene.notes || ''}
+            onChange={handleNotesChange}
+            placeholder="Notes about this scene..."
+            rows={4}
+            spellCheck={true}
+          />
+        </div>
       </div>
 
       {/* Distraction-Free Mode Overlay */}

@@ -1070,7 +1070,9 @@ function App() {
   };
 
   return (
-    <div className={`app ${isSaving ? 'saving' : ''}`}>
+    <div
+      className={`app ${isSaving ? 'saving' : ''} ${currentOperation && currentOperation.toLowerCase().includes('export') ? 'exporting' : ''} ${currentOperation && currentOperation.toLowerCase().includes('import') ? 'importing' : ''} ${currentOperation && (currentOperation.toLowerCase().includes('sync') || currentOperation.toLowerCase().includes('github')) ? 'processing' : ''}`}
+    >
       <header
         className={`app-header ${hasUnsavedChanges ? 'has-unsaved-changes' : ''}`}
       >
@@ -1280,6 +1282,7 @@ function App() {
           onExport={() => {
             // Export is handled internally by ExportDialog
           }}
+          onOperationUpdate={setCurrentOperation}
         />
       )}
 

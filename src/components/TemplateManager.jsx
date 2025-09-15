@@ -208,10 +208,10 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
               {/* Recommended Fonts */}
               {fontRecommendations.length > 0 && (
                 <div
+                  id="font-recommendations"
                   style={{
                     marginBottom: '15px',
                     padding: '10px',
-                    backgroundColor: '#f5f5f5',
                     borderRadius: '4px'
                   }}
                 >
@@ -230,17 +230,14 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
                       <button
                         key={font.key}
                         type="button"
+                        className={`font-recommendation-btn ${
+                          localTemplate.fontFamily === font.name
+                            ? 'selected'
+                            : ''
+                        }`}
                         onClick={() => handleFontChange(font.name)}
                         style={{
                           padding: '8px',
-                          border:
-                            localTemplate.fontFamily === font.name
-                              ? '2px solid #2196f3'
-                              : '1px solid #ddd',
-                          backgroundColor:
-                            localTemplate.fontFamily === font.name
-                              ? '#e3f2fd'
-                              : 'white',
                           borderRadius: '4px',
                           cursor: 'pointer',
                           textAlign: 'left',
@@ -302,10 +299,10 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
                   )
                 ] && (
                   <div
+                    id="font-info-panel"
                     style={{
                       marginTop: '10px',
                       padding: '10px',
-                      backgroundColor: '#f9f9f9',
                       borderRadius: '4px',
                       fontSize: '12px'
                     }}
@@ -354,12 +351,10 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
               <div style={{ marginTop: '15px' }}>
                 <button
                   type="button"
+                  className={`font-preview-toggle ${showFontPreview ? 'active' : ''}`}
                   onClick={() => setShowFontPreview(!showFontPreview)}
                   style={{
                     padding: '8px 16px',
-                    backgroundColor: showFontPreview ? '#2196f3' : '#f5f5f5',
-                    color: showFontPreview ? 'white' : '#333',
-                    border: '1px solid #ddd',
                     borderRadius: '4px',
                     cursor: 'pointer',
                     fontSize: '12px'
@@ -372,10 +367,10 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
               {/* Font Preview */}
               {showFontPreview && (
                 <div
+                  id="font-preview-container"
                   style={{
                     marginTop: '15px',
                     padding: '15px',
-                    backgroundColor: '#f9f9f9',
                     borderRadius: '4px'
                   }}
                 >
@@ -404,10 +399,10 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
               Recommended: 10-12pt for most books, 14pt+ for large print
             </small>
             <div
+              id="smart-sizing-info"
               style={{
                 marginTop: '8px',
                 padding: '8px',
-                backgroundColor: '#e3f2fd',
                 borderRadius: '4px',
                 fontSize: '11px'
               }}
@@ -783,9 +778,9 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
 
                 <div className="form-group">
                   <div
+                    id="running-headers-info"
                     style={{
                       padding: '10px',
-                      backgroundColor: '#f9f9f9',
                       borderRadius: '4px',
                       fontSize: '12px'
                     }}

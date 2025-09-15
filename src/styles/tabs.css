@@ -12,7 +12,6 @@
 
 .tab-list-header {
   padding: var(--spacing-lg);
-  border-bottom: var(--border-width) solid var(--color-border);
   background: var(--color-surface-alt);
   flex-shrink: 0;
   width: 100%;
