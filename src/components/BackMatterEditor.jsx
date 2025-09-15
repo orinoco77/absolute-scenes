@@ -251,7 +251,7 @@ function BackMatterEditor({
   );
 
   return (
-    <div className="back-matter-editor">
+    <div className="back-matter-editor" data-type={backMatterItem.type}>
       <div className="back-matter-header">
         <div className="back-matter-title-section">
           <div className="back-matter-icon-large">{typeConfig.icon}</div>
@@ -286,7 +286,7 @@ function BackMatterEditor({
         </div>
       </div>
 
-      <div className="editor-container">
+      <div className="back-matter-content-container">
         {typeConfig.isImage ? renderImageEditor() : renderTextEditor()}
       </div>
     </div>

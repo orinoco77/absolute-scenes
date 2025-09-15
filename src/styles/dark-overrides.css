@@ -122,6 +122,11 @@
   border-color: var(--color-border);
 }
 
+[data-theme="dark"] .modal-content {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
 /* Dark theme tabs */
 [data-theme="dark"] .tab-button,
 [data-theme="dark"] .accordion-button {
@@ -321,4 +326,332 @@
 [data-theme="dark"] .character-threads div,
 [data-theme="dark"] .character-threads svg {
   background: var(--color-surface) !important;
+}
+
+/* Fix editor toolbar in dark mode */
+[data-theme="dark"] .editor-toolbar {
+  background: var(--color-secondary) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+/* Fix unassigned chapters section in dark mode */
+[data-theme="dark"] .unassigned-chapters-section {
+  background-color: var(--color-surface-alt) !important;
+  border-color: var(--color-warning) !important;
+}
+
+[data-theme="dark"] .unassigned-header h4 {
+  color: var(--color-warning) !important;
+}
+
+[data-theme="dark"] .unassigned-header p {
+  color: var(--color-text-light) !important;
+}
+
+[data-theme="dark"] .unassigned-chapters-section .chapter-group {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* Fix front-matter title and author inputs in dark mode */
+[data-theme="dark"] .front-matter-title-input,
+[data-theme="dark"] .front-matter-author-input {
+  color: var(--color-text) !important;
+  background: var(--color-surface) !important;
+  border-bottom-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .front-matter-title-input:focus,
+[data-theme="dark"] .front-matter-author-input:focus {
+  border-bottom-color: var(--color-primary) !important;
+}
+
+[data-theme="dark"] .front-matter-title-input::placeholder,
+[data-theme="dark"] .front-matter-author-input::placeholder {
+  color: var(--color-text-light) !important;
+}
+
+/* Fix any other input fields in dark mode that might have missed styling */
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="url"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] textarea {
+  color: var(--color-text) !important;
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] input[type="text"]:focus,
+[data-theme="dark"] input[type="email"]:focus,
+[data-theme="dark"] input[type="url"]:focus,
+[data-theme="dark"] input[type="number"]:focus,
+[data-theme="dark"] textarea:focus {
+  color: var(--color-text) !important;
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-primary) !important;
+}
+
+[data-theme="dark"] input[type="text"]::placeholder,
+[data-theme="dark"] input[type="email"]::placeholder,
+[data-theme="dark"] input[type="url"]::placeholder,
+[data-theme="dark"] input[type="number"]::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--color-text-light) !important;
+}
+
+/* Fix copyright help section in dark mode */
+[data-theme="dark"] .copyright-help {
+  background: var(--color-surface-alt) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .copyright-help h4 {
+  color: var(--color-primary) !important;
+}
+
+[data-theme="dark"] .copyright-help ul {
+  color: var(--color-text) !important;
+}
+
+/* Fix author replacement prompt in dark mode */
+[data-theme="dark"] .author-replacement-prompt {
+  background: var(--color-surface-alt) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .author-replacement-text {
+  color: var(--color-text) !important;
+}
+
+[data-theme="dark"] .author-replacement-button {
+  background: var(--color-success) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+[data-theme="dark"] .author-replacement-button:hover {
+  background: var(--color-success) !important;
+  opacity: 0.8;
+}
+
+/* Fix dropdown disabled items visibility in dark mode */
+[data-theme="dark"] .dropdown-item.disabled {
+  opacity: 1 !important;
+  background: var(--color-surface-disabled) !important;
+  color: var(--color-text-muted) !important;
+}
+
+[data-theme="dark"] .dropdown-item.disabled:hover {
+  background: var(--color-surface-disabled) !important;
+  color: var(--color-text-muted) !important;
+}
+
+/* Fix location type select dropdown in dark mode */
+[data-theme="dark"] .location-type-input {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .location-type-input:focus {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Fix location type select dropdown options in dark mode */
+[data-theme="dark"] .location-type-input option {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+/* Fix scene notes section in dark mode to match copyright help styling */
+[data-theme="dark"] .scene-notes {
+  background: var(--color-surface-alt) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .scene-notes h4 {
+  color: var(--color-primary) !important;
+}
+
+/* Fix format buttons in toolbar to match other buttons in dark mode */
+[data-theme="dark"] .format-btn {
+  background: var(--color-surface-alt) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+[data-theme="dark"] .format-btn:hover {
+  background: var(--color-surface-hover) !important;
+  border-color: var(--color-border-dark) !important;
+}
+
+[data-theme="dark"] .format-btn:active {
+  background: var(--color-surface) !important;
+}
+
+/* Fix icon buttons in toolbar to match primary button colors in dark mode */
+[data-theme="dark"] .icon-button {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+[data-theme="dark"] .icon-button:hover {
+  background: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+[data-theme="dark"] .icon-button:active {
+  background: var(--color-primary) !important;
+  opacity: 0.8;
+}
+
+/* Fix textarea resize handle to be dark in dark mode */
+[data-theme="dark"] textarea {
+  color-scheme: dark;
+}
+
+/* Comprehensive textarea resize handle fix for all textareas */
+[data-theme="dark"] textarea::-webkit-resizer {
+  background-color: var(--color-border-dark);
+  border-color: var(--color-border);
+}
+
+/* Fix specific textarea classes that might have different styling */
+[data-theme="dark"] .scene-content-textarea::-webkit-resizer,
+[data-theme="dark"] .character-editor-textarea textarea::-webkit-resizer,
+[data-theme="dark"] .location-editor-textarea textarea::-webkit-resizer,
+[data-theme="dark"] .background-content-textarea::-webkit-resizer,
+[data-theme="dark"] .front-matter-content-textarea::-webkit-resizer,
+[data-theme="dark"] .back-matter-content-textarea::-webkit-resizer {
+  background-color: var(--color-border-dark);
+  border-color: var(--color-border);
+}
+
+/* Fix export dialog book preview section in dark mode */
+[data-theme="dark"] .book-preview {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text) !important;
+}
+
+/* Fix export dialog parts structure and ebook format notes sections in dark mode */
+[data-theme="dark"] .modal *[style*="backgroundColor: #f0f9ff"],
+[data-theme="dark"] .modal *[style*="background-color: #f0f9ff"],
+[data-theme="dark"] *[style*="backgroundColor: #f0f9ff"],
+[data-theme="dark"] *[style*="background-color: #f0f9ff"],
+[data-theme="dark"] .modal div[style*="backgroundColor: '#f0f9ff'"],
+[data-theme="dark"] .modal div[style*="background-color: '#f0f9ff'"] {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* More aggressive override for light blue export dialog sections */
+[data-theme="dark"] .modal-content div[style*="f0f9ff"] {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+/* Fix export dialog parts structure section with clean ID selector */
+[data-theme="dark"] #export-parts-structure {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+/* Fix GitHub connection status section in dark mode */
+[data-theme="dark"] #github-connection-status {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+/* Fix Template Manager sections in dark mode */
+[data-theme="dark"] #font-recommendations {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text) !important;
+}
+
+[data-theme="dark"] .font-recommendation-btn {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+[data-theme="dark"] .font-recommendation-btn.selected {
+  background: var(--color-primary) !important;
+  border: 2px solid var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+[data-theme="dark"] #font-info-panel {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text) !important;
+}
+
+[data-theme="dark"] .font-preview-toggle {
+  background: var(--color-surface-alt) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+[data-theme="dark"] .font-preview-toggle.active {
+  background: var(--color-primary) !important;
+  border: 1px solid var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+[data-theme="dark"] #font-preview-container {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text) !important;
+}
+
+[data-theme="dark"] #smart-sizing-info {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text) !important;
+}
+
+[data-theme="dark"] #running-headers-info {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text) !important;
+}
+
+/* Fix Backup Recovery dialog sections in dark mode */
+[data-theme="dark"] #backup-error-message {
+  background: var(--color-error-bg) !important;
+  border: 1px solid var(--color-error) !important;
+  color: var(--color-error-text) !important;
+}
+
+[data-theme="dark"] #backup-repositories-list {
+  border: 1px solid var(--color-border) !important;
+  background: var(--color-surface) !important;
+}
+
+[data-theme="dark"] .backup-repository-item {
+  border-bottom: 1px solid var(--color-border) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+[data-theme="dark"] .backup-download-btn {
+  background: var(--color-success) !important;
+  color: var(--color-text-inverse) !important;
+  border: none !important;
+}
+
+[data-theme="dark"] .backup-connect-github-btn {
+  background: var(--color-success) !important;
+  color: var(--color-text-inverse) !important;
+  border: none !important;
+}
+
+[data-theme="dark"] #backup-tip-section {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text) !important;
 }

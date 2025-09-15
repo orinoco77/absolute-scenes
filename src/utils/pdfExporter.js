@@ -2015,10 +2015,12 @@ export async function exportToPDF(book, options = {}) {
             title: 'Export Complete',
             body: result.message
           });
+        } else if (result.message === 'Save was cancelled') {
+          // User canceled the save dialog - this is intentional, not an error
+          console.log('PDF export canceled by user');
+          return; // Exit without fallback
         } else {
-          throw new Error(
-            result.error || result.message || 'Save was cancelled'
-          );
+          throw new Error(result.error || result.message || 'Save failed');
         }
       } catch (electronError) {
         console.warn(

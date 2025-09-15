@@ -106,15 +106,13 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
                 You need to be connected to GitHub to access your book backups.
               </p>
               <button
+                className="backup-connect-github-btn"
                 onClick={() => {
                   onClose();
                   // Trigger GitHub integration dialog
                 }}
                 style={{
                   padding: '12px 24px',
-                  background: '#2ea043',
-                  color: 'white',
-                  border: 'none',
                   borderRadius: '6px',
                   fontSize: '14px',
                   fontWeight: 'bold',
@@ -149,12 +147,10 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
         <div className="modal-content">
           {error && (
             <div
+              id="backup-error-message"
               style={{
                 padding: '12px',
-                background: '#ffebee',
-                border: '1px solid #f44336',
                 borderRadius: '4px',
-                color: '#c62828',
                 marginBottom: '20px'
               }}
             >
@@ -198,19 +194,19 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
             </div>
           ) : (
             <div
+              id="backup-repositories-list"
               style={{
                 maxHeight: '400px',
                 overflowY: 'auto',
-                border: '1px solid #ddd',
                 borderRadius: '6px'
               }}
             >
               {(repositories || []).map(repo => (
                 <div
                   key={repo.id}
+                  className="backup-repository-item"
                   style={{
                     padding: '16px',
-                    borderBottom: '1px solid #eee',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
@@ -233,18 +229,14 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
                     </div>
                   </div>
                   <button
+                    className={`backup-download-btn ${isDownloading ? 'loading' : ''}`}
                     onClick={() => handleDownloadBook(repo)}
                     disabled={isDownloading}
                     style={{
                       padding: '8px 16px',
-                      background: '#2ea043',
-                      color: 'white',
-                      border: 'none',
                       borderRadius: '4px',
                       fontSize: '13px',
                       fontWeight: 'bold',
-                      cursor: isDownloading ? 'wait' : 'pointer',
-                      opacity: isDownloading ? 0.7 : 1,
                       marginLeft: '16px'
                     }}
                   >
@@ -257,13 +249,12 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
 
           {(repositories || []).length > 0 && (
             <div
+              id="backup-tip-section"
               style={{
                 marginTop: '16px',
                 padding: '12px',
-                background: '#e3f2fd',
                 borderRadius: '4px',
-                fontSize: '13px',
-                color: '#1565c0'
+                fontSize: '13px'
               }}
             >
               <strong>💡 Tip:</strong> Downloaded books will be saved to your

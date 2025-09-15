@@ -5,10 +5,11 @@ import {
   exportToEPUB
 } from '../utils/exportManager';
 
-function ExportDialog({ book, onClose, onExport }) {
+function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
   const [exportFormat, setExportFormat] = useState('pdf');
   const [includeSceneBreaks, setIncludeSceneBreaks] = useState(true);
   const [includeSceneTitles, setIncludeSceneTitles] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
     const options = {
@@ -17,6 +18,8 @@ function ExportDialog({ book, onClose, onExport }) {
       template: book.template
     };
 
+    setIsExporting(true);
+    onOperationUpdate?.(`Exporting ${exportFormat.toUpperCase()}...`);
     try {
       switch (exportFormat) {
         case 'pdf':
@@ -35,6 +38,9 @@ function ExportDialog({ book, onClose, onExport }) {
       onClose();
     } catch (error) {
       alert('Export failed: ' + error.message);
+    } finally {
+      setIsExporting(false);
+      onOperationUpdate?.(null);
     }
   };
 
@@ -199,11 +205,10 @@ function ExportDialog({ book, onClose, onExport }) {
             </p>
             {book.parts && book.parts.length > 0 && (
               <div
+                id="export-parts-structure"
                 style={{
                   marginTop: '1em',
                   padding: '0.5em',
-                  backgroundColor: '#f0f9ff',
-                  border: '1px solid #bae6fd',
                   borderRadius: '0.25rem'
                 }}
               >
@@ -282,13 +287,31 @@ function ExportDialog({ book, onClose, onExport }) {
         </div>
 
         <div className="modal-footer">
-          <button onClick={onClose} className="btn-secondary">
+          <button
+            onClick={onClose}
+            className="btn-secondary"
+            disabled={isExporting}
+            style={{ opacity: isExporting ? 0.5 : 1 }}
+          >
             Cancel
           </button>
-          <button onClick={handleExport} className="btn-primary">
+          <button
+            onClick={handleExport}
+            className="btn-primary"
+            disabled={isExporting}
+            style={{ opacity: isExporting ? 0.5 : 1 }}
+          >
             Export
           </button>
         </div>
+        {isExporting && (
+          <div className="loading-overlay">
+            <div className="loading-content">
+              <div className="loading-spinner large" />
+              <span>Exporting {exportFormat.toUpperCase()}...</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -169,22 +169,136 @@ body {
   background: #7f8c8d;
 }
 
-/* Save operation styles */
-.app.saving {
-  pointer-events: none;
+/* Loading states and cursors for long-running operations */
+.app.saving,
+.app.loading,
+.app.exporting,
+.app.importing,
+.app.processing {
+  cursor: wait !important;
 }
 
-.app.saving .icon-button {
-  opacity: 0.7;
-}
-
-.app.saving * {
+.app.saving *,
+.app.loading *,
+.app.exporting *,
+.app.importing *,
+.app.processing * {
+  cursor: wait !important;
   user-select: none;
 }
 
+/* Allow text selection in editors during loading */
 .app.saving .scene-editor textarea,
-.app.saving .scene-editor input {
+.app.saving .scene-editor input,
+.app.loading .scene-editor textarea,
+.app.loading .scene-editor input,
+.app.exporting .scene-editor textarea,
+.app.exporting .scene-editor input,
+.app.importing .scene-editor textarea,
+.app.importing .scene-editor input,
+.app.processing .scene-editor textarea,
+.app.processing .scene-editor input {
   user-select: auto;
+  cursor: text !important;
+}
+
+/* Loading state button styling */
+.app.saving .icon-button,
+.app.loading .icon-button,
+.app.exporting .icon-button,
+.app.importing .icon-button,
+.app.processing .icon-button {
+  opacity: 0.7;
+  cursor: wait !important;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  border-top-color: var(--color-primary);
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
+}
+
+.loading-spinner.large {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+}
+
+/* Loading overlay for modal dialogs */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  cursor: wait;
+}
+
+.loading-overlay .loading-content {
+  background: var(--color-surface);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text);
+}
+
+/* Loading states for specific operations */
+.app.character-analysis-loading .character-threads {
+  position: relative;
+}
+
+.app.character-analysis-loading .character-threads::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* Button loading states */
+button.loading {
+  cursor: wait !important;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+button.loading::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
 }
 
 /* Unsaved changes indicator */
@@ -212,6 +326,115 @@ body {
   padding: 1rem;
   border-radius: 4px;
   margin-top: 1rem;
+}
+
+/* Export dialog parts structure */
+#export-parts-structure {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
+}
+
+/* GitHub connection status */
+#github-connection-status {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+/* Template Manager styling */
+#font-recommendations {
+  background: #f5f5f5;
+}
+
+.font-recommendation-btn {
+  background: white;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.font-recommendation-btn.selected {
+  background: #e3f2fd;
+  border: 2px solid #2196f3;
+  color: #1976d2;
+}
+
+#font-info-panel {
+  background: #f9f9f9;
+  color: #333;
+}
+
+.font-preview-toggle {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.font-preview-toggle.active {
+  background: #2196f3;
+  border: 1px solid #2196f3;
+  color: white;
+}
+
+#font-preview-container {
+  background: #f9f9f9;
+}
+
+#smart-sizing-info {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+#running-headers-info {
+  background: #f9f9f9;
+  color: #333;
+}
+
+/* Backup Recovery dialog styling */
+#backup-error-message {
+  background: #ffebee;
+  border: 1px solid #f44336;
+  color: #c62828;
+}
+
+#backup-repositories-list {
+  border: 1px solid #ddd;
+}
+
+.backup-repository-item {
+  border-bottom: 1px solid #eee;
+}
+
+.backup-repository-item:last-child {
+  border-bottom: none;
+}
+
+.backup-download-btn {
+  background: #2ea043;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.backup-download-btn.loading {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.backup-download-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.backup-connect-github-btn {
+  background: #2ea043;
+  color: white;
+  border: none;
+}
+
+#backup-tip-section {
+  background: #e3f2fd;
+  color: #1565c0;
 }
 
 .chapter-breakdown {

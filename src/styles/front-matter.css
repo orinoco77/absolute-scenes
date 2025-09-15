@@ -211,13 +211,23 @@
   height: 100%;
 }
 
+.front-matter-content-container {
+  flex: 1;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .front-matter-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  padding: 1rem;
   padding-bottom: 15px;
-  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
 }
 
 .front-matter-title-section {
@@ -285,6 +295,7 @@
   display: flex;
   flex-direction: column;
   margin-bottom: 0px;
+  min-height: 0;
 }
 
 .front-matter-content-textarea {
@@ -295,10 +306,16 @@
   padding: 15px;
   outline: none;
   transition: border-color 0.2s;
-  min-height: 300px;
+  min-height: 600px;
+  height: 100%;
   font-family: var(--editor-font-family, "Monaco", "Menlo", "Ubuntu Mono", monospace);
   font-size: 16px;
   line-height: 1.6;
+}
+
+/* Copyright page needs smaller textarea to make room for tips section */
+.front-matter-editor[data-type="copyright"] .front-matter-content-textarea {
+  min-height: 400px;
 }
 
 .front-matter-content-textarea:focus {
@@ -442,7 +459,7 @@
 }
 
 .copyright-help {
-  margin-top: 20px;
+  margin: 20px 1rem 1rem 1rem;
   padding: 15px;
   background: #e3f2fd;
   border-radius: 8px;
@@ -465,6 +482,35 @@
 
 .copyright-help li {
   margin-bottom: 5px;
+}
+
+.author-replacement-prompt {
+  margin-top: 15px;
+  padding: 10px;
+  background: #fff3cd;
+  border-radius: 4px;
+  border: 1px solid #ffeaa7;
+}
+
+.author-replacement-text {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #856404;
+}
+
+.author-replacement-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.author-replacement-button:hover {
+  background: #218838;
 }
 
 .no-front-matter {

@@ -22,6 +22,7 @@ function CharacterThreadVisualization({
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [filterMentions, setFilterMentions] = useState(true); // New: toggle for presence filtering
   const [presenceThreshold, setPresenceThreshold] = useState(2.0); // New: adjustable threshold
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Handle window resize for responsive width
   useEffect(() => {
@@ -32,13 +33,22 @@ function CharacterThreadVisualization({
 
   // Analyze character presence using rule-based detection
   const analysis = useMemo(() => {
-    return CharacterAnalyzer.analyzeCharacterPresence(
-      chapters,
-      characters,
-      characterDetectionBlacklist,
-      filterMentions,
-      presenceThreshold
-    );
+    setIsAnalyzing(true);
+    try {
+      const result = CharacterAnalyzer.analyzeCharacterPresence(
+        chapters,
+        characters,
+        characterDetectionBlacklist,
+        filterMentions,
+        presenceThreshold
+      );
+      setIsAnalyzing(false);
+      return result;
+    } catch (error) {
+      setIsAnalyzing(false);
+      console.error('Character analysis failed:', error);
+      return { characterPresence: new Map(), allDetectedCharacters: [] };
+    }
   }, [
     chapters,
     characters,
@@ -130,44 +140,71 @@ function CharacterThreadVisualization({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibleCharacters, windowWidth]); // Include windowWidth for responsive recalculation
 
-  // Spacing constants for compact layout
-  const maxSceneSpacing = 60; // Maximum spacing between scenes
-  const minSceneSpacing = 25; // Minimum spacing to maintain readability
-  const leftMargin = 180;
+  // Calculate chapter title widths to determine minimum spacing needed
+  const estimateTextWidth = (text, fontSize) => {
+    // Rough estimation: average character width * font size * text length
+    const avgCharWidth = fontSize * 0.6; // Approximation for most fonts
+    return text.length * avgCharWidth;
+  };
+
+  const chapterTitles = chapters.map(chapter => chapter.title);
+  const longestChapterTitle = chapterTitles.reduce(
+    (longest, current) => (current.length > longest.length ? current : longest),
+    ''
+  );
+
+  // Calculate minimum spacing needed for chapter titles
+  const chapterTitleFontSize = 11;
+  const longestTitleWidth = estimateTextWidth(
+    longestChapterTitle,
+    chapterTitleFontSize
+  );
+  const chapterTitlePadding = 20; // Extra padding around titles
+  const minSpacingForChapters = longestTitleWidth + chapterTitlePadding;
+
+  // Dynamic spacing constants that scale with content
+  const minSceneSpacing = Math.max(40, minSpacingForChapters); // Increased minimum spacing to prevent overlap
+  const leftMargin = 200; // Increased for longer character names
   const rightMargin = 50;
-  const topMargin = 60;
+  const topMargin = 80; // Increased for chapter titles
   const bottomMargin = 50;
 
-  // SVG dimensions - fit content precisely to avoid unnecessary scrollbars
-  const availableWidth = Math.max(400, windowWidth - 300); // Account for sidebar and padding
-  const actualScenesWidth =
+  // Calculate minimum character spacing to prevent text overlap
+  const minCharacterSpacing = 25; // Minimum space between character names
+
+  // SVG dimensions - ensure all content fits without overlap
+  const availableWidth = Math.max(600, windowWidth - 200); // Increased minimum width
+  const requiredSceneWidth =
     allScenes.length > 1
-      ? (allScenes.length - 1) *
-          Math.max(minSceneSpacing, Math.min(maxSceneSpacing, 50)) +
-        leftMargin +
-        rightMargin +
-        20
-      : leftMargin + rightMargin + 150; // Fallback width for 0-1 scenes
-  const width = Math.min(actualScenesWidth, availableWidth); // Fit within available space
-  const baseHeight = Math.min(
-    600,
-    Math.max(400, visibleCharacters.length * 30 + 120)
+      ? (allScenes.length - 1) * minSceneSpacing
+      : minSceneSpacing;
+  const actualScenesWidth = leftMargin + requiredSceneWidth + rightMargin;
+  const width = Math.max(actualScenesWidth, availableWidth);
+
+  // Height should accommodate all characters without cramping
+  const requiredCharacterHeight = Math.max(
+    visibleCharacters.length * minCharacterSpacing,
+    300
   );
-  const height = baseHeight;
+  const height = topMargin + requiredCharacterHeight + bottomMargin;
 
   const plotWidth = width - leftMargin - rightMargin;
   const plotHeight = height - topMargin - bottomMargin;
 
-  // Calculate positions with compact scene spacing
+  // Calculate scene spacing - prioritize readability over compactness and accommodate chapter titles
   const calculatedSpacing =
     allScenes.length > 1
-      ? Math.min(maxSceneSpacing, plotWidth / Math.max(allScenes.length - 1, 1))
+      ? Math.max(minSceneSpacing, plotWidth / Math.max(allScenes.length - 1, 1))
       : plotWidth / 2;
   const sceneSpacing = Math.max(minSceneSpacing, calculatedSpacing);
 
+  // Character spacing - ensure adequate space for text
   const characterSpacing =
     visibleCharacters.length > 1
-      ? plotHeight / (visibleCharacters.length - 1)
+      ? Math.max(
+          minCharacterSpacing,
+          plotHeight / (visibleCharacters.length - 1)
+        )
       : plotHeight / 2;
 
   const toggleCharacterSelection = characterName => {
@@ -219,7 +256,6 @@ function CharacterThreadVisualization({
           padding: '2rem',
           textAlign: 'center',
           height: '100%',
-          maxHeight: '800px',
           overflow: 'auto',
           display: 'flex',
           flexDirection: 'column',
@@ -229,8 +265,8 @@ function CharacterThreadVisualization({
         <h3>Character Thread Analysis</h3>
         <div
           style={{
-            backgroundColor: '#f9fafb',
-            border: '2px dashed #d1d5db',
+            backgroundColor: 'var(--color-surface-alt, #f9fafb)',
+            border: '2px dashed var(--color-border, #d1d5db)',
             borderRadius: '0.5rem',
             padding: '2rem',
             maxWidth: '500px',
@@ -241,13 +277,17 @@ function CharacterThreadVisualization({
             style={{
               margin: '0 0 1rem 0',
               fontSize: '1.1em',
-              color: '#374151'
+              color: 'var(--color-text, #374151)'
             }}
           >
             No characters detected yet.
           </p>
           <div
-            style={{ fontSize: '0.9em', color: '#6b7280', textAlign: 'left' }}
+            style={{
+              fontSize: '0.9em',
+              color: 'var(--color-text-light, #6b7280)',
+              textAlign: 'left'
+            }}
           >
             <p>
               <strong>To get character detection working:</strong>
@@ -294,7 +334,6 @@ function CharacterThreadVisualization({
       style={{
         padding: '1.5rem',
         height: '100%',
-        maxHeight: '800px', // Constrain height to enable scrolling
         overflow: 'auto',
         display: 'flex',
         flexDirection: 'column'
@@ -320,9 +359,13 @@ function CharacterThreadVisualization({
           style={{
             padding: '0.25rem 0.5rem',
             fontSize: '0.8rem',
-            backgroundColor: showOnlySelected ? '#2563eb' : '#f3f4f6',
-            color: showOnlySelected ? 'white' : '#374151',
-            border: '1px solid #d1d5db',
+            backgroundColor: showOnlySelected
+              ? 'var(--color-primary, #2563eb)'
+              : 'var(--color-surface-alt, #f3f4f6)',
+            color: showOnlySelected
+              ? 'var(--color-text-inverse, white)'
+              : 'var(--color-text, #374151)',
+            border: '1px solid var(--color-border, #d1d5db)',
             borderRadius: '0.25rem',
             cursor: 'pointer'
           }}
@@ -336,8 +379,8 @@ function CharacterThreadVisualization({
             style={{
               padding: '0.25rem 0.5rem',
               fontSize: '0.8rem',
-              backgroundColor: '#dc2626',
-              color: 'white',
+              backgroundColor: 'var(--color-error, #dc2626)',
+              color: 'var(--color-text-inverse, white)',
               border: 'none',
               borderRadius: '0.25rem',
               cursor: 'pointer'
@@ -353,9 +396,13 @@ function CharacterThreadVisualization({
             style={{
               padding: '0.25rem 0.5rem',
               fontSize: '0.8rem',
-              backgroundColor: showExcluded ? '#dc2626' : '#f3f4f6',
-              color: showExcluded ? 'white' : '#374151',
-              border: '1px solid #d1d5db',
+              backgroundColor: showExcluded
+                ? 'var(--color-error, #dc2626)'
+                : 'var(--color-surface-alt, #f3f4f6)',
+              color: showExcluded
+                ? 'var(--color-text-inverse, white)'
+                : 'var(--color-text, #374151)',
+              border: '1px solid var(--color-border, #d1d5db)',
               borderRadius: '0.25rem',
               cursor: 'pointer'
             }}
@@ -372,8 +419,8 @@ function CharacterThreadVisualization({
             style={{
               padding: '0.25rem 0.5rem',
               fontSize: '0.8rem',
-              backgroundColor: '#16a34a',
-              color: 'white',
+              backgroundColor: 'var(--color-success, #16a34a)',
+              color: 'var(--color-text-inverse, white)',
               border: 'none',
               borderRadius: '0.25rem',
               cursor: 'pointer'
@@ -390,7 +437,7 @@ function CharacterThreadVisualization({
             alignItems: 'center',
             gap: '0.5rem',
             fontSize: '0.8rem',
-            color: '#6b7280'
+            color: 'var(--color-text-light, #6b7280)'
           }}
         >
           <label
@@ -421,7 +468,12 @@ function CharacterThreadVisualization({
                 style={{ width: '60px' }}
                 title={`Presence threshold: ${presenceThreshold} (higher = stricter filtering)`}
               />
-              <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  color: 'var(--color-text-muted, #9ca3af)'
+                }}
+              >
                 {presenceThreshold}
               </span>
             </div>
@@ -434,14 +486,35 @@ function CharacterThreadVisualization({
         style={{
           flex: 1,
           overflow: 'auto',
-          border: '1px solid #e5e7eb',
+          border: '1px solid var(--color-border, #e5e7eb)',
           borderRadius: '0.5rem',
-          backgroundColor: '#fafafa'
+          backgroundColor: 'var(--color-surface-alt, #fafafa)',
+          minHeight: '400px',
+          position: 'relative'
         }}
       >
-        <svg width={width} height={height} style={{ display: 'block' }}>
+        {isAnalyzing && (
+          <div className="loading-overlay">
+            <div className="loading-content">
+              <div className="loading-spinner large" />
+              <span>Analyzing character presence...</span>
+            </div>
+          </div>
+        )}
+        <svg
+          width={width}
+          height={height}
+          style={{
+            display: 'block',
+            minWidth: '600px' // Ensure minimum width for readability
+          }}
+        >
           {/* Background */}
-          <rect width={width} height={height} fill="#fafafa" />
+          <rect
+            width={width}
+            height={height}
+            fill="var(--color-surface-alt, #fafafa)"
+          />
 
           {/* Scene columns background */}
           {allScenes.map((scene, index) => {
@@ -453,7 +526,11 @@ function CharacterThreadVisualization({
                 y={topMargin}
                 width={30}
                 height={plotHeight}
-                fill={index % 2 === 0 ? '#ffffff' : '#f8f9fa'}
+                fill={
+                  index % 2 === 0
+                    ? 'var(--color-surface, #ffffff)'
+                    : 'var(--color-surface-alt, #f8f9fa)'
+                }
                 opacity={0.7}
               />
             );
@@ -557,10 +634,10 @@ function CharacterThreadVisualization({
             return (
               <g key={`${characterName}-label`}>
                 <text
-                  x={leftMargin - 10}
+                  x={leftMargin - 15}
                   y={y + 4}
                   textAnchor="end"
-                  fontSize="12"
+                  fontSize="13"
                   fill={color}
                   opacity={opacity}
                   fontWeight={
@@ -570,7 +647,11 @@ function CharacterThreadVisualization({
                         ? '600'
                         : 'normal'
                   }
-                  style={{ cursor: 'pointer' }}
+                  style={{
+                    cursor: 'pointer',
+                    maxWidth: `${leftMargin - 30}px`,
+                    userSelect: 'none'
+                  }}
                   onClick={() => toggleCharacterSelection(characterName)}
                   onMouseEnter={() => setHoveredCharacter(characterName)}
                   onMouseLeave={() => setHoveredCharacter(null)}
@@ -580,13 +661,16 @@ function CharacterThreadVisualization({
 
                 {/* Exclude button */}
                 <text
-                  x={leftMargin - 165}
+                  x={leftMargin - 180}
                   y={y + 4}
                   textAnchor="middle"
-                  fontSize="10"
+                  fontSize="12"
                   fill="#dc2626"
                   opacity={isHovered ? 1 : 0.6}
-                  style={{ cursor: 'pointer' }}
+                  style={{
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                  }}
                   onClick={() => toggleCharacterExclusion(characterName)}
                   onMouseEnter={() => setHoveredCharacter(characterName)}
                   onMouseLeave={() => setHoveredCharacter(null)}
@@ -600,34 +684,40 @@ function CharacterThreadVisualization({
           {/* Scene labels */}
           {allScenes.map((scene, index) => {
             const x = leftMargin + index * sceneSpacing;
+
+            // Helper function to truncate text if too long
+            const truncateText = (text, maxLength) => {
+              if (text.length <= maxLength) return text;
+              return text.substring(0, maxLength - 3) + '...';
+            };
+
+            // Calculate max characters that can fit in the available space
+            const maxCharsForTitle = Math.floor(
+              sceneSpacing / (chapterTitleFontSize * 0.6)
+            );
+            const displayTitle = truncateText(
+              scene.chapterTitle,
+              maxCharsForTitle
+            );
+
             return (
               <g key={`scene-label-${scene.key}`}>
                 {/* Chapter title (only on first scene of chapter) */}
                 {(index === 0 ||
-                  allScenes[index - 1].chapter !== scene.chapter) && (
+                  allScenes[index - 1].chapterTitle !== scene.chapterTitle) && (
                   <text
                     x={x}
-                    y={topMargin - 35}
+                    y={topMargin - 45}
                     textAnchor="middle"
-                    fontSize="10"
+                    fontSize={chapterTitleFontSize}
                     fontWeight="bold"
-                    fill="#374151"
+                    fill="var(--color-text, #374151)"
+                    style={{ userSelect: 'none' }}
                   >
-                    {scene.chapterTitle}
+                    <title>{scene.chapterTitle}</title>
+                    {displayTitle}
                   </text>
                 )}
-
-                {/* Scene title */}
-                <text
-                  x={x}
-                  y={topMargin - 25}
-                  textAnchor="middle"
-                  fontSize="8"
-                  fill="#9ca3af"
-                  transform={`rotate(-45, ${x}, ${topMargin - 25})`}
-                >
-                  {scene.sceneTitle || `Scene ${scene.scene + 1}`}
-                </text>
 
                 {/* Scene separator line */}
                 <line
@@ -635,7 +725,7 @@ function CharacterThreadVisualization({
                   y1={topMargin}
                   x2={x}
                   y2={height - bottomMargin}
-                  stroke="#e5e7eb"
+                  stroke="var(--color-border, #e5e7eb)"
                   strokeWidth="0.5"
                   strokeDasharray="2,2"
                 />
@@ -650,7 +740,7 @@ function CharacterThreadVisualization({
         style={{
           marginTop: '1rem',
           fontSize: '0.9em',
-          color: '#6b7280',
+          color: 'var(--color-text-light, #6b7280)',
           flexShrink: 0
         }}
       >

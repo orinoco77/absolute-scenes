@@ -291,7 +291,7 @@ function FrontMatterEditor({
   };
 
   return (
-    <div className="front-matter-editor">
+    <div className="front-matter-editor" data-type={frontMatterItem.type}>
       <div className="front-matter-header">
         <div className="front-matter-title-section">
           <div className="front-matter-icon-large">
@@ -330,7 +330,7 @@ function FrontMatterEditor({
         </div>
       </div>
 
-      <div className="editor-container">
+      <div className="front-matter-content-container">
         {frontMatterItem.type === 'map'
           ? renderImageEditor()
           : renderTextEditor()}
@@ -347,39 +347,14 @@ function FrontMatterEditor({
             <li>Customize the permissions text as needed</li>
           </ul>
           {authorName && content.includes('[Author Name]') && (
-            <div
-              style={{
-                marginTop: '15px',
-                padding: '10px',
-                background: '#fff3cd',
-                borderRadius: '4px',
-                border: '1px solid #ffeaa7'
-              }}
-            >
-              <p
-                style={{
-                  margin: '0 0 10px 0',
-                  fontSize: '13px',
-                  color: '#856404'
-                }}
-              >
+            <div className="author-replacement-prompt">
+              <p className="author-replacement-text">
                 Found [Author Name] placeholder in your copyright text. Replace
                 it with "{authorName}"?
               </p>
               <button
                 onClick={replaceAuthorNamePlaceholder}
-                style={{
-                  background: '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseEnter={e => (e.target.style.background = '#218838')}
-                onMouseLeave={e => (e.target.style.background = '#28a745')}
+                className="author-replacement-button"
               >
                 Replace with {authorName}
               </button>

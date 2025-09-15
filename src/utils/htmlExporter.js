@@ -66,10 +66,12 @@ export async function exportToHTML(book, options = {}) {
             body: result.message
           });
           return;
+        } else if (result.message === 'Save was cancelled') {
+          // User canceled the save dialog - this is intentional, not an error
+          console.log('HTML export canceled by user');
+          return; // Exit without fallback
         } else {
-          throw new Error(
-            result.error || result.message || 'Save was cancelled'
-          );
+          throw new Error(result.error || result.message || 'Save failed');
         }
       } catch (electronError) {
         console.warn(
