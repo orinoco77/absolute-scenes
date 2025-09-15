@@ -510,12 +510,10 @@ function GitHubIntegration({
           <div className="modal-content">
             {error && (
               <div
+                className="github-error-message"
                 style={{
                   padding: '12px',
-                  background: '#ffebee',
-                  border: '1px solid #f44336',
                   borderRadius: '4px',
-                  color: '#c62828',
                   marginBottom: '20px'
                 }}
               >
@@ -540,23 +538,22 @@ function GitHubIntegration({
                   steps:
                 </p>
                 <div
+                  className="github-setup-instructions"
                   style={{
                     textAlign: 'left',
-                    background: '#f8f9fa',
                     padding: '16px',
                     borderRadius: '6px',
                     marginBottom: '20px'
                   }}
                 >
                   <div
+                    className="github-setup-tip"
                     style={{
                       padding: '12px',
-                      background: '#e8f5e8',
                       borderRadius: '4px',
                       marginBottom: '12px',
                       fontSize: '14px',
-                      fontWeight: 'bold',
-                      color: '#2d5a2d'
+                      fontWeight: 'bold'
                     }}
                   >
                     💡 Important: Don't change anything on the GitHub page!
@@ -579,13 +576,12 @@ function GitHubIntegration({
                     <li>📋 Copy the token that appears (starts with "ghp_")</li>
                   </ol>
                   <div
+                    className="github-reconnect-tip"
                     style={{
                       padding: '12px',
-                      background: '#fff3cd',
                       borderRadius: '4px',
                       marginTop: '12px',
-                      fontSize: '13px',
-                      color: '#856404'
+                      fontSize: '13px'
                     }}
                   >
                     <strong>💡 Reconnecting?</strong> If you have an existing
@@ -617,9 +613,9 @@ function GitHubIntegration({
                   Step 2: Enter Your Token
                 </h3>
                 <div
+                  className="github-privacy-note"
                   style={{
                     padding: '16px',
-                    background: '#e3f2fd',
                     borderRadius: '6px',
                     marginBottom: '16px',
                     fontSize: '14px'
@@ -723,8 +719,8 @@ function GitHubIntegration({
                   Final Step: Your Author Name
                 </h3>
                 <div
+                  className="github-success-status"
                   style={{
-                    background: '#e7f5e7',
                     padding: '15px',
                     borderRadius: '6px',
                     marginBottom: '20px'
@@ -822,8 +818,8 @@ function GitHubIntegration({
                   Repository Setup
                 </h3>
                 <div
+                  className="github-repo-setup-info"
                   style={{
-                    background: '#f0f8ff',
                     padding: '15px',
                     borderRadius: '6px',
                     marginBottom: '20px'
@@ -836,15 +832,13 @@ function GitHubIntegration({
 
                 <div style={{ marginBottom: '20px' }}>
                   <div
+                    className={`github-repo-choice ${repositoryChoice === 'new' ? 'selected' : ''}`}
                     onClick={() => handleRepositoryChoice('new')}
                     style={{
                       padding: '20px',
-                      border: '2px solid #ddd',
                       borderRadius: '8px',
                       marginBottom: '15px',
-                      cursor: 'pointer',
-                      background:
-                        repositoryChoice === 'new' ? '#e7f5e7' : '#f9f9f9'
+                      cursor: 'pointer'
                     }}
                   >
                     <h4 style={{ margin: '0 0 8px 0' }}>
@@ -857,14 +851,12 @@ function GitHubIntegration({
                   </div>
 
                   <div
+                    className={`github-repo-choice ${repositoryChoice === 'existing' ? 'selected' : ''}`}
                     onClick={() => handleRepositoryChoice('existing')}
                     style={{
                       padding: '20px',
-                      border: '2px solid #ddd',
                       borderRadius: '8px',
-                      cursor: 'pointer',
-                      background:
-                        repositoryChoice === 'existing' ? '#e7f5e7' : '#f9f9f9'
+                      cursor: 'pointer'
                     }}
                   >
                     <h4 style={{ margin: '0 0 8px 0' }}>
@@ -902,8 +894,8 @@ function GitHubIntegration({
                   Select Repository
                 </h3>
                 <div
+                  className="github-repo-select-info"
                   style={{
-                    background: '#fff3cd',
                     padding: '15px',
                     borderRadius: '6px',
                     marginBottom: '20px'
@@ -1057,12 +1049,10 @@ function GitHubIntegration({
         <div className="modal-content">
           {error && (
             <div
+              className="github-error-message"
               style={{
                 padding: '12px',
-                background: '#ffebee',
-                border: '1px solid #f44336',
                 borderRadius: '4px',
-                color: '#c62828',
                 marginBottom: '20px'
               }}
             >
@@ -1073,10 +1063,10 @@ function GitHubIntegration({
           {!isAuthenticated ? (
             <div className="github-setup">
               <div
+                className="github-intro-panel"
                 style={{
                   textAlign: 'center',
                   padding: '20px',
-                  background: '#f8f9fa',
                   borderRadius: '8px',
                   marginBottom: '20px'
                 }}
@@ -1119,9 +1109,9 @@ function GitHubIntegration({
               </div>
 
               <div
+                className="github-privacy-info"
                 style={{
                   padding: '15px',
-                  background: '#e3f2fd',
                   borderRadius: '6px',
                   marginBottom: '20px',
                   fontSize: '14px'
@@ -1206,10 +1196,9 @@ function GitHubIntegration({
               {currentRepository ? (
                 <div>
                   <div
+                    className="github-repo-info"
                     style={{
                       padding: '16px',
-                      background: '#f8f9fa',
-                      border: '1px solid #dee2e6',
                       borderRadius: '6px',
                       marginBottom: '20px'
                     }}
@@ -1270,12 +1259,11 @@ function GitHubIntegration({
 
                   {lastSyncTime && (
                     <div
+                      className="github-sync-status"
                       style={{
                         padding: '12px',
-                        background: '#e8f5e8',
                         borderRadius: '4px',
                         fontSize: '13px',
-                        color: '#2d5a2d',
                         marginBottom: '16px'
                       }}
                     >
@@ -1294,10 +1282,9 @@ function GitHubIntegration({
                     return shouldShow;
                   })() && (
                     <div
+                      className="github-collab-testing"
                       style={{
                         padding: '12px',
-                        background: '#fff3cd',
-                        border: '1px solid #ffeaa7',
                         borderRadius: '4px',
                         marginTop: '16px'
                       }}
