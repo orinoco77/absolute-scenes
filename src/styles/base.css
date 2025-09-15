@@ -437,6 +437,82 @@ button.loading::before {
   color: #1565c0;
 }
 
+/* GitHub Integration dialog styling */
+.github-error-message {
+  background: #ffebee;
+  border: 1px solid #f44336;
+  color: #c62828;
+}
+
+.github-setup-instructions {
+  background: #f8f9fa;
+}
+
+.github-setup-tip {
+  background: #e8f5e8;
+  color: #2d5a2d;
+}
+
+.github-reconnect-tip {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.github-privacy-note {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.github-success-status {
+  background: #e7f5e7;
+  color: #155724;
+}
+
+.github-repo-setup-info {
+  background: #f0f8ff;
+  color: #0c4a6e;
+}
+
+.github-repo-choice {
+  background: #f9f9f9;
+  border: 2px solid #ddd;
+}
+
+.github-repo-choice.selected {
+  background: #e7f5e7;
+  border: 2px solid #28a745;
+}
+
+.github-repo-select-info {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.github-intro-panel {
+  background: #f8f9fa;
+}
+
+.github-privacy-info {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.github-repo-info {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.github-sync-status {
+  background: #e8f5e8;
+  color: #2d5a2d;
+}
+
+.github-collab-testing {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+}
+
 .chapter-breakdown {
   margin-top: 1rem;
   padding-top: 1rem;
