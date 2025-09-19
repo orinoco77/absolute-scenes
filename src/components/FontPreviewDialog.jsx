@@ -165,7 +165,12 @@ The morning sun filtered through the *ancient oak trees*, casting dappled shadow
                   </div>
                 </div>
                 {comfortMetrics.recommendations.length > 0 && (
-                  <div style={{ fontSize: '12px', color: '#666' }}>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      color: 'var(--color-text-muted)'
+                    }}
+                  >
                     <strong>Recommendations:</strong>
                     <ul style={{ margin: '4px 0', paddingLeft: '16px' }}>
                       {comfortMetrics.recommendations.map((rec, idx) => (
@@ -223,13 +228,20 @@ The morning sun filtered through the *ancient oak trees*, casting dappled shadow
                       }
                     >
                       <div style={{ fontWeight: 'bold' }}>{font.name}</div>
-                      <div style={{ color: '#666', fontSize: '10px' }}>
+                      <div
+                        style={{
+                          color: 'var(--color-text-muted)',
+                          fontSize: '10px'
+                        }}
+                      >
                         {font.characteristics}
                       </div>
                     </button>
                   ))}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>
+              <div
+                style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}
+              >
                 Selected: {selectedFonts.join(', ')}
               </div>
             </div>
@@ -260,10 +272,20 @@ The morning sun filtered through the *ancient oak trees*, casting dappled shadow
                     }}
                   >
                     <div>
-                      <h4 style={{ margin: '0 0 4px 0', color: '#2196f3' }}>
+                      <h4
+                        style={{
+                          margin: '0 0 4px 0',
+                          color: 'var(--color-primary)'
+                        }}
+                      >
                         {fontData.name}
                       </h4>
-                      <div style={{ fontSize: '12px', color: '#666' }}>
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          color: 'var(--color-text-muted)'
+                        }}
+                      >
                         {fontData.characteristics} • Best for:{' '}
                         {fontData.bestFor.join(', ')}
                       </div>
@@ -271,7 +293,7 @@ The morning sun filtered through the *ancient oak trees*, casting dappled shadow
                         <div
                           style={{
                             fontSize: '10px',
-                            color: '#888',
+                            color: 'var(--color-text-muted)',
                             marginTop: '2px'
                           }}
                         >
@@ -288,7 +310,7 @@ The morning sun filtered through the *ancient oak trees*, casting dappled shadow
                         }}
                         style={{
                           padding: '6px 12px',
-                          backgroundColor: '#2196f3',
+                          backgroundColor: 'var(--color-primary)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',

@@ -99,7 +99,7 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
               <p
                 style={{
                   margin: '0 0 20px 0',
-                  color: '#666',
+                  color: 'var(--color-text-muted)',
                   lineHeight: '1.5'
                 }}
               >
@@ -160,7 +160,13 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
 
           <div style={{ marginBottom: '20px' }}>
             <h4 style={{ margin: '0 0 8px 0' }}>Your Book Backups</h4>
-            <p style={{ margin: '0', color: '#666', fontSize: '14px' }}>
+            <p
+              style={{
+                margin: '0',
+                color: 'var(--color-text-muted)',
+                fontSize: '14px'
+              }}
+            >
               Choose a repository to recover your book from. Only repositories
               containing .book files are shown.
             </p>
@@ -174,7 +180,7 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
               }}
             >
               <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔄</div>
-              <p style={{ margin: '0', color: '#666' }}>
+              <p style={{ margin: '0', color: 'var(--color-text-muted)' }}>
                 Loading your repositories...
               </p>
             </div>
@@ -187,7 +193,13 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
             >
               <div style={{ fontSize: '32px', marginBottom: '12px' }}>📂</div>
               <h4 style={{ margin: '0 0 8px 0' }}>No Book Backups Found</h4>
-              <p style={{ margin: '0', color: '#666', fontSize: '14px' }}>
+              <p
+                style={{
+                  margin: '0',
+                  color: 'var(--color-text-muted)',
+                  fontSize: '14px'
+                }}
+              >
                 We couldn't find any repositories containing .book files in your
                 GitHub account.
               </p>
@@ -216,7 +228,12 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
                     <h5 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>
                       📖 {repo.name}
                     </h5>
-                    <div style={{ fontSize: '13px', color: '#666' }}>
+                    <div
+                      style={{
+                        fontSize: '13px',
+                        color: 'var(--color-text-muted)'
+                      }}
+                    >
                       <div>
                         File: <strong>{repo.bookFile.name}</strong>
                       </div>

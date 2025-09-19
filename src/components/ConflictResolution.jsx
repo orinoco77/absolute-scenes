@@ -93,8 +93,8 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
                 padding: '5px 10px',
                 backgroundColor:
                   currentResolution?.resolution === 'local'
-                    ? '#007bff'
-                    : '#f8f9fa',
+                    ? 'var(--color-primary)'
+                    : 'var(--color-surface-alt)',
                 color:
                   currentResolution?.resolution === 'local' ? 'white' : 'black',
                 border: '1px solid var(--color-border)',
@@ -127,8 +127,8 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
                 padding: '5px 10px',
                 backgroundColor:
                   currentResolution?.resolution === 'remote'
-                    ? '#007bff'
-                    : '#f8f9fa',
+                    ? 'var(--color-primary)'
+                    : 'var(--color-surface-alt)',
                 color:
                   currentResolution?.resolution === 'remote'
                     ? 'white'
@@ -154,8 +154,8 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
               padding: '5px 10px',
               backgroundColor:
                 currentResolution?.resolution === 'manual'
-                  ? '#007bff'
-                  : '#f8f9fa',
+                  ? 'var(--color-primary)'
+                  : 'var(--color-surface-alt)',
               color:
                 currentResolution?.resolution === 'manual' ? 'white' : 'black',
               border: '1px solid var(--color-border)',
@@ -230,30 +230,13 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
             justifyContent: 'flex-end'
           }}
         >
-          <button
-            onClick={onCancel}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
+          <button onClick={onCancel} className="btn btn-secondary">
             Cancel
           </button>
           <button
             onClick={handleResolveAll}
             disabled={!canResolve}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: canResolve ? '#28a745' : '#e9ecef',
-              color: canResolve ? 'white' : '#6c757d',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: canResolve ? 'pointer' : 'not-allowed'
-            }}
+            className={`btn ${canResolve ? 'btn-success' : 'btn'}`}
           >
             Resolve All Conflicts
           </button>

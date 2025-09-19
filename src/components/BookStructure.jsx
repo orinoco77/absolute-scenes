@@ -49,7 +49,10 @@ function ThreadsControls({
               characterDetectionBlacklist.length > 0 && (
                 <div className="tab-stat">
                   <span className="stat-label">Blacklisted names:</span>
-                  <span className="stat-value" style={{ color: '#dc2626' }}>
+                  <span
+                    className="stat-value"
+                    style={{ color: 'var(--color-error)' }}
+                  >
                     {characterDetectionBlacklist.length}
                   </span>
                 </div>

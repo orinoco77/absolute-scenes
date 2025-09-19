@@ -39,7 +39,7 @@
 }
 
 .toolbar button:focus {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--color-text-inverse);
   outline-offset: 2px;
 }
 
@@ -55,13 +55,13 @@
   justify-content: center !important;
   position: relative !important;
   transition: all 0.2s ease !important;
-  background: #3498db !important;
-  border: 1px solid #2980b9 !important;
+  background: var(--color-primary) !important;
+  border: 1px solid var(--color-primary-hover) !important;
 }
 
 .icon-button:hover {
-  background: #2980b9 !important;
-  border-color: #21618c !important;
+  background: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-dark) !important;
   transform: translateY(-1px) !important;
   box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3) !important;
 }
@@ -81,7 +81,7 @@
 .add-chapter-btn,
 .add-scene-btn,
 .recycle-bin-btn {
-  background: #2196f3;
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 6px 12px;
@@ -94,21 +94,21 @@
 .add-chapter-btn:hover,
 .add-scene-btn:hover,
 .recycle-bin-btn:hover {
-  background: #1976d2;
+  background: var(--color-primary-hover);
 }
 
 .add-scene-btn:disabled {
-  background: #ccc;
+  background: var(--color-surface-disabled);
   cursor: not-allowed;
 }
 
 .add-scene-btn:disabled:hover {
-  background: #ccc;
+  background: var(--color-surface-disabled);
 }
 
 .add-scene-btn,
 .add-chapter-btn {
-  background: #27ae60;
+  background: var(--color-success);
   color: white;
   border: none;
   padding: 0.5rem;
@@ -119,11 +119,11 @@
 }
 
 .add-chapter-btn {
-  background: #3498db;
+  background: var(--color-primary);
 }
 
 .add-scene-btn:disabled {
-  background: #bdc3c7;
+  background: var(--color-border);
   cursor: not-allowed;
 }
 
@@ -131,11 +131,11 @@
 .header-buttons .secondary-btn {
   background-color: var(--color-surface-alt);
   border: 1px solid var(--color-border);
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .header-buttons .secondary-btn:hover {
-  background-color: #e0e0e0;
+  background-color: var(--color-surface-alt);
   border-color: var(--color-border);
 }
 
@@ -152,26 +152,26 @@
 }
 
 .header-buttons .primary-btn {
-  background: #2196f3;
+  background: var(--color-primary);
   color: white;
 }
 
 .header-buttons .primary-btn:hover {
-  background: #1976d2;
+  background: var(--color-primary-hover);
 }
 
 .header-buttons .secondary-btn {
-  background: #e0e0e0;
-  color: #333;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
 }
 
 .header-buttons .secondary-btn:hover {
-  background: #d0d0d0;
+  background: var(--color-surface-hover);
 }
 
 .header-buttons .secondary-btn.has-items {
   background: var(--color-warning-bg);
-  color: #856404;
+  color: var(--color-warning);
   border: 1px solid var(--color-warning);
 }
 
@@ -179,19 +179,19 @@
   opacity: 0.5;
   cursor: not-allowed;
   background: var(--color-surface-alt);
-  color: #999;
+  color: var(--color-text-light);
 }
 
 .header-buttons button:disabled:hover {
   background: var(--color-surface-alt);
-  color: #999;
+  color: var(--color-text-light);
 }
 
 /* Distraction-Free Mode toolbar styles */
 .toolbar-separator {
   width: 1px;
   height: 20px;
-  background: #ddd;
+  background: var(--color-surface-alt);
   margin: 0 8px;
 }
 
@@ -206,18 +206,18 @@
 }
 
 [data-theme="dark"] .header-buttons .secondary-btn {
-  background: #374151; /* Dark grey background */
+  background: var(--color-secondary); /* Dark grey background */
   color: var(--color-text);
   border: 1px solid var(--color-border);
 }
 
 [data-theme="dark"] .header-buttons .secondary-btn:hover {
-  background: #4B5563; /* Slightly lighter dark grey */
+  background: var(--color-secondary-light); /* Slightly lighter dark grey */
   border-color: var(--color-border-dark);
 }
 
 [data-theme="dark"] .header-buttons .secondary-btn.has-items {
-  background: #92400e; /* Dark amber background */
-  color: #fbbf24; /* Light amber text */
-  border: 1px solid #d97706;
+  background: var(--color-warning); /* Dark amber background */
+  color: var(--color-text-inverse); /* Light amber text */
+  border: 1px solid var(--color-warning-border);
 }

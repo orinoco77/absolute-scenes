@@ -147,14 +147,8 @@ function IllustrationEditor({ illustration, onIllustrationUpdate }) {
 
           <button
             onClick={() => fileInputRef.current?.click()}
+            className="btn btn-primary btn-lg"
             style={{
-              background: '#2196f3',
-              color: 'white',
-              border: 'none',
-              padding: '15px 30px',
-              fontSize: '16px',
-              borderRadius: '4px',
-              cursor: 'pointer',
               display: 'block',
               margin: '10px 0'
             }}
@@ -184,13 +178,9 @@ function IllustrationEditor({ illustration, onIllustrationUpdate }) {
               <br />
               <button
                 onClick={handleRemoveImage}
+                className="btn btn-error"
                 style={{
-                  background: '#f44336',
-                  color: 'white',
-                  border: 'none',
-                  padding: '10px 20px',
-                  marginTop: '10px',
-                  cursor: 'pointer'
+                  marginTop: '10px'
                 }}
               >
                 Remove Image

@@ -181,6 +181,31 @@ async function createWindow() {
     }
   });
 
+  // Handle distraction-free mode entry (hide menu)
+  ipcMain.on('distraction-free-entered', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setMenuBarVisibility(false);
+    }
+  });
+
+  // Handle distraction-free mode exit (restore menu)
+  ipcMain.on('distraction-free-exited', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      // Use timeouts to ensure menu restoration works properly,
+      // especially when transitioning out of fullscreen mode
+      setTimeout(() => {
+        mainWindow.setMenuBarVisibility(true);
+
+        // Double-check to ensure it takes effect
+        setTimeout(() => {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.setMenuBarVisibility(true);
+          }
+        }, 100);
+      }, 50);
+    }
+  });
+
   // Handle window close event - check for unsaved changes
   mainWindow.on('close', event => {
     event.preventDefault();
@@ -197,7 +222,21 @@ async function handleNewBook() {
     let hasUnsavedChanges = false;
     try {
       hasUnsavedChanges = await mainWindow.webContents.executeJavaScript(`
-        window.electronAPI && window.electronAPI.hasUnsavedChanges ? window.electronAPI.hasUnsavedChanges() : false
+        (() => {
+          // Try electronAPI first (if preload script is working)
+          if (window.electronAPI && window.electronAPI.hasUnsavedChanges) {
+            return window.electronAPI.hasUnsavedChanges();
+          }
+          // Fallback to extensions (when nodeIntegration is true)
+          if (window._electronAPIExtensions && window._electronAPIExtensions.hasUnsavedChanges) {
+            return window._electronAPIExtensions.hasUnsavedChanges();
+          }
+          // Last resort: check mock API (browser mode)
+          if (window._mockElectronAPI && window._mockElectronAPI.hasUnsavedChanges) {
+            return window._mockElectronAPI.hasUnsavedChanges();
+          }
+          return false;
+        })()
       `);
     } catch (error) {
       console.log('Could not check unsaved changes, proceeding with new book');
@@ -237,7 +276,21 @@ async function handleWindowClose() {
     let hasUnsavedChanges = false;
     try {
       hasUnsavedChanges = await mainWindow.webContents.executeJavaScript(`
-        window.electronAPI && window.electronAPI.hasUnsavedChanges ? window.electronAPI.hasUnsavedChanges() : false
+        (() => {
+          // Try electronAPI first (if preload script is working)
+          if (window.electronAPI && window.electronAPI.hasUnsavedChanges) {
+            return window.electronAPI.hasUnsavedChanges();
+          }
+          // Fallback to extensions (when nodeIntegration is true)
+          if (window._electronAPIExtensions && window._electronAPIExtensions.hasUnsavedChanges) {
+            return window._electronAPIExtensions.hasUnsavedChanges();
+          }
+          // Last resort: check mock API (browser mode)
+          if (window._mockElectronAPI && window._mockElectronAPI.hasUnsavedChanges) {
+            return window._mockElectronAPI.hasUnsavedChanges();
+          }
+          return false;
+        })()
       `);
     } catch (error) {
       console.log('Could not check unsaved changes, proceeding with close');
@@ -334,15 +387,61 @@ function attemptToOpenPendingFile() {
   }
 
   if (mainWindow && !mainWindow.isDestroyed()) {
-    openBookFile(pendingFileToOpen);
+    openBookFile(pendingFileToOpen, true); // Check for unsaved changes when opening from file association
     pendingFileToOpen = null; // Clear after attempting to open
   }
 }
 
 // Enhanced function to open a book file with better error handling and retry logic
-async function openBookFile(filePath) {
+async function openBookFile(filePath, checkUnsavedChanges = true) {
   if (!filePath) {
     return;
+  }
+
+  if (checkUnsavedChanges) {
+    // Check if there are unsaved changes in the React app via IPC
+    let hasUnsavedChanges = false;
+    try {
+      hasUnsavedChanges = await mainWindow.webContents.executeJavaScript(`
+        (() => {
+          // Try electronAPI first (if preload script is working)
+          if (window.electronAPI && window.electronAPI.hasUnsavedChanges) {
+            return window.electronAPI.hasUnsavedChanges();
+          }
+          // Fallback to extensions (when nodeIntegration is true)
+          if (window._electronAPIExtensions && window._electronAPIExtensions.hasUnsavedChanges) {
+            return window._electronAPIExtensions.hasUnsavedChanges();
+          }
+          // Last resort: check mock API (browser mode)
+          if (window._mockElectronAPI && window._mockElectronAPI.hasUnsavedChanges) {
+            return window._mockElectronAPI.hasUnsavedChanges();
+          }
+          return false;
+        })()
+      `);
+    } catch (error) {
+      console.log(
+        'Could not check unsaved changes, proceeding with open book file'
+      );
+      hasUnsavedChanges = false;
+    }
+
+    if (hasUnsavedChanges) {
+      const response = await dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        buttons: ['Open Book', 'Cancel'],
+        defaultId: 1,
+        cancelId: 1,
+        title: 'Unsaved Changes',
+        message:
+          'You have unsaved changes. Are you sure you want to open another book?',
+        detail: 'All unsaved changes will be lost.'
+      });
+
+      if (response.response !== 0) {
+        return; // User cancelled
+      }
+    }
   }
 
   try {
@@ -1919,6 +2018,49 @@ function showAboutDialog() {
 
 async function openBook() {
   try {
+    // Check if there are unsaved changes BEFORE showing file picker
+    let hasUnsavedChanges = false;
+    try {
+      hasUnsavedChanges = await mainWindow.webContents.executeJavaScript(`
+        (() => {
+          // Try electronAPI first (if preload script is working)
+          if (window.electronAPI && window.electronAPI.hasUnsavedChanges) {
+            return window.electronAPI.hasUnsavedChanges();
+          }
+          // Fallback to extensions (when nodeIntegration is true)
+          if (window._electronAPIExtensions && window._electronAPIExtensions.hasUnsavedChanges) {
+            return window._electronAPIExtensions.hasUnsavedChanges();
+          }
+          // Last resort: check mock API (browser mode)
+          if (window._mockElectronAPI && window._mockElectronAPI.hasUnsavedChanges) {
+            return window._mockElectronAPI.hasUnsavedChanges();
+          }
+          return false;
+        })()
+      `);
+    } catch (error) {
+      console.log('Could not check unsaved changes, proceeding with open book');
+      hasUnsavedChanges = false;
+    }
+
+    if (hasUnsavedChanges) {
+      const response = await dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        buttons: ['Open Book', 'Cancel'],
+        defaultId: 1,
+        cancelId: 1,
+        title: 'Unsaved Changes',
+        message:
+          'You have unsaved changes. Are you sure you want to open another book?',
+        detail: 'All unsaved changes will be lost.'
+      });
+
+      if (response.response !== 0) {
+        return; // User cancelled - don't show file picker
+      }
+    }
+
+    // Show file picker only if user confirmed or no unsaved changes
     const result = await dialog.showOpenDialog(mainWindow, {
       properties: ['openFile'],
       filters: [
@@ -1929,7 +2071,8 @@ async function openBook() {
 
     if (!result.canceled && result.filePaths.length > 0) {
       const filePath = result.filePaths[0];
-      await openBookFile(filePath);
+      // Skip unsaved changes check since we already did it
+      await openBookFile(filePath, false);
     }
   } catch (error) {
     console.error('Error opening book file:', error);

@@ -530,7 +530,7 @@ function GitHubIntegration({
                 <p
                   style={{
                     margin: '0 0 20px 0',
-                    color: '#666',
+                    color: 'var(--color-text-muted)',
                     lineHeight: '1.5'
                   }}
                 >
@@ -593,7 +593,7 @@ function GitHubIntegration({
                   onClick={() => setStep(3)}
                   style={{
                     padding: '12px 24px',
-                    background: '#2ea043',
+                    background: 'var(--color-success)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
@@ -657,7 +657,7 @@ function GitHubIntegration({
                     style={{
                       display: 'block',
                       marginTop: '8px',
-                      color: '#666'
+                      color: 'var(--color-text-muted)'
                     }}
                   >
                     Paste the token you just copied from GitHub (starts with
@@ -673,7 +673,7 @@ function GitHubIntegration({
                     style={{
                       flex: 1,
                       padding: '12px',
-                      background: '#6c757d',
+                      background: 'var(--color-secondary)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -688,7 +688,9 @@ function GitHubIntegration({
                     style={{
                       flex: 2,
                       padding: '12px',
-                      background: token.trim() ? '#2ea043' : '#ccc',
+                      background: token.trim()
+                        ? 'var(--color-success)'
+                        : 'var(--color-surface-disabled)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -729,7 +731,13 @@ function GitHubIntegration({
                   <p style={{ margin: '0 0 10px 0' }}>
                     ✅ <strong>GitHub connection successful!</strong>
                   </p>
-                  <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
+                  <p
+                    style={{
+                      margin: '0',
+                      fontSize: '14px',
+                      color: 'var(--color-text-muted)'
+                    }}
+                  >
                     How would you like to be identified in collaborative
                     writing? This can be your real name or a pseudonym.
                   </p>
@@ -766,7 +774,7 @@ function GitHubIntegration({
                     style={{
                       display: 'block',
                       marginTop: '8px',
-                      color: '#666'
+                      color: 'var(--color-text-muted)'
                     }}
                   >
                     This name will be used for scene assignments and
@@ -779,7 +787,7 @@ function GitHubIntegration({
                     style={{
                       flex: 1,
                       padding: '12px',
-                      background: '#6c757d',
+                      background: 'var(--color-secondary)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -794,7 +802,9 @@ function GitHubIntegration({
                     style={{
                       flex: 2,
                       padding: '12px',
-                      background: authorName.trim() ? '#2ea043' : '#ccc',
+                      background: authorName.trim()
+                        ? 'var(--color-success)'
+                        : 'var(--color-surface-disabled)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -844,7 +854,13 @@ function GitHubIntegration({
                     <h4 style={{ margin: '0 0 8px 0' }}>
                       📝 Create New Repository
                     </h4>
-                    <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
+                    <p
+                      style={{
+                        margin: '0',
+                        fontSize: '14px',
+                        color: 'var(--color-text-muted)'
+                      }}
+                    >
                       Perfect for starting a new book project. We'll create a
                       new repository for you.
                     </p>
@@ -862,7 +878,13 @@ function GitHubIntegration({
                     <h4 style={{ margin: '0 0 8px 0' }}>
                       👥 Join Existing Repository
                     </h4>
-                    <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
+                    <p
+                      style={{
+                        margin: '0',
+                        fontSize: '14px',
+                        color: 'var(--color-text-muted)'
+                      }}
+                    >
                       Connect to a book that already exists. Great for
                       collaborative writing!
                     </p>
@@ -875,7 +897,7 @@ function GitHubIntegration({
                     style={{
                       flex: 1,
                       padding: '12px',
-                      background: '#6c757d',
+                      background: 'var(--color-secondary)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -925,7 +947,7 @@ function GitHubIntegration({
                           style={{
                             padding: '20px',
                             textAlign: 'center',
-                            color: '#666'
+                            color: 'var(--color-text-muted)'
                           }}
                         >
                           No repositories found. You may need to be added as a
@@ -942,7 +964,7 @@ function GitHubIntegration({
                               cursor: 'pointer',
                               background:
                                 selectedRepo === repo.full_name
-                                  ? '#e7f5e7'
+                                  ? 'var(--color-success-background)'
                                   : 'white'
                             }}
                           >
@@ -954,14 +976,19 @@ function GitHubIntegration({
                             >
                               {repo.private ? '🔒' : '📖'} {repo.name}
                             </div>
-                            <div style={{ fontSize: '12px', color: '#666' }}>
+                            <div
+                              style={{
+                                fontSize: '12px',
+                                color: 'var(--color-text-muted)'
+                              }}
+                            >
                               {repo.full_name}
                             </div>
                             {repo.description && (
                               <div
                                 style={{
                                   fontSize: '13px',
-                                  color: '#666',
+                                  color: 'var(--color-text-muted)',
                                   marginTop: '5px'
                                 }}
                               >
@@ -981,7 +1008,7 @@ function GitHubIntegration({
                     style={{
                       flex: 1,
                       padding: '12px',
-                      background: '#6c757d',
+                      background: 'var(--color-secondary)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -998,8 +1025,8 @@ function GitHubIntegration({
                       padding: '12px',
                       background:
                         selectedRepo && !isSettingUpCollaboration
-                          ? '#2ea043'
-                          : '#ccc',
+                          ? 'var(--color-success)'
+                          : 'var(--color-surface-disabled)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -1072,10 +1099,18 @@ function GitHubIntegration({
                 }}
               >
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔒</div>
-                <h3 style={{ margin: '0 0 12px 0', color: '#333' }}>
+                <h3
+                  style={{ margin: '0 0 12px 0', color: 'var(--color-text)' }}
+                >
                   Safe & Secure Book Backup
                 </h3>
-                <p style={{ margin: '0', color: '#666', lineHeight: '1.5' }}>
+                <p
+                  style={{
+                    margin: '0',
+                    color: 'var(--color-text-muted)',
+                    lineHeight: '1.5'
+                  }}
+                >
                   Keep your book safe with automatic cloud backup and version
                   history. Your work is always secure and never lost.
                 </p>
@@ -1129,7 +1164,7 @@ function GitHubIntegration({
                   padding: '15px',
                   fontSize: '16px',
                   fontWeight: 'bold',
-                  background: '#2ea043',
+                  background: 'var(--color-success)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
@@ -1146,7 +1181,7 @@ function GitHubIntegration({
                   textAlign: 'center',
                   marginTop: '16px',
                   fontSize: '13px',
-                  color: '#666'
+                  color: 'var(--color-text-muted)'
                 }}
               >
                 Don't have a GitHub account?
@@ -1156,7 +1191,10 @@ function GitHubIntegration({
                     e.preventDefault();
                     openGitHubSignup();
                   }}
-                  style={{ color: '#0969da', textDecoration: 'none' }}
+                  style={{
+                    color: 'var(--color-primary)',
+                    textDecoration: 'none'
+                  }}
                 >
                   Create one free here
                 </a>
@@ -1184,11 +1222,13 @@ function GitHubIntegration({
                   <span style={{ fontSize: '20px', marginRight: '8px' }}>
                     ✅
                   </span>
-                  <strong style={{ color: '#155724' }}>
+                  <strong style={{ color: 'var(--color-success)' }}>
                     Connected to GitHub
                   </strong>
                 </div>
-                <div style={{ fontSize: '14px', color: '#155724' }}>
+                <div
+                  style={{ fontSize: '14px', color: 'var(--color-success)' }}
+                >
                   Signed in as <strong>{userInfo?.login}</strong>
                 </div>
               </div>
@@ -1207,7 +1247,7 @@ function GitHubIntegration({
                     <div
                       style={{
                         fontSize: '14px',
-                        color: '#666',
+                        color: 'var(--color-text-muted)',
                         marginBottom: '12px'
                       }}
                     >
@@ -1218,7 +1258,7 @@ function GitHubIntegration({
                         onClick={openRepositoryInBrowser}
                         style={{
                           padding: '8px 12px',
-                          background: '#0969da',
+                          background: 'var(--color-primary)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
@@ -1233,7 +1273,7 @@ function GitHubIntegration({
                         disabled={isSyncing}
                         style={{
                           padding: '8px 12px',
-                          background: '#2ea043',
+                          background: 'var(--color-success)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
@@ -1289,14 +1329,19 @@ function GitHubIntegration({
                         marginTop: '16px'
                       }}
                     >
-                      <h5 style={{ margin: '0 0 8px 0', color: '#856404' }}>
+                      <h5
+                        style={{
+                          margin: '0 0 8px 0',
+                          color: 'var(--color-warning)'
+                        }}
+                      >
                         🧪 Collaboration Testing
                       </h5>
                       <p
                         style={{
                           margin: '0 0 12px 0',
                           fontSize: '13px',
-                          color: '#856404'
+                          color: 'var(--color-warning)'
                         }}
                       >
                         This repository has only 1 contributor. You can enable
@@ -1320,7 +1365,7 @@ function GitHubIntegration({
                         }}
                         style={{
                           padding: '6px 12px',
-                          background: '#856404',
+                          background: 'var(--color-warning)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
@@ -1342,7 +1387,7 @@ function GitHubIntegration({
                   <p
                     style={{
                       margin: '0 0 16px 0',
-                      color: '#666',
+                      color: 'var(--color-text-muted)',
                       fontSize: '14px'
                     }}
                   >
@@ -1358,8 +1403,8 @@ function GitHubIntegration({
                       padding: '12px 24px',
                       background:
                         !book.title?.trim() || !book.author?.trim()
-                          ? '#ccc'
-                          : '#2ea043',
+                          ? 'var(--color-surface-disabled)'
+                          : 'var(--color-success)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -1381,7 +1426,7 @@ function GitHubIntegration({
                   <div
                     style={{
                       margin: '12px 0',
-                      color: '#666',
+                      color: 'var(--color-text-muted)',
                       fontSize: '13px'
                     }}
                   >
@@ -1399,7 +1444,7 @@ function GitHubIntegration({
                     disabled={isSyncing}
                     style={{
                       padding: '10px 20px',
-                      background: '#0969da',
+                      background: 'var(--color-primary)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -1426,7 +1471,7 @@ function GitHubIntegration({
                   style={{
                     padding: '8px 16px',
                     background: 'transparent',
-                    color: '#dc3545',
+                    color: 'var(--color-error)',
                     border: '1px solid var(--color-error)',
                     borderRadius: '4px',
                     fontSize: '12px',

@@ -87,6 +87,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send('fullscreen-exited');
   },
 
+  // Distraction-free mode handling
+  onDistractionFreeEnter: () => {
+    ipcRenderer.send('distraction-free-entered');
+  },
+  onDistractionFreeExit: () => {
+    ipcRenderer.send('distraction-free-exited');
+  },
+
   // Unsaved changes check - using a mutable container
   _unsavedChangesChecker: { fn: null },
   hasUnsavedChanges: () => {

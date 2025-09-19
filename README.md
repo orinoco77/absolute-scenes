@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.100<!--/VERSION--> | **Tests:** <!--TESTS-->1048/1048<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.3.101<!--/VERSION--> | **Tests:** <!--TESTS-->1048/1048<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2025-09-19<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -286,7 +286,7 @@ Access via the 🔗 GitHub Integration button:
 
 **Code Quality:** <!--TESTS-->1048/1048<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->122<!--/COMMITS--> | **Latest:** <!--COMMIT-->b2e2708 - Restore IllustrationList broken in merge (5 hours ago)<!--/COMMIT-->
+<!--COMMITS-->123<!--/COMMITS--> | **Latest:** <!--COMMIT-->dc00afc - Fix for illustration list and test failures (4 hours ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.100<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.3.100<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.3.101<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.101<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-09-19<!--/DATE--> | Build <!--COMMIT-->b2e2708 - Restore IllustrationList broken in merge (5 hours ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-09-19<!--/DATE--> | Build <!--COMMIT-->dc00afc - Fix for illustration list and test failures (4 hours ago)<!--/COMMIT-->_
