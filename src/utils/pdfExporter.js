@@ -339,15 +339,16 @@ function renderFormattedTextToPDF(
   const processLineBreak = () => {
     // Render current line if it has content
     if (currentLineWords.length > 0) {
-      let lineStartX = x;
-      let availableWidth = currentMaxWidth;
-
-      // Apply indentation only to the first line of the paragraph
-      if (isFirstLineOfParagraph && shouldIndentFirstLine) {
-        const indentAmount = Math.max(24, Math.min(48, currentMaxWidth * 0.03));
-        availableWidth -= indentAmount;
-        lineStartX += indentAmount;
-      }
+      // Calculate indentation for this line
+      const indentation = calculateParagraphIndentation(
+        isFirstLineOfParagraph,
+        shouldIndentFirstLine,
+        fontSize,
+        currentMaxWidth,
+        x,
+        pdf
+      );
+      const { availableWidth, lineStartX } = indentation;
 
       renderMixedFormattedLine(
         pdf,
@@ -404,11 +405,15 @@ function renderFormattedTextToPDF(
     const spaceWidth = wordObj.needsSpace ? pdf.getTextWidth(' ') : 0;
 
     // Determine available width for this line
-    let availableWidth = currentMaxWidth;
-    if (isFirstLineOfParagraph && shouldIndentFirstLine) {
-      const indentAmount = Math.max(24, Math.min(48, currentMaxWidth * 0.03));
-      availableWidth -= indentAmount;
-    }
+    const indentation = calculateParagraphIndentation(
+      isFirstLineOfParagraph,
+      shouldIndentFirstLine,
+      fontSize,
+      currentMaxWidth,
+      x,
+      pdf
+    );
+    const availableWidth = indentation.availableWidth;
 
     // Check if adding this word would exceed the available line width
     const totalWordWidth = spaceWidth + wordWidth;
@@ -428,14 +433,16 @@ function renderFormattedTextToPDF(
 
   // Render any remaining words in the final line
   if (currentLineWords.length > 0) {
-    let lineStartX = x;
-    let availableWidth = currentMaxWidth;
-
-    if (isFirstLineOfParagraph && shouldIndentFirstLine) {
-      const indentAmount = Math.max(24, Math.min(48, availableWidth * 0.03));
-      lineStartX += indentAmount;
-      availableWidth -= indentAmount;
-    }
+    // Calculate indentation for the final line
+    const indentation = calculateParagraphIndentation(
+      isFirstLineOfParagraph,
+      shouldIndentFirstLine,
+      fontSize,
+      currentMaxWidth,
+      x,
+      pdf
+    );
+    const { availableWidth, lineStartX } = indentation;
 
     renderMixedFormattedLine(
       pdf,
@@ -480,6 +487,33 @@ function getFontSize(type, baseFontSize) {
     default:
       return baseFontSize;
   }
+}
+
+// Helper function to calculate paragraph indentation settings
+function calculateParagraphIndentation(
+  isFirstLineOfParagraph,
+  shouldIndentFirstLine,
+  fontSize,
+  maxWidth,
+  startX,
+  pdf
+) {
+  if (isFirstLineOfParagraph && shouldIndentFirstLine) {
+    // Measure actual width of 2 em-dashes using the PDF's text measurement
+    const emDashString = '——'; // 2 em-dashes
+    const indentAmount = pdf.getTextWidth(emDashString);
+    return {
+      indentAmount,
+      availableWidth: maxWidth - indentAmount,
+      lineStartX: startX + indentAmount
+    };
+  }
+
+  return {
+    indentAmount: 0,
+    availableWidth: maxWidth,
+    lineStartX: startX
+  };
 }
 
 // Helper function to render a line with mixed formatting
