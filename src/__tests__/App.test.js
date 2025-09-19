@@ -1,10 +1,4 @@
-import {
-  render,
-  screen,
-  fireEvent
-  // waitFor imported but not used
-  // act imported but not used after removing unnecessary wrappers
-} from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import App from '../App.jsx';
 import { saveBook } from '../utils/fileOperations';
@@ -457,24 +451,30 @@ describe('App Component - Comprehensive Tests', () => {
       render(<App />);
 
       const titleInput = screen.getByPlaceholderText('Book Title');
+
       fireEvent.change(titleInput, { target: { value: 'My Great Novel' } });
 
       expect(titleInput.value).toBe('My Great Novel');
-      expect(screen.getByTestId('save-status')).toHaveTextContent(
-        'Unsaved Changes'
-      );
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
     });
 
     test('updates author and marks as changed', async () => {
       render(<App />);
 
       const authorInput = screen.getByPlaceholderText('Author');
+
       fireEvent.change(authorInput, { target: { value: 'John Author' } });
 
       expect(authorInput.value).toBe('John Author');
-      expect(screen.getByTestId('save-status')).toHaveTextContent(
-        'Unsaved Changes'
-      );
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
     });
   });
 
@@ -497,7 +497,9 @@ describe('App Component - Comprehensive Tests', () => {
           `${tab.charAt(0).toUpperCase() + tab.slice(1)} Tab`
         );
         fireEvent.click(tabButton);
-        expect(screen.getByTestId('active-tab')).toHaveTextContent(tab);
+        await waitFor(() => {
+          expect(screen.getByTestId('active-tab')).toHaveTextContent(tab);
+        });
       }
     });
 
@@ -509,25 +511,40 @@ describe('App Component - Comprehensive Tests', () => {
 
       // Characters tab
       fireEvent.click(screen.getByText('Characters Tab'));
-      expect(screen.getByText('No Character Selected')).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(screen.getByText('No Character Selected')).toBeInTheDocument();
+      });
 
       // Locations tab
       fireEvent.click(screen.getByText('Locations Tab'));
-      expect(screen.getByText('No Location Selected')).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(screen.getByText('No Location Selected')).toBeInTheDocument();
+      });
 
       // Background tab
       fireEvent.click(screen.getByText('Background Tab'));
-      expect(screen.getByText('No Document Selected')).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(screen.getByText('No Document Selected')).toBeInTheDocument();
+      });
 
       // Front Matter tab
       fireEvent.click(screen.getByText('Frontmatter Tab'));
-      expect(screen.getByTestId('frontmatter-editor')).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('frontmatter-editor')).toBeInTheDocument();
+      });
 
       // Threads tab
       fireEvent.click(screen.getByText('Threads Tab'));
-      expect(
-        screen.getByTestId('character-thread-visualization')
-      ).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('character-thread-visualization')
+        ).toBeInTheDocument();
+      });
     });
   });
 
@@ -539,9 +556,11 @@ describe('App Component - Comprehensive Tests', () => {
 
       fireEvent.click(screen.getByText('Add Scene'));
 
-      expect(screen.getByTestId('save-status')).toHaveTextContent(
-        'Unsaved Changes'
-      );
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
     });
 
     test('creates new chapter and updates state', async () => {
@@ -553,9 +572,11 @@ describe('App Component - Comprehensive Tests', () => {
 
       fireEvent.click(screen.getByText('Add Chapter'));
 
-      expect(screen.getByTestId('save-status')).toHaveTextContent(
-        'Unsaved Changes'
-      );
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
     });
 
     test('creates new character and updates state', async () => {
@@ -567,9 +588,11 @@ describe('App Component - Comprehensive Tests', () => {
 
       fireEvent.click(screen.getByText('Add Character'));
 
-      expect(screen.getByTestId('save-status')).toHaveTextContent(
-        'Unsaved Changes'
-      );
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
     });
 
     test('creates new location and updates state', async () => {
@@ -581,9 +604,11 @@ describe('App Component - Comprehensive Tests', () => {
 
       fireEvent.click(screen.getByText('Add Location'));
 
-      expect(screen.getByTestId('save-status')).toHaveTextContent(
-        'Unsaved Changes'
-      );
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
     });
 
     test('creates new part and updates state', async () => {
@@ -595,9 +620,11 @@ describe('App Component - Comprehensive Tests', () => {
 
       fireEvent.click(screen.getByText('Add Part'));
 
-      expect(screen.getByTestId('save-status')).toHaveTextContent(
-        'Unsaved Changes'
-      );
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
     });
   });
 
@@ -607,9 +634,11 @@ describe('App Component - Comprehensive Tests', () => {
 
       fireEvent.click(screen.getByText('Select Scene'));
 
-      expect(screen.getByTestId('current-scene-id')).toHaveTextContent(
-        'scene-1'
-      );
+      await waitFor(() => {
+        expect(screen.getByTestId('current-scene-id')).toHaveTextContent(
+          'scene-1'
+        );
+      });
     });
 
     test('selects character and shows editor', async () => {
@@ -617,10 +646,15 @@ describe('App Component - Comprehensive Tests', () => {
 
       // Switch to characters tab first
       fireEvent.click(screen.getByText('Characters Tab'));
+
       fireEvent.click(screen.getByText('Select Character'));
 
       // Should be able to interact with character editor
-      expect(screen.getByTestId('active-tab')).toHaveTextContent('characters');
+      await waitFor(() => {
+        expect(screen.getByTestId('active-tab')).toHaveTextContent(
+          'characters'
+        );
+      });
     });
 
     test('updates scene content and marks as changed', async () => {
@@ -632,9 +666,11 @@ describe('App Component - Comprehensive Tests', () => {
       // Then update it through the book structure mock
       fireEvent.click(screen.getByText('Update Scene'));
 
-      expect(screen.getByTestId('save-status')).toHaveTextContent(
-        'Unsaved Changes'
-      );
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
     });
 
     test('manages back matter sections correctly', async () => {
@@ -642,7 +678,12 @@ describe('App Component - Comprehensive Tests', () => {
 
       // Switch to back matter tab
       fireEvent.click(screen.getByText('Backmatter Tab'));
-      expect(screen.getByTestId('active-tab')).toHaveTextContent('backmatter');
+
+      await waitFor(() => {
+        expect(screen.getByTestId('active-tab')).toHaveTextContent(
+          'backmatter'
+        );
+      });
 
       // Should show no back matter message initially
       expect(
@@ -654,13 +695,17 @@ describe('App Component - Comprehensive Tests', () => {
       fireEvent.change(addSelect, { target: { value: 'epilogue' } });
 
       // Should mark as changed
-      expect(screen.getByTestId('save-status')).toHaveTextContent(
-        'Unsaved Changes'
-      );
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
 
       // Should now show the epilogue in the back matter list (check both locations)
-      const epilogueElements = screen.getAllByText('Epilogue');
-      expect(epilogueElements.length).toBeGreaterThanOrEqual(1);
+      await waitFor(() => {
+        const epilogueElements = screen.getAllByText('Epilogue');
+        expect(epilogueElements.length).toBeGreaterThanOrEqual(1);
+      });
     });
   });
 

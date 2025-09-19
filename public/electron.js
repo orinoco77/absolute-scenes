@@ -37,7 +37,7 @@ if (!gotTheLock) {
   });
 }
 
-function createWindow() {
+async function createWindow() {
   // Register IPC handlers first, before creating the window
   registerIpcHandlers();
 
@@ -54,7 +54,7 @@ function createWindow() {
   // Get saved language or default to en-US
   let savedLanguage = 'en-US';
   try {
-    const Store = require('electron-store');
+    const { default: Store } = await import('electron-store');
     const store = new Store();
     savedLanguage = store.get('spellCheckLanguage', 'en-US');
   } catch (error) {
@@ -77,7 +77,7 @@ function createWindow() {
 
   mainWindow = new BrowserWindow({
     width: 1400,
-    height: 940,
+    height: 1020,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -2106,7 +2106,7 @@ function registerIpcHandlers() {
   // Save spell checker language to electron-store for next app startup
   ipcMain.handle('save-spell-checker-language', async (event, language) => {
     try {
-      const Store = require('electron-store');
+      const { default: Store } = await import('electron-store');
       const store = new Store();
       store.set('spellCheckLanguage', language);
       console.log('Spell checker language saved to store:', language);
@@ -2250,8 +2250,8 @@ function registerIpcHandlers() {
   });
 }
 
-app.whenReady().then(() => {
-  createWindow();
+app.whenReady().then(async () => {
+  await createWindow();
 
   // Enhanced file opening from command line
   const filePath = getFilePathFromArgs(process.argv);
@@ -2293,9 +2293,9 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('activate', () => {
+app.on('activate', async () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+    await createWindow();
   }
 });
 
