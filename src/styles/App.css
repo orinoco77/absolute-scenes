@@ -1,28 +1,28 @@
 /* Import theme system first */
-@import './themes.css';
+@import "./themes.css";
 
 /* Import all CSS modules */
-@import './base.css';
-@import './buttons.css';
-@import './inputs.css';
-@import './header-toolbar.css';
-@import './book-structure.css';
-@import './scenes-chapters.css';
-@import './editor.css';
-@import './status-bar.css';
-@import './tabs.css';
-@import './accordion.css';
-@import './drag-drop.css';
-@import './characters.css';
-@import './locations.css';
-@import './parts.css';
-@import './front-matter.css';
-@import './back-matter.css';
-@import './illustrations.css';
-@import './recycle-bin.css';
-@import './font-settings.css';
-@import './windows-overrides.css';
-@import './dark-overrides.css';
+@import "./base.css";
+@import "./buttons.css";
+@import "./inputs.css";
+@import "./header-toolbar.css";
+@import "./book-structure.css";
+@import "./scenes-chapters.css";
+@import "./editor.css";
+@import "./status-bar.css";
+@import "./tabs.css";
+@import "./accordion.css";
+@import "./drag-drop.css";
+@import "./characters.css";
+@import "./locations.css";
+@import "./parts.css";
+@import "./front-matter.css";
+@import "./back-matter.css";
+@import "./illustrations.css";
+@import "./recycle-bin.css";
+@import "./font-settings.css";
+@import "./windows-overrides.css";
+@import "./dark-overrides.css";
 
 /* 
  * App.css should ONLY contain imports - no duplicate styles!
