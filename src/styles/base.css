@@ -94,7 +94,7 @@ body {
 
 .modal-footer {
   padding: 1rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
@@ -115,7 +115,7 @@ body {
 .form-group select {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
 }
 
@@ -274,7 +274,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -317,12 +317,12 @@ button.loading::before {
   background: #d4edda;
   padding: 1rem;
   border-radius: 4px;
-  border: 1px solid #c3e6cb;
+  border: 1px solid var(--color-success-border);
 }
 
 /* Book preview styles */
 .book-preview {
-  background: #f8f9fa;
+  background: var(--color-surface-alt);
   padding: 1rem;
   border-radius: 4px;
   margin-top: 1rem;
@@ -330,26 +330,26 @@ button.loading::before {
 
 /* Export dialog parts structure */
 #export-parts-structure {
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
   color: #0369a1;
 }
 
 /* GitHub connection status */
 #github-connection-status {
   background: #d4edda;
-  border: 1px solid #c3e6cb;
+  border: 1px solid var(--color-success-border);
   color: #155724;
 }
 
 /* Template Manager styling */
 #font-recommendations {
-  background: #f5f5f5;
+  background: var(--color-surface-alt);
 }
 
 .font-recommendation-btn {
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   color: #333;
 }
 
@@ -360,13 +360,13 @@ button.loading::before {
 }
 
 #font-info-panel {
-  background: #f9f9f9;
+  background: var(--color-surface-alt);
   color: #333;
 }
 
 .font-preview-toggle {
-  background: #f5f5f5;
-  border: 1px solid #ddd;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
   color: #333;
 }
 
@@ -377,7 +377,7 @@ button.loading::before {
 }
 
 #font-preview-container {
-  background: #f9f9f9;
+  background: var(--color-surface-alt);
 }
 
 #smart-sizing-info {
@@ -386,23 +386,23 @@ button.loading::before {
 }
 
 #running-headers-info {
-  background: #f9f9f9;
+  background: var(--color-surface-alt);
   color: #333;
 }
 
 /* Backup Recovery dialog styling */
 #backup-error-message {
-  background: #ffebee;
+  background: var(--color-error-bg);
   border: 1px solid #f44336;
   color: #c62828;
 }
 
 #backup-repositories-list {
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
 }
 
 .backup-repository-item {
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .backup-repository-item:last-child {
@@ -439,13 +439,13 @@ button.loading::before {
 
 /* GitHub Integration dialog styling */
 .github-error-message {
-  background: #ffebee;
+  background: var(--color-error-bg);
   border: 1px solid #f44336;
   color: #c62828;
 }
 
 .github-setup-instructions {
-  background: #f8f9fa;
+  background: var(--color-surface-alt);
 }
 
 .github-setup-tip {
@@ -454,7 +454,7 @@ button.loading::before {
 }
 
 .github-reconnect-tip {
-  background: #fff3cd;
+  background: var(--color-warning-bg);
   color: #856404;
 }
 
@@ -474,8 +474,8 @@ button.loading::before {
 }
 
 .github-repo-choice {
-  background: #f9f9f9;
-  border: 2px solid #ddd;
+  background: var(--color-surface-alt);
+  border: 2px solid var(--color-border);
 }
 
 .github-repo-choice.selected {
@@ -484,12 +484,12 @@ button.loading::before {
 }
 
 .github-repo-select-info {
-  background: #fff3cd;
+  background: var(--color-warning-bg);
   color: #856404;
 }
 
 .github-intro-panel {
-  background: #f8f9fa;
+  background: var(--color-surface-alt);
 }
 
 .github-privacy-info {
@@ -498,8 +498,8 @@ button.loading::before {
 }
 
 .github-repo-info {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
 }
 
 .github-sync-status {
@@ -508,15 +508,15 @@ button.loading::before {
 }
 
 .github-collab-testing {
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning);
   color: #856404;
 }
 
 .chapter-breakdown {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid var(--color-border);
 }
 
 .chapter-breakdown h4 {
@@ -530,7 +530,7 @@ button.loading::before {
   justify-content: space-between;
   padding: 0.25rem 0;
   font-size: 0.85rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .chapter-preview-item:last-child {

@@ -140,7 +140,7 @@ function IllustrationEditor({ illustration, onIllustrationUpdate }) {
           style={{
             margin: '20px 0',
             padding: '20px',
-            border: '2px solid #ccc'
+            border: '2px solid var(--color-border)'
           }}
         >
           <h4>Upload Image</h4>
@@ -178,7 +178,7 @@ function IllustrationEditor({ illustration, onIllustrationUpdate }) {
                 style={{
                   maxWidth: '200px',
                   height: 'auto',
-                  border: '1px solid #ddd'
+                  border: '1px solid var(--color-border)'
                 }}
               />
               <br />

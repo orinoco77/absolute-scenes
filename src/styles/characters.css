@@ -49,7 +49,7 @@
   color: var(--color-text-muted);
   font-style: italic;
   text-align: center;
-  background: #f9f9f9;
+  background: var(--color-surface-alt);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -61,7 +61,7 @@
 
 .character-item {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   transition: background-color 0.2s;
   display: flex;
@@ -71,11 +71,11 @@
 }
 
 .character-item:hover {
-  background: #f8f9fa;
+  background: var(--color-surface-alt);
 }
 
 .character-item.active {
-  background: #f3e5f5;
+  background: var(--color-surface-hover);
   border-left: 3px solid #9c27b0;
 }
 
@@ -104,7 +104,7 @@
 
 .character-name-edit {
   font-weight: 500;
-  background: white;
+  background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   padding: 0.25rem;
   border-radius: 2px;
@@ -145,13 +145,13 @@
 
 .delete-character-btn:hover {
   opacity: 1;
-  background-color: #ffebee;
+  background-color: var(--color-error-bg);
 }
 
 /* Character Editor styles */
 .character-editor {
   flex: 1;
-  background: white;
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -208,7 +208,7 @@
   position: absolute;
   top: 100%;
   left: 0;
-  background: white;
+  background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -232,7 +232,7 @@
 }
 
 .avatar-option:hover {
-  background: #f0f0f0;
+  background: var(--color-surface-alt);
 }
 
 .character-title-inputs {
@@ -246,7 +246,7 @@
   font-size: 1.5rem;
   font-weight: bold;
   border: none;
-  border-bottom: 2px solid #eee;
+  border-bottom: 2px solid var(--color-border);
   background: transparent;
   padding: 0.5rem 0;
 }
@@ -294,7 +294,7 @@
   line-height: 1.6;
   resize: none;
   outline: none;
-  background: white;
+  background: var(--color-surface);
   min-height: 400px;
 }
 

@@ -38,9 +38,9 @@ function FontPreview({
     lineHeight: lineHeight,
     color: '#333',
     padding: '20px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--color-border)',
     borderRadius: '4px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--color-surface)',
     minHeight: '120px',
     maxWidth: '600px',
     textAlign: 'justify'
@@ -179,10 +179,10 @@ function FontPreview({
             width: '100%',
             height: '60px',
             padding: '8px',
-            border: '1px solid #ddd',
+            border: '1px solid var(--color-border)',
             borderRadius: '4px',
             fontSize: '12px',
-            fontFamily: 'Arial, sans-serif',
+            fontFamily: 'var(--font-family-primary)',
             resize: 'vertical'
           }}
           placeholder="Enter your own text to preview how it looks in the selected font..."

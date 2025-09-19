@@ -125,7 +125,7 @@
 .chapters-container::-webkit-scrollbar-track,
 .characters-container::-webkit-scrollbar-track,
 .recycle-bin::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--color-surface-alt);
   border-radius: 4px;
 }
 

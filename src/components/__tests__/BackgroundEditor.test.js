@@ -116,7 +116,7 @@ describe('BackgroundEditor Component', () => {
     const titleInput = screen.getByDisplayValue('Character Backstory');
 
     expect(titleInput).toHaveStyle({
-      fontFamily: 'Georgia',
+      fontFamily: 'var(--font-family-primary)',
       fontSize: '18px' // fontSize + 4
     });
   });

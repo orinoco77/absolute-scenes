@@ -89,7 +89,7 @@ The morning sun filtered through the *ancient oak trees*, casting dappled shadow
             style={{
               marginBottom: '20px',
               padding: '15px',
-              backgroundColor: '#f5f5f5',
+              backgroundColor: 'var(--color-surface-alt)',
               borderRadius: '8px'
             }}
           >
@@ -135,9 +135,9 @@ The morning sun filtered through the *ancient oak trees*, casting dappled shadow
               <div
                 style={{
                   padding: '10px',
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--color-surface)',
                   borderRadius: '4px',
-                  border: '1px solid #ddd'
+                  border: '1px solid var(--color-border)'
                 }}
               >
                 <div
@@ -245,7 +245,7 @@ The morning sun filtered through the *ancient oak trees*, casting dappled shadow
                   style={{
                     marginBottom: '24px',
                     padding: '16px',
-                    border: '1px solid #ddd',
+                    border: '1px solid var(--color-border)',
                     borderRadius: '8px',
                     backgroundColor:
                       fontData.name === currentFont ? '#f0f8ff' : 'white'
@@ -304,13 +304,13 @@ The morning sun filtered through the *ancient oak trees*, casting dappled shadow
                   <div
                     style={{
                       padding: '16px',
-                      backgroundColor: '#fafafa',
+                      backgroundColor: 'var(--color-surface-alt)',
                       borderRadius: '4px',
                       fontFamily: preview.fontFamily,
                       fontSize: preview.fontSize,
                       lineHeight: preview.lineHeight,
                       textAlign: 'justify',
-                      border: '1px solid #eee',
+                      border: '1px solid var(--color-border)',
                       maxHeight: '200px',
                       overflowY: 'auto'
                     }}

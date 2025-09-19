@@ -53,7 +53,7 @@
   position: absolute;
   top: 100%;
   left: 0;
-  background: white;
+  background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -114,7 +114,7 @@
   border: var(--border-width) solid var(--color-border);
   border-radius: 4px;
   padding: 6px 10px;
-  background: white;
+  background: var(--color-surface);
   outline: none;
   transition: border-color 0.2s;
 }
@@ -245,12 +245,12 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: white;
+  background: var(--color-surface);
 }
 
 .location-list-header {
   padding: 1rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-border);
   background: var(--color-surface-alt);
 }
 
@@ -296,11 +296,11 @@
   gap: 0.75rem;
   padding: 0.75rem;
   margin-bottom: 0.5rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s;
-  background: white;
+  background: var(--color-surface);
 }
 
 .location-item:hover {
@@ -390,7 +390,7 @@
 }
 
 .delete-location-btn:hover {
-  background: #ffebee;
+  background: var(--color-error-bg);
   opacity: 1;
 }
 

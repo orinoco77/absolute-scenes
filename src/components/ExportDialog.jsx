@@ -83,8 +83,8 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
               <div
                 style={{
                   padding: '0.75rem',
-                  backgroundColor: '#f0f9ff',
-                  border: '1px solid #bae6fd',
+                  backgroundColor: 'var(--color-info-bg)',
+                  border: '1px solid var(--color-info-border)',
                   borderRadius: '0.25rem',
                   fontSize: '0.9em',
                   color: '#0369a1'

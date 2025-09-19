@@ -110,7 +110,7 @@ function BackgroundEditor({ document, template, onDocumentUpdate }) {
           className="scene-title-input"
           placeholder="Document Title"
           style={{
-            fontFamily: template.fontFamily,
+            fontFamily: 'var(--font-family-primary)',
             fontSize: `${Math.max(template.fontSize + 4, 18)}px`
           }}
         />
