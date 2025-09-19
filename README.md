@@ -556,6 +556,7 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+
 - **v1.3.97**: More dark mode fixes
 - **v1.3.96**: Bump vite from 7.1.4 to 7.1.5
 - **v1.3.91**: Vite migration
@@ -570,4 +571,5 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-09-19<!--/DATE--> | Build <!--COMMIT-->78ec7f6 - Fix for spelling dictionary change not sticking (8 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-09-19<!--/DATE--> | Build <!--COMMIT-->78ec7f6 - Fix for spelling
+dictionary change not sticking (8 minutes ago)<!--/COMMIT-->_
