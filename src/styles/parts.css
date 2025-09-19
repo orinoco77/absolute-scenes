@@ -70,11 +70,11 @@
 .part-title-edit {
   flex: 1;
   padding: 4px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 16px;
   font-weight: bold;
-  background-color: white;
+  background-color: var(--color-surface);
 }
 
 .part-meta {
@@ -110,14 +110,14 @@
 
 .chapters-in-part {
   padding: 0;
-  background-color: white;
+  background-color: var(--color-surface);
   border-radius: 0 0 6px 6px;
 }
 
 .chapters-in-part .chapter-group {
   margin-bottom: 0;
   border: none;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-border);
   border-radius: 0;
 }
 
@@ -130,7 +130,7 @@
   text-align: center;
   color: #999;
   font-style: italic;
-  background-color: #f5f5f5;
+  background-color: var(--color-surface-alt);
   border-radius: 4px;
   margin: 8px;
 }
@@ -141,7 +141,7 @@
   padding: 12px;
   border: 2px dashed #ff9800;
   border-radius: 8px;
-  background-color: #fff8e1;
+  background-color: var(--color-warning-bg);
 }
 
 .unassigned-header {
@@ -164,5 +164,5 @@
 .unassigned-chapters-section .chapter-group {
   margin-bottom: 8px;
   border: 1px solid #ffb74d;
-  background-color: white;
+  background-color: var(--color-surface);
 }

@@ -60,7 +60,7 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
         style={{
           marginBottom: '20px',
           padding: '15px',
-          border: '1px solid #ddd',
+          border: '1px solid var(--color-border)',
           borderRadius: '5px'
         }}
       >
@@ -77,8 +77,8 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
             <div
               style={{
                 padding: '10px',
-                backgroundColor: '#f0f8ff',
-                border: '1px solid #ccc',
+                backgroundColor: 'var(--color-info-bg)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '3px'
               }}
             >
@@ -97,7 +97,7 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
                     : '#f8f9fa',
                 color:
                   currentResolution?.resolution === 'local' ? 'white' : 'black',
-                border: '1px solid #ccc',
+                border: '1px solid var(--color-border)',
                 borderRadius: '3px',
                 cursor: 'pointer'
               }}
@@ -111,8 +111,8 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
             <div
               style={{
                 padding: '10px',
-                backgroundColor: '#fff0f0',
-                border: '1px solid #ccc',
+                backgroundColor: 'var(--color-error-bg)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '3px'
               }}
             >
@@ -133,7 +133,7 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
                   currentResolution?.resolution === 'remote'
                     ? 'white'
                     : 'black',
-                border: '1px solid #ccc',
+                border: '1px solid var(--color-border)',
                 borderRadius: '3px',
                 cursor: 'pointer'
               }}
@@ -158,7 +158,7 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
                   : '#f8f9fa',
               color:
                 currentResolution?.resolution === 'manual' ? 'white' : 'black',
-              border: '1px solid #ccc',
+              border: '1px solid var(--color-border)',
               borderRadius: '3px',
               cursor: 'pointer',
               marginBottom: '10px'
@@ -175,9 +175,9 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
                 width: '100%',
                 minHeight: '100px',
                 padding: '10px',
-                border: '1px solid #ccc',
+                border: '1px solid var(--color-border)',
                 borderRadius: '3px',
-                fontFamily: 'monospace'
+                fontFamily: 'var(--font-family-primary)'
               }}
               spellCheck={true}
             />
@@ -205,7 +205,7 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
     >
       <div
         style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--color-surface)',
           padding: '20px',
           borderRadius: '10px',
           maxWidth: '80%',

@@ -642,10 +642,10 @@ function GitHubIntegration({
                     style={{
                       width: '100%',
                       padding: '12px',
-                      border: '2px solid #ddd',
+                      border: '2px solid var(--color-border)',
                       borderRadius: '6px',
                       fontSize: '14px',
-                      fontFamily: 'monospace'
+                      fontFamily: 'var(--font-family-primary)'
                     }}
                     onKeyPress={e => {
                       if (e.key === 'Enter') {
@@ -752,7 +752,7 @@ function GitHubIntegration({
                     style={{
                       width: '100%',
                       padding: '12px',
-                      border: '2px solid #ddd',
+                      border: '2px solid var(--color-border)',
                       borderRadius: '6px',
                       fontSize: '14px'
                     }}
@@ -916,7 +916,7 @@ function GitHubIntegration({
                       style={{
                         maxHeight: '300px',
                         overflowY: 'auto',
-                        border: '1px solid #ddd',
+                        border: '1px solid var(--color-border)',
                         borderRadius: '6px'
                       }}
                     >
@@ -938,7 +938,7 @@ function GitHubIntegration({
                             onClick={() => setSelectedRepo(repo.full_name)}
                             style={{
                               padding: '15px',
-                              borderBottom: '1px solid #eee',
+                              borderBottom: '1px solid var(--color-border)',
                               cursor: 'pointer',
                               background:
                                 selectedRepo === repo.full_name
@@ -1416,7 +1416,7 @@ function GitHubIntegration({
 
               <div
                 style={{
-                  borderTop: '1px solid #eee',
+                  borderTop: '1px solid var(--color-border)',
                   paddingTop: '16px',
                   textAlign: 'center'
                 }}
@@ -1427,7 +1427,7 @@ function GitHubIntegration({
                     padding: '8px 16px',
                     background: 'transparent',
                     color: '#dc3545',
-                    border: '1px solid #dc3545',
+                    border: '1px solid var(--color-error)',
                     borderRadius: '4px',
                     fontSize: '12px',
                     cursor: 'pointer'

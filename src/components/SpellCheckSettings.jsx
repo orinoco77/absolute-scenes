@@ -139,7 +139,7 @@ function SpellCheckSettings({ onClose }) {
                 style={{
                   marginTop: '15px',
                   padding: '10px',
-                  backgroundColor: '#f9f9f9',
+                  backgroundColor: 'var(--color-surface-alt)',
                   borderRadius: '4px',
                   fontSize: '12px'
                 }}
@@ -154,7 +154,7 @@ function SpellCheckSettings({ onClose }) {
               style={{
                 marginTop: '15px',
                 padding: '10px',
-                backgroundColor: '#fff3e0',
+                backgroundColor: 'var(--color-warning-bg)',
                 borderRadius: '4px',
                 fontSize: '12px'
               }}

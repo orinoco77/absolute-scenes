@@ -79,11 +79,16 @@
 
 /* The main textarea - override TextEditor styles */
 .distraction-free-textarea textarea,
-.distraction-free-textarea {
+.distraction-free-textarea,
+.distraction-free-overlay textarea,
+[data-theme="dark"] .distraction-free-textarea textarea,
+[data-theme="dark"] .distraction-free-textarea,
+[data-theme="dark"] .distraction-free-overlay textarea {
   width: 100% !important;
   max-width: 800px !important; /* Comfortable reading width */
   height: 100% !important;
   background: transparent !important;
+  background-color: transparent !important;
   border: none !important;
   outline: none !important;
   color: #e8e8e8 !important;

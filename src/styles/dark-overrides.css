@@ -736,3 +736,11 @@
   border: 1px solid var(--color-border) !important;
   color: var(--color-text) !important;
 }
+
+/* Fix distraction-free mode textarea background in dark mode */
+[data-theme="dark"] .distraction-free-overlay .distraction-free-textarea textarea,
+[data-theme="dark"] .distraction-free-overlay .distraction-free-textarea,
+[data-theme="dark"] .distraction-free-overlay textarea {
+  background: transparent !important;
+  background-color: transparent !important;
+}

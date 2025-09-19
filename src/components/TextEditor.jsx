@@ -366,8 +366,8 @@ const TextEditor = forwardRef(
           <div
             className="find-replace-panel"
             style={{
-              background: 'white',
-              border: '1px solid #ccc',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
               borderRadius: '4px',
               padding: '8px',
               marginBottom: '4px',
@@ -398,7 +398,7 @@ const TextEditor = forwardRef(
                 style={{
                   flex: 1,
                   padding: '4px',
-                  border: '1px solid #ccc',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '2px',
                   fontSize: '12px'
                 }}
@@ -409,9 +409,9 @@ const TextEditor = forwardRef(
                 disabled={matches.length === 0}
                 style={{
                   padding: '4px 8px',
-                  border: '1px solid #ccc',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '2px',
-                  background: 'white',
+                  background: 'var(--color-surface)',
                   cursor: matches.length > 0 ? 'pointer' : 'not-allowed',
                   fontSize: '12px'
                 }}
@@ -423,9 +423,9 @@ const TextEditor = forwardRef(
                 disabled={matches.length === 0}
                 style={{
                   padding: '4px 8px',
-                  border: '1px solid #ccc',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '2px',
-                  background: 'white',
+                  background: 'var(--color-surface)',
                   cursor: matches.length > 0 ? 'pointer' : 'not-allowed',
                   fontSize: '12px'
                 }}
@@ -443,9 +443,9 @@ const TextEditor = forwardRef(
                 onClick={() => setShowFindReplace(false)}
                 style={{
                   padding: '4px 8px',
-                  border: '1px solid #ccc',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '2px',
-                  background: 'white',
+                  background: 'var(--color-surface)',
                   cursor: 'pointer',
                   fontSize: '12px'
                 }}
@@ -469,7 +469,7 @@ const TextEditor = forwardRef(
                 style={{
                   flex: 1,
                   padding: '4px',
-                  border: '1px solid #ccc',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '2px',
                   fontSize: '12px'
                 }}
@@ -479,9 +479,9 @@ const TextEditor = forwardRef(
                 disabled={currentMatchIndex < 0}
                 style={{
                   padding: '4px 8px',
-                  border: '1px solid #ccc',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '2px',
-                  background: 'white',
+                  background: 'var(--color-surface)',
                   cursor: currentMatchIndex >= 0 ? 'pointer' : 'not-allowed',
                   fontSize: '11px'
                 }}
@@ -493,9 +493,9 @@ const TextEditor = forwardRef(
                 disabled={matches.length === 0}
                 style={{
                   padding: '4px 8px',
-                  border: '1px solid #ccc',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '2px',
-                  background: 'white',
+                  background: 'var(--color-surface)',
                   cursor: matches.length > 0 ? 'pointer' : 'not-allowed',
                   fontSize: '11px'
                 }}
@@ -566,7 +566,7 @@ const TextEditor = forwardRef(
             fontSize: 'inherit',
             lineHeight: '1.5',
             padding: '8px',
-            border: '1px solid #ccc',
+            border: '1px solid var(--color-border)',
             borderRadius: '4px',
             outline: 'none',
             transition: 'border-color 0.2s',

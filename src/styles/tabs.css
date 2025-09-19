@@ -77,7 +77,7 @@
 
 .locations-container .location-recycle-bin {
   flex-shrink: 0;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--color-border);
   max-height: 200px;
   overflow-y: auto;
 }

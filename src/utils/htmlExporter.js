@@ -145,7 +145,7 @@ function generateHTML(book, options = {}) {
       max-width: 8.5in;
       margin: 1in auto;
       padding: 1in;
-      background: white;
+      background: var(--color-surface);
     }
     .title-page {
       text-align: center;

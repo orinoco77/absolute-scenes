@@ -155,8 +155,8 @@ function CharacterList({
             flexShrink: 0,
             maxHeight: '300px',
             overflow: 'auto',
-            borderTop: '1px solid #e5e7eb',
-            backgroundColor: '#fafafa'
+            borderTop: '1px solid var(--color-border)',
+            backgroundColor: 'var(--color-surface-alt)'
           }}
         >
           <div className="recycle-bin-header">
