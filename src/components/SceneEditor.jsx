@@ -11,17 +11,36 @@ function SceneEditor({
   const textareaRef = useRef(null);
   const [isDistractionFree, setIsDistractionFree] = useState(false);
 
+  // Helper function to enter distraction-free mode
+  const enterDistractionFree = () => {
+    setIsDistractionFree(true);
+
+    // Hide the menu when entering distraction-free mode
+    try {
+      // Since nodeIntegration is true, we can access electron directly
+      const { ipcRenderer } = window.require('electron');
+      ipcRenderer.send('distraction-free-entered');
+    } catch (error) {
+      // In browser environment, electron APIs won't be available
+      console.warn('Could not hide menu: electron APIs not available');
+    }
+
+    // Try to enter fullscreen mode (this might fail or be rejected by user)
+    // Note: We rely on our own IPC for menu control, not fullscreen events
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {
+        // Fullscreen request failed, but we're still in distraction-free mode
+        // Menu is handled by our IPC call above
+      });
+    }
+  };
+
   // Handle F11 for distraction-free mode with fullscreen
   useEffect(() => {
     const handleKeyDown = e => {
       if (e.key === 'F11') {
         e.preventDefault();
-        setIsDistractionFree(true);
-
-        // Enter fullscreen mode
-        if (document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen();
-        }
+        enterDistractionFree();
       }
     };
 
@@ -33,8 +52,17 @@ function SceneEditor({
   const handleCloseDistractionFree = () => {
     setIsDistractionFree(false);
 
-    // Exit fullscreen mode - this will trigger the fullscreenchange event
-    // which will in turn send the 'fullscreen-exited' IPC message to show the menu
+    // Always restore the menu when exiting distraction-free mode
+    try {
+      // Since nodeIntegration is true, we can access electron directly
+      const { ipcRenderer } = window.require('electron');
+      ipcRenderer.send('distraction-free-exited');
+    } catch (error) {
+      // In browser environment, electron APIs won't be available
+      console.warn('Could not restore menu: electron APIs not available');
+    }
+
+    // If we're in fullscreen mode, also exit it
     if (document.fullscreenElement && document.exitFullscreen) {
       document.exitFullscreen();
     }
@@ -221,13 +249,7 @@ function SceneEditor({
           </button>
           <div className="toolbar-separator" />
           <button
-            onClick={() => {
-              setIsDistractionFree(true);
-              // Enter fullscreen mode
-              if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-              }
-            }}
+            onClick={enterDistractionFree}
             className="format-btn distraction-free-btn"
             title="Distraction-Free Mode (F11)"
           >

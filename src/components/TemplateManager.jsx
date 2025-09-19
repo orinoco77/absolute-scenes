@@ -114,17 +114,21 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
     const licenseInfo = getFontLicenseInfo(font.name);
     if (licenseInfo.requiresLicense) {
       return (
-        <span style={{ color: '#ff6b35', fontSize: '12px' }}>
+        <span style={{ color: 'var(--color-warning)', fontSize: '12px' }}>
           ⚠ License Required
         </span>
       );
     } else if (font.systemFont) {
       return (
-        <span style={{ color: '#4caf50', fontSize: '12px' }}>✓ Available</span>
+        <span style={{ color: 'var(--color-success)', fontSize: '12px' }}>
+          ✓ Available
+        </span>
       );
     } else {
       return (
-        <span style={{ color: '#2196f3', fontSize: '12px' }}>ⓦ Web Font</span>
+        <span style={{ color: 'var(--color-primary)', fontSize: '12px' }}>
+          ⓦ Web Font
+        </span>
       );
     }
   };
@@ -215,7 +219,12 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
                     borderRadius: '4px'
                   }}
                 >
-                  <h4 style={{ margin: '0 0 10px 0', color: '#2196f3' }}>
+                  <h4
+                    style={{
+                      margin: '0 0 10px 0',
+                      color: 'var(--color-primary)'
+                    }}
+                  >
                     📖 Recommended for {selectedGenre.replace('-', ' ')}:
                   </h4>
                   <div
@@ -245,7 +254,12 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
                         }}
                       >
                         <div style={{ fontWeight: 'bold' }}>{font.name}</div>
-                        <div style={{ color: '#666', fontSize: '10px' }}>
+                        <div
+                          style={{
+                            color: 'var(--color-text-muted)',
+                            fontSize: '10px'
+                          }}
+                        >
                           {font.characteristics}
                         </div>
                         {getFontStatusIcon(font)}
@@ -327,7 +341,7 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
                           {licenseInfo.requiresLicense && (
                             <div
                               style={{
-                                color: '#ff6b35',
+                                color: 'var(--color-warning)',
                                 fontWeight: 'bold',
                                 marginTop: '5px'
                               }}
@@ -447,7 +461,12 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
               <option value="separated">Line Separated (Modern Style)</option>
             </select>
             {localTemplate.writingType === 'verse' && (
-              <small style={{ color: '#666', fontStyle: 'italic' }}>
+              <small
+                style={{
+                  color: 'var(--color-text-muted)',
+                  fontStyle: 'italic'
+                }}
+              >
                 Not applicable for verse - original formatting is preserved
               </small>
             )}
@@ -491,7 +510,12 @@ function TemplateManager({ template, onTemplateUpdate, onClose }) {
             </select>
             <small>
               {localTemplate.writingType === 'verse' ? (
-                <span style={{ color: '#666', fontStyle: 'italic' }}>
+                <span
+                  style={{
+                    color: 'var(--color-text-muted)',
+                    fontStyle: 'italic'
+                  }}
+                >
                   Not applicable for verse - original alignment is preserved
                 </span>
               ) : (

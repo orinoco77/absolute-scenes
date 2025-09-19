@@ -433,7 +433,11 @@ const TextEditor = forwardRef(
                 ↓
               </button>
               <span
-                style={{ minWidth: '60px', fontSize: '11px', color: '#666' }}
+                style={{
+                  minWidth: '60px',
+                  fontSize: '11px',
+                  color: 'var(--color-text-muted)'
+                }}
               >
                 {matches.length > 0
                   ? `${currentMatchIndex + 1} of ${matches.length}`

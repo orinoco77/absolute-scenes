@@ -87,7 +87,7 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
                   border: '1px solid var(--color-info-border)',
                   borderRadius: '0.25rem',
                   fontSize: '0.9em',
-                  color: '#0369a1'
+                  color: 'var(--color-primary)'
                 }}
               >
                 <strong>📱 Ebook Format Notes:</strong>
@@ -271,7 +271,7 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
                         style={{
                           margin: '0.5rem 0 0 0',
                           fontSize: '0.9em',
-                          color: '#ef6c00'
+                          color: 'var(--color-warning)'
                         }}
                       >
                         📄 {unassignedChapters.length} unassigned chapters (
