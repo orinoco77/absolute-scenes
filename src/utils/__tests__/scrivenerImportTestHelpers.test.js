@@ -105,14 +105,14 @@ describe('scrivenerImportTestHelpers', () => {
   });
 
   describe('convertRtfToPlainText', () => {
-    it('handles empty content', () => {
-      expect(convertRtfToPlainText('')).toBe('');
-      expect(convertRtfToPlainText(null)).toBe('');
+    it('handles empty content', async () => {
+      expect(await convertRtfToPlainText('')).toBe('');
+      expect(await convertRtfToPlainText(null)).toBe('');
     });
 
-    it('returns non-RTF content as-is', () => {
+    it('returns non-RTF content as-is', async () => {
       const plainText = 'This is plain text content';
-      expect(convertRtfToPlainText(plainText)).toBe(plainText);
+      expect(await convertRtfToPlainText(plainText)).toBe(plainText);
     });
   });
 

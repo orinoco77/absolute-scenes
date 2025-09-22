@@ -1,11 +1,15 @@
 import { getCssFontFamily } from './fontManager';
+import { processTextForExport } from './textProcessing';
 
 // Improved markdown parsing utilities
 function parseMarkdownToHTML(text) {
   if (!text) return '';
 
+  // First convert double dashes to em-dashes
+  const processedText = processTextForExport(text);
+
   return (
-    text
+    processedText
       // Handle headings (must be at start of line)
       .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
       .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
@@ -23,8 +27,11 @@ function parseMarkdownToHTML(text) {
 function parseVerseToHTML(text) {
   if (!text) return '';
 
+  // First convert double dashes to em-dashes
+  const processedText = processTextForExport(text);
+
   return (
-    text
+    processedText
       // Escape HTML characters but preserve formatting
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')

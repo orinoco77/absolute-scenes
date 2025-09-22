@@ -34,6 +34,10 @@ function FrontMatterEditor({
           <h4>Available Front Matter Types:</h4>
           <ul>
             <li>
+              <strong>Manuscript Title:</strong> Auto-generated title page for
+              manuscript format exports only (not used in print-ready PDFs)
+            </li>
+            <li>
               <strong>Copyright:</strong> Essential legal information and
               publication details
             </li>
@@ -49,6 +53,7 @@ function FrontMatterEditor({
             </li>
             <li>
               <strong>Prologue:</strong> Story introduction or opening scene
+              (included in both manuscript and print-ready formats)
             </li>
             <li>
               <strong>Map:</strong> Visual maps or illustrations for your world
@@ -275,6 +280,8 @@ function FrontMatterEditor({
 
   const getPlaceholderText = () => {
     switch (frontMatterItem.type) {
+      case 'manuscript-title':
+        return 'This front matter type is for reference only. The manuscript title page is auto-generated when exporting in manuscript format and contains standard placeholders for contact information.';
       case 'copyright':
         return 'Copyright information will be pre-filled. You can customize it as needed...';
       case 'dedication':
@@ -368,6 +375,7 @@ function FrontMatterEditor({
 
 function getFrontMatterIcon(type) {
   const icons = {
+    'manuscript-title': '📋',
     copyright: '©️',
     dedication: '💝',
     acknowledgments: '🙏',
@@ -380,6 +388,7 @@ function getFrontMatterIcon(type) {
 
 function getFrontMatterTypeLabel(type) {
   const labels = {
+    'manuscript-title': 'Manuscript Title Page',
     copyright: 'Copyright Page',
     dedication: 'Dedication Page',
     acknowledgments: 'Acknowledgments',

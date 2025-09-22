@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
@@ -11,9 +12,38 @@ const {
   ipcMain,
   shell
 } = require('electron');
+const rtfParse = require('rtf-parse');
 
 let mainWindow;
 let pendingFileToOpen = null; // Store file path to open once app is ready
+
+// RTF Character Conversion Utilities
+
+function convertRtfCharacterEscapes(text) {
+  // Convert Windows-1252 RTF escape sequences
+  text = text.replace(/\\'91/g, "'"); // Left single quote
+  text = text.replace(/\\'92/g, "'"); // Right single quote/apostrophe
+  text = text.replace(/\\'93/g, '"'); // Left double quote
+  text = text.replace(/\\'94/g, '"'); // Right double quote
+  text = text.replace(/\\'96/g, '–'); // En-dash
+  text = text.replace(/\\'97/g, '--'); // Em-dash
+  text = text.replace(/\\'85/g, '...'); // Ellipsis
+  text = text.replace(/\\'a0/g, ' '); // Non-breaking space
+
+  return text;
+}
+
+function convertRtfUnicodeEscapes(text) {
+  // Clean up Unicode escapes combined with RTF escapes
+  text = text.replace(/\\u8220\\'93/g, '"'); // Left double quote
+  text = text.replace(/\\u8221\\'94/g, '"'); // Right double quote
+  text = text.replace(/\\u8216\\'91/g, "'"); // Left single quote
+  text = text.replace(/\\u8217\\'92/g, "'"); // Right single quote/apostrophe
+  text = text.replace(/\\u8211\\'96/g, '–'); // En-dash
+  text = text.replace(/\\u8212\\'97/g, '--'); // Em-dash
+  text = text.replace(/\\u8230\\'85/g, '...'); // Ellipsis
+  return text;
+}
 
 // Handle single instance - prevent multiple instances of the app
 const gotTheLock = app.requestSingleInstanceLock();
@@ -1121,7 +1151,7 @@ async function parseFrontMatterItem(binderItem, scrivenerPath) {
   if (fsSync.existsSync(rtfPath)) {
     try {
       const rtfContent = fsSync.readFileSync(rtfPath, 'utf8');
-      content = convertRtfToPlainText(rtfContent);
+      content = await convertRtfToPlainText(rtfContent);
     } catch (error) {
       console.error(
         `Error reading RTF content for front matter ${uuid}:`,
@@ -1209,7 +1239,7 @@ async function parseScene(binderItem, scrivenerPath) {
 
     if (fsSync.existsSync(contentPath)) {
       const rtfContent = fsSync.readFileSync(contentPath, 'utf8');
-      content = convertRtfToPlainText(rtfContent);
+      content = await convertRtfToPlainText(rtfContent);
     }
 
     // Read synopsis if available
@@ -1224,7 +1254,7 @@ async function parseScene(binderItem, scrivenerPath) {
     let notes = '';
     if (fsSync.existsSync(notesPath)) {
       const rtfNotes = fsSync.readFileSync(notesPath, 'utf8');
-      notes = convertRtfToPlainText(rtfNotes);
+      notes = await convertRtfToPlainText(rtfNotes);
     }
 
     const scene = {
@@ -1329,7 +1359,7 @@ async function parseCharacter(binderItem, scrivenerPath) {
   let description = '';
   if (fsSync.existsSync(contentPath)) {
     const rtfContent = fsSync.readFileSync(contentPath, 'utf8');
-    description = convertRtfToPlainText(rtfContent);
+    description = await convertRtfToPlainText(rtfContent);
   }
 
   return {
@@ -1354,7 +1384,7 @@ async function parseLocation(binderItem, scrivenerPath) {
   let description = '';
   if (fsSync.existsSync(contentPath)) {
     const rtfContent = fsSync.readFileSync(contentPath, 'utf8');
-    description = convertRtfToPlainText(rtfContent);
+    description = await convertRtfToPlainText(rtfContent);
   }
 
   return {
@@ -1371,264 +1401,236 @@ function getElementText(parent, tagName) {
 }
 
 function convertRtfToPlainText(rtfContent) {
-  try {
-    let text = rtfContent;
+  if (!rtfContent || rtfContent.trim() === '') {
+    return Promise.resolve('');
+  }
 
-    // Remove header info (font table, color table, style sheet) - these are nested structures
-    text = text.replace(/\{\\fonttbl[^}]*(\{[^}]*\}[^}]*)*\}/g, '');
-    text = text.replace(/\{\\colortbl[^}]*\}/g, '');
-    text = text.replace(/\{\\stylesheet[^}]*(\{[^}]*\}[^}]*)*\}/g, '');
-    text = text.replace(/\{\\info[^}]*(\{[^}]*\}[^}]*)*\}/g, '');
+  // If it's not RTF content, return as-is
+  if (!rtfContent.includes('{\\rtf')) {
+    return Promise.resolve(rtfContent.trim());
+  }
 
-    // Remove page setup commands and document formatting
-    text = text.replace(
-      /\\paperw\d+\\paperh\d+\\margl\d+\\margr\d+\\margt\d+\\margb\d+/g,
-      ''
-    );
-    text = text.replace(/\\[a-z]+\d+/g, ''); // Remove dimension commands
+  // Use proper RTF parser
+  return rtfParse
+    .parseString(rtfContent)
+    .then(doc => {
+      const result = convertRtfDocumentToMarkdown(doc);
 
-    // Remove text direction and alignment commands that cause preamble text
-    text = text.replace(/\\ltrch\\loch\s*/g, ''); // Left-to-right character/localized character
-    text = text.replace(/\\rtlch\\rtloch\s*/g, ''); // Right-to-left character
-    text = text.replace(/\\pard\\plain\s*/g, ''); // Paragraph default + plain text
-    text = text.replace(/\\pard\s*/g, ''); // Paragraph default
-    text = text.replace(/\\plain\s*/g, ''); // Plain text formatting
-
-    // Remove tab stops and positioning commands
-    text = text.replace(/\\tx\d+/g, ''); // Tab stops
-    text = text.replace(/\\fi\d+/g, ''); // First line indent
-    text = text.replace(/\\li\d+/g, ''); // Left indent
-    text = text.replace(/\\ri\d+/g, ''); // Right indent
-
-    // Convert paragraph and line breaks BEFORE removing other formatting
-    text = text.replace(/\\par\\plain\s*/g, '\n\n'); // Paragraph with plain text
-    text = text.replace(/\\par\s*/g, '\n\n'); // Regular paragraph break
-    text = text.replace(/\\line\s*/g, '\n'); // Line break
-
-    // Handle special characters and escape sequences - with smart quote conversion
-    text = text.replace(
-      /\\u(\d+)\\?'?[0-9a-fA-F]{0,2}\\?[a-z]?\s*/g,
-      (match, code) => {
-        const charCode = parseInt(code);
-        // Convert smart quotes and apostrophes to regular ASCII
-        if (charCode === 8220 || charCode === 8221) return '"'; // Left/right double quotation marks
-        if (charCode === 8216 || charCode === 8217) return "'"; // Left/right single quotation marks
-        if (charCode === 8212) return '--'; // Em dash
-        if (charCode === 8211) return '-'; // En dash
-        if (charCode === 8230) return '...'; // Horizontal ellipsis
-        return String.fromCharCode(charCode);
-      }
-    );
-    text = text.replace(/\\'([0-9a-fA-F]{2})/g, (match, hex) => {
-      const charCode = parseInt(hex, 16);
-      // Convert smart quotes from hex codes (Windows-1252 encoding)
-      if (charCode === 0x93 || charCode === 0x94) return '"'; // Smart double quotes
-      if (charCode === 0x91 || charCode === 0x92) return "'"; // Smart single quotes/apostrophes
-      if (charCode === 0x96) return '-'; // En dash
-      if (charCode === 0x97) return '--'; // Em dash
-      if (charCode === 0x85) return '...'; // Horizontal ellipsis
-      // Handle other Windows-1252 characters that might appear
-      if (charCode >= 128 && charCode <= 159) {
-        // These are often control characters or special symbols, convert to space or appropriate replacement
-        const win1252Map = {
-          128: 'E',
-          129: '',
-          130: ',',
-          131: 'f',
-          132: '"',
-          133: '...',
-          134: '+',
-          135: '++',
-          136: '^',
-          137: '%',
-          138: 'S',
-          139: '<',
-          140: 'OE',
-          141: '',
-          142: 'Z',
-          143: '',
-          144: '',
-          145: "'",
-          146: "'",
-          147: '"',
-          148: '"',
-          149: '*',
-          150: '-',
-          151: '--',
-          152: '~',
-          153: '(TM)',
-          154: 's',
-          155: '>',
-          156: 'oe',
-          157: '',
-          158: 'z',
-          159: 'Y'
-        };
-        return win1252Map[charCode] || '';
-      }
-      return String.fromCharCode(charCode);
+      return result;
+    })
+    .catch(error => {
+      console.error('RTF parsing failed:', error);
+      throw error; // Don't fall back, let the error bubble up
     });
+}
 
-    // Convert special RTF escape sequences directly to ASCII
-    text = text.replace(/\\emdash\s*/g, '--'); // Em dash to double hyphen
-    text = text.replace(/\\endash\s*/g, '-'); // En dash to single hyphen
-    text = text.replace(/\\~/g, ' '); // Non-breaking space
-    text = text.replace(/\\-/g, ''); // Optional hyphen
-    text = text.replace(/\\_/g, '-'); // Non-breaking hyphen
-    text = text.replace(/\\\\/g, '\\'); // Literal backslash
-    text = text.replace(/\\\{/g, '{'); // Literal opening brace
-    text = text.replace(/\\\}/g, '}'); // Literal closing brace
+function convertRtfDocumentToMarkdown(doc) {
+  const paragraphs = [];
+  let currentParagraph = '';
+  const formatState = { italic: false, bold: false };
+  let pendingItalicText = '';
+  let pendingBoldText = '';
 
-    // Remove font formatting and other RTF control words
-    text = text.replace(/\\[fF]\d+/g, ''); // Font changes
-    text = text.replace(/\\[bB]\d*/g, ''); // Bold
-    text = text.replace(/\\[iI]\d*/g, ''); // Italic
-    text = text.replace(/\\[uU][lL]\d*/g, ''); // Underline
-    text = text.replace(/\\cf\d+/g, ''); // Color formatting
-    text = text.replace(/\\fs\d+/g, ''); // Font size
-    text = text.replace(/\\[a-zA-Z]+\d*\s?/g, ''); // Remove remaining control words
+  function flushFormattedText() {
+    if (pendingItalicText.trim()) {
+      const trimmedText = pendingItalicText.trim();
+      const beforeSpace = shouldAddSpaceBefore(
+        pendingItalicText,
+        currentParagraph
+      );
+      const afterSpace = shouldAddSpaceAfter(pendingItalicText);
+      currentParagraph += `${beforeSpace}*${trimmedText}*${afterSpace}`;
+      pendingItalicText = '';
+    }
+    if (pendingBoldText.trim()) {
+      const trimmedText = pendingBoldText.trim();
+      const beforeSpace = shouldAddSpaceBefore(
+        pendingBoldText,
+        currentParagraph
+      );
+      const afterSpace = shouldAddSpaceAfter(pendingBoldText);
+      currentParagraph += `${beforeSpace}**${trimmedText}**${afterSpace}`;
+      pendingBoldText = '';
+    }
+  }
 
-    // Remove braces and clean up
-    text = text.replace(/\{\s*/g, ''); // Remove opening braces
-    text = text.replace(/\s*\}/g, ''); // Remove closing braces
-
-    // Remove common RTF artifacts that appear as text (more comprehensive)
-    text = text.replace(/\\\*;;\s*/g, ''); // Remove \*;; artifacts (with backslash)
-    text = text.replace(/^\*;;\s*/gm, ''); // Remove *;; artifacts at line start
-    text = text.replace(/\*;;\s*/g, ''); // Remove *;; artifacts anywhere
-    text = text.replace(/^d\s*$/gm, ''); // Remove standalone 'd' lines
-    text = text.replace(/^dirnatural\s*$/gm, ''); // Remove 'dirnatural' artifacts
-    text = text.replace(/^irnatural\s*$/gm, ''); // Remove 'irnatural' artifacts
-    text = text.replace(/^natural\s*$/gm, ''); // Remove 'natural' artifacts
-    text = text.replace(/^\s*\\\s*$/gm, ''); // Remove lines with just backslashes
-    text = text.replace(/\\\s*\n/g, '\n'); // Remove backslashes at line endings
-    text = text.replace(/\\\s+/g, ' '); // Replace backslash + whitespace with space
-
-    // Remove font name artifacts that appear as text
-    text = text.replace(/^[A-Za-z]+-[A-Za-z]+;\s*$/gm, ''); // Remove font names like "PalatinoLinotype-Italic;"
-    text = text.replace(/^[A-Za-z]+Linotype-[A-Za-z]+;\s*$/gm, ''); // Specifically target Linotype fonts
-    text = text.replace(/^[A-Za-z]+-[A-Za-z]+[;,]\s*$/gm, ''); // Font names ending with ; or ,
-    text = text.replace(/^\s*;;\s*$/gm, ''); // Remove lines with just ;;
-
-    // Convert smart quotes and other typographic characters (comprehensive)
-    text = text.replace(/[""„‟‚‛«»]/g, '"'); // All varieties of smart double quotes
-    text = text.replace(/[''‛‚`´]/g, "'"); // All varieties of smart single quotes and apostrophes
-    text = text.replace(/[–—]/g, '--'); // Convert en dash and em dash to double hyphen
-    text = text.replace(/[…]/g, '...'); // Convert ellipsis to three periods
-    text = text.replace(/[\u2018\u2019\u201A\u201B]/g, "'"); // Unicode single quotes
-    text = text.replace(/[\u201C\u201D\u201E\u201F]/g, '"'); // Unicode double quotes
-
-    // Clean up excessive whitespace and normalize
-    text = text.replace(/[ \t]+/g, ' '); // Normalize spaces and tabs
-    text = text.replace(/\n\s+/g, '\n'); // Remove leading whitespace on lines
-    text = text.replace(/\s+\n/g, '\n'); // Remove trailing whitespace on lines
-    text = text.replace(/\n{3,}/g, '\n\n'); // Limit consecutive line breaks
-    text = text.replace(/^\s*\n+/g, ''); // Remove leading empty lines
-
-    // Final cleanup: remove any remaining RTF artifacts at the very start
-    text = text.replace(/^[\\*;irnatuldh\s]*/, ''); // Remove leading artifacts
-    text = text.replace(/^[A-Za-z]+-[A-Za-z]+;\s*/, ''); // Remove leading font names like "PalatinoLinotype-Italic;"
-    text = text.replace(/^;;\s*/, ''); // Remove leading ;;
-    text = text.trim();
-
-    return text;
-  } catch (error) {
-    console.error('Error converting RTF:', error);
-
-    // Fallback: extract text between braces containing visible content
-    try {
-      const textMatches = rtfContent.match(/\{[^{}]*[a-zA-Z][^{}]*\}/g);
-      if (textMatches) {
-        const fallbackText = textMatches
-          .map(match => {
-            // Remove RTF commands and keep plain text
-            const cleanText = match
-              .replace(/\{\\[^}]*\}/g, '') // Remove control sequences
-              .replace(/\\[a-zA-Z]+\d*\s?/g, '') // Remove control words
-              .replace(/[{}]/g, '') // Remove braces
-              .replace(/\\\*;;\s*/g, '') // Remove \*;; artifacts
-              .replace(/^\*;;\s*/g, '') // Remove *;; artifacts
-              .replace(/\*;;\s*/g, '') // Remove *;; artifacts anywhere
-              .replace(/^d\s*$/g, '') // Remove standalone 'd'
-              .replace(/^dirnatural\s*$/g, '') // Remove 'dirnatural'
-              .replace(/^irnatural\s*$/g, '') // Remove 'irnatural'
-              .replace(/\\\s*\n/g, '\n') // Remove backslashes at line endings
-              .replace(/\\\s+/g, ' ') // Replace backslash + whitespace with space
-              .replace(/[""„‟‚‛«»]/g, '"') // All varieties of smart double quotes
-              .replace(/[''‛‚`´]/g, "'") // All varieties of smart single quotes and apostrophes
-              .replace(/[–—]/g, '--') // Convert en dash and em dash to double hyphen
-              .replace(/[\u2018\u2019\u201A\u201B]/g, "'") // Unicode single quotes
-              .replace(/[\u201C\u201D\u201E\u201F]/g, '"') // Unicode double quotes
-              .replace(/[\u0080-\u009F]/g, match => {
-                // Handle Windows-1252 control characters
-                const code = match.charCodeAt(0);
-                const win1252Map = {
-                  128: 'E',
-                  129: '',
-                  130: ',',
-                  131: 'f',
-                  132: '"',
-                  133: '...',
-                  134: '+',
-                  135: '++',
-                  136: '^',
-                  137: '%',
-                  138: 'S',
-                  139: '<',
-                  140: 'OE',
-                  141: '',
-                  142: 'Z',
-                  143: '',
-                  144: '',
-                  145: "'",
-                  146: "'",
-                  147: '"',
-                  148: '"',
-                  149: '*',
-                  150: '-',
-                  151: '--',
-                  152: '~',
-                  153: '(TM)',
-                  154: 's',
-                  155: '>',
-                  156: 'oe',
-                  157: '',
-                  158: 'z',
-                  159: 'Y'
-                };
-                return win1252Map[code] || '';
-              })
-              .replace(/^[A-Za-z]+-[A-Za-z]+;\s*/, '') // Remove leading font names
-              .replace(/^;;\s*/, '') // Remove leading ;;
-              .replace(/^[\\*;irnatuldh\s]*/, '') // Remove leading artifacts
-              .trim();
-            return cleanText;
-          })
-          .filter(
-            text =>
-              text &&
-              text.length > 0 &&
-              text !== '*' &&
-              text !== ';' &&
-              text !== 'd' &&
-              text !== 'dirnatural' &&
-              text !== 'irnatural' &&
-              text !== '\\*;;' &&
-              text !== ';;' &&
-              !text.match(/^[\\*;irnatuldh\s]*$/) &&
-              !text.match(/^[A-Za-z]+-[A-Za-z]+;?\s*$/) && // Filter out font names
-              !text.match(/^[A-Za-z]+Linotype-[A-Za-z]+;?\s*$/)
-          ) // Filter out Linotype fonts
-          .join(' ');
-
-        return fallbackText;
-      }
-    } catch (fallbackError) {
-      console.error('Fallback RTF conversion failed:', fallbackError);
+  function shouldAddSpaceBefore(formattedText, currentParagraph) {
+    // If the formatted text doesn't start with space, don't add one
+    if (!formattedText.match(/^\s+/)) {
+      return '';
     }
 
-    return '';
+    // If there's nothing before this in the paragraph, don't add space
+    if (!currentParagraph) {
+      return '';
+    }
+
+    // Get the last character of what's already in the paragraph
+    const lastChar = currentParagraph.slice(-1);
+
+    // Don't add space after these characters
+    const noSpaceAfter = ['"', "'", '—', '–', '(', '[', '{'];
+    if (noSpaceAfter.includes(lastChar)) {
+      return '';
+    }
+
+    // Add space if the paragraph doesn't already end with whitespace
+    return lastChar.match(/\s/) ? '' : ' ';
   }
+
+  function shouldAddSpaceAfter(formattedText) {
+    // Add trailing space if the original formatted text had trailing space
+    // OR if we need to maintain proper spacing between formatted and unformatted text
+    if (formattedText.match(/\s+$/)) {
+      return ' ';
+    }
+
+    // For now, conservatively add a space after formatting to prevent text concatenation
+    // This will be cleaned up later if not needed
+    return ' ';
+  }
+
+  function addText(text) {
+    // Skip font names and RTF junk BEFORE character conversion
+    if (
+      text.includes('PalatinoLinotype') ||
+      text.includes('Cochin') ||
+      text.match(/^[A-Za-z-]+;$/) ||
+      text.trim() === ''
+    ) {
+      return;
+    }
+
+    // Convert smart quotes and special characters AFTER filtering
+    text = convertRtfCharacterEscapes(text);
+
+    // Skip pure RTF artifacts but preserve converted characters
+    //if (text.match(/^[;*\\]+$/)) {
+    //  return;
+    //}
+
+    // Remove trailing backslashes
+    text = text.replace(/\\+$/, '');
+
+    if (formatState.italic) {
+      pendingItalicText += text;
+    } else if (formatState.bold) {
+      pendingBoldText += text;
+    } else {
+      // Regular text - flush any pending formatted text first
+      flushFormattedText();
+      currentParagraph += text;
+    }
+  }
+
+  function walkTree(node) {
+    if (node.constructor.name === 'Command') {
+      // Handle formatting commands
+      if (node.name === 'i1' || node.name === 'i') {
+        // Starting italic - flush any pending text first
+        flushFormattedText();
+        formatState.italic = true;
+      } else if (node.name === 'i0') {
+        // Ending italic - flush the italic text
+        flushFormattedText();
+        formatState.italic = false;
+      } else if (node.name === 'b1' || node.name === 'b') {
+        flushFormattedText();
+        formatState.bold = true;
+      } else if (node.name === 'b0') {
+        flushFormattedText();
+        formatState.bold = false;
+      } else if (node.name === 'emdash') {
+        // Em-dash command
+        addText('--');
+      } else if (node.name === 'par' || node.name === 'pard') {
+        // Paragraph break - flush everything and start new paragraph
+        flushFormattedText();
+        const beforeClean = currentParagraph.trim();
+        const cleanParagraph = beforeClean
+          .replace(/^(\*;;|[;\\])+/, '') // Remove *;; patterns, ;, and \ from beginning
+          .replace(/\\+$/, '') // Remove trailing backslashes
+          .trim();
+
+        if (cleanParagraph) {
+          paragraphs.push(cleanParagraph);
+          currentParagraph = '';
+        } else {
+          currentParagraph = '';
+        }
+      }
+    } else if (node.constructor.name === 'Text' && node.value) {
+      // Handle text nodes
+      if (node.value.trim()) {
+        // Check if text contains paragraph breaks (double newlines)
+        if (node.value.includes('\n\n')) {
+          const parts = node.value.split('\n\n');
+          for (let i = 0; i < parts.length; i++) {
+            if (parts[i].trim()) {
+              addText(parts[i]);
+            }
+            // Add paragraph break after each part except the last
+            if (i < parts.length - 1) {
+              flushFormattedText();
+              const cleanParagraph = currentParagraph
+                .trim()
+                .replace(/^(\*;;|[;\\])+/, '') // Remove *;; patterns, ;, and \ from beginning
+                .replace(/\\+$/, '') // Remove trailing backslashes
+                .trim();
+              if (cleanParagraph) {
+                paragraphs.push(cleanParagraph);
+              }
+              currentParagraph = '';
+            }
+          }
+        } else {
+          addText(node.value);
+        }
+      } else if (node.value.includes('\n')) {
+        // Newline-only text nodes can indicate paragraph breaks
+        flushFormattedText();
+        const cleanParagraph = currentParagraph
+          .trim()
+          .replace(/^(\*;;|[;\\])+/, '') // Remove *;; patterns, ;, and \ from beginning
+          .replace(/\\+$/, '') // Remove trailing backslashes
+          .trim();
+        if (cleanParagraph) {
+          paragraphs.push(cleanParagraph);
+        }
+        currentParagraph = '';
+      }
+    } else if (node.children) {
+      // Recursively walk child nodes
+      for (const child of node.children) {
+        walkTree(child);
+      }
+    }
+  }
+
+  // Walk the entire document tree
+  walkTree(doc);
+
+  // Flush any remaining text and add final paragraph
+  flushFormattedText();
+  const finalParagraph = currentParagraph
+    .trim()
+    .replace(/^(\*;;|[;\\])+/, '') // Remove *;; patterns, ;, and \ from beginning
+    .replace(/\\+$/, '') // Remove trailing backslashes
+    .trim();
+  if (finalParagraph) {
+    paragraphs.push(finalParagraph);
+  }
+
+  // Join paragraphs with double newlines
+  let result = paragraphs.join('\n\n');
+
+  // Final cleanup - remove trailing backslashes from all paragraphs
+  result = result.replace(/\\+$/gm, ''); // Remove trailing backslashes from each line
+  result = result.replace(/\\+\n/g, '\n'); // Remove backslashes before newlines
+
+  const finalResult = result;
+
+  return finalResult;
 }
 
 function convertToBookFormat(bookData) {

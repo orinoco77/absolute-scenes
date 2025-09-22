@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   exportToPDF,
+  exportToManuscriptPDF,
   exportToHTML,
   exportToEPUB
 } from '../utils/exportManager';
@@ -9,13 +10,15 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
   const [exportFormat, setExportFormat] = useState('pdf');
   const [includeSceneBreaks, setIncludeSceneBreaks] = useState(true);
   const [includeSceneTitles, setIncludeSceneTitles] = useState(false);
+  const [manuscriptPageSize, setManuscriptPageSize] = useState('a4'); // Default to A4
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
     const options = {
       includeSceneBreaks,
       includeSceneTitles,
-      template: book.template
+      template: book.template,
+      manuscriptPageSize: manuscriptPageSize
     };
 
     setIsExporting(true);
@@ -24,6 +27,9 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
       switch (exportFormat) {
         case 'pdf':
           await exportToPDF(book, options);
+          break;
+        case 'manuscript':
+          await exportToManuscriptPDF(book, options);
           break;
         case 'html':
           await exportToHTML(book, options);
@@ -62,6 +68,7 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
               onChange={e => setExportFormat(e.target.value)}
             >
               <option value="pdf">PDF (Print Ready)</option>
+              <option value="manuscript">PDF (Manuscript)</option>
               <option value="html">HTML (Web Preview)</option>
               <option value="epub">EPUB (Ebook)</option>
             </select>
@@ -77,6 +84,63 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
               Include scene breaks
             </label>
           </div>
+
+          {exportFormat === 'manuscript' && (
+            <div className="form-group">
+              <label>Manuscript Page Size</label>
+              <select
+                value={manuscriptPageSize}
+                onChange={e => setManuscriptPageSize(e.target.value)}
+              >
+                <option value="a4">
+                  A4 (210 × 297mm) - International Standard
+                </option>
+                <option value="letter">
+                  US Letter (8.5" × 11") - US Standard
+                </option>
+              </select>
+            </div>
+          )}
+
+          {exportFormat === 'manuscript' && (
+            <div className="form-group">
+              <div
+                style={{
+                  padding: '0.75rem',
+                  backgroundColor: 'var(--color-info-bg)',
+                  border: '1px solid var(--color-info-border)',
+                  borderRadius: '0.25rem',
+                  fontSize: '0.9em',
+                  color: 'var(--color-primary)'
+                }}
+              >
+                <strong>📝 Manuscript Format Notes:</strong>
+                <ul style={{ margin: '0.5rem 0 0 1.5rem', padding: 0 }}>
+                  <li>
+                    {manuscriptPageSize === 'a4'
+                      ? 'A4 size (210 × 297mm) with 25mm margins'
+                      : 'US Letter size (8.5" × 11") with 1" margins'}
+                  </li>
+                  <li>Times New Roman 12pt font, double-spaced</li>
+                  <li>Professional manuscript title page with contact info</li>
+                  <li>Left-aligned text (not justified)</li>
+                  <li>First-line paragraph indentation</li>
+                  <li>Running headers with author/title</li>
+                  <li>Page numbers on all pages</li>
+                </ul>
+                <p
+                  style={{
+                    margin: '0.5rem 0 0 0',
+                    fontSize: '0.8em',
+                    fontStyle: 'italic'
+                  }}
+                >
+                  💡 This format follows industry standards for manuscript
+                  submission to publishers and agents worldwide.
+                </p>
+              </div>
+            </div>
+          )}
 
           {exportFormat === 'epub' && (
             <div className="form-group">
@@ -117,7 +181,7 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
             </div>
           )}
 
-          {exportFormat !== 'epub' && (
+          {exportFormat !== 'epub' && exportFormat !== 'manuscript' && (
             <div className="form-group">
               <label>
                 <input
@@ -149,6 +213,11 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
                 if (exportFormat === 'epub') {
                   return 'Responsive (adapts to any device)';
                 }
+                if (exportFormat === 'manuscript') {
+                  return manuscriptPageSize === 'a4'
+                    ? 'A4 (210 × 297mm) - Manuscript Standard'
+                    : 'US Letter (8.5" × 11") - Manuscript Standard';
+                }
                 const pageDimensions = {
                   letter: 'US Letter (8.5" × 11")',
                   a4: 'A4 (8.27" × 11.69")',
@@ -167,15 +236,19 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
                 ? book.template.textAlign === 'left'
                   ? 'Left Aligned (reader adjustable)'
                   : 'Justified (reader adjustable)'
-                : book.template.textAlign === 'left'
-                  ? 'Left Aligned'
-                  : 'Justified (Professional)'}
+                : exportFormat === 'manuscript'
+                  ? 'Left Aligned (Manuscript Standard)'
+                  : book.template.textAlign === 'left'
+                    ? 'Left Aligned'
+                    : 'Justified (Professional)'}
             </p>
             <p>
               <strong>Paragraph Style:</strong>{' '}
-              {book.template.paragraphStyle === 'indented'
-                ? 'Indented (Traditional)'
-                : 'Line Separated (Modern)'}
+              {exportFormat === 'manuscript'
+                ? 'Indented (Manuscript Standard)'
+                : book.template.paragraphStyle === 'indented'
+                  ? 'Indented (Traditional)'
+                  : 'Line Separated (Modern)'}
             </p>
             <p>
               <strong>Chapters:</strong> {book.chapters.length}
