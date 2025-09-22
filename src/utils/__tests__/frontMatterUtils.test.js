@@ -59,12 +59,13 @@ describe('frontMatterUtils', () => {
 
   describe('getFrontMatterOrder', () => {
     it('returns correct order for known types', () => {
-      expect(getFrontMatterOrder('copyright')).toBe(0);
-      expect(getFrontMatterOrder('dedication')).toBe(1);
-      expect(getFrontMatterOrder('acknowledgments')).toBe(2);
-      expect(getFrontMatterOrder('foreword')).toBe(3);
-      expect(getFrontMatterOrder('map')).toBe(4);
-      expect(getFrontMatterOrder('prologue')).toBe(5);
+      expect(getFrontMatterOrder('manuscript-title')).toBe(0);
+      expect(getFrontMatterOrder('copyright')).toBe(1);
+      expect(getFrontMatterOrder('dedication')).toBe(2);
+      expect(getFrontMatterOrder('acknowledgments')).toBe(3);
+      expect(getFrontMatterOrder('foreword')).toBe(4);
+      expect(getFrontMatterOrder('map')).toBe(5);
+      expect(getFrontMatterOrder('prologue')).toBe(6);
     });
 
     it('returns 1000 for unknown types', () => {
@@ -76,6 +77,7 @@ describe('frontMatterUtils', () => {
   describe('FRONT_MATTER_ORDER', () => {
     it('has the correct canonical order', () => {
       expect(FRONT_MATTER_ORDER).toEqual([
+        'manuscript-title',
         'copyright',
         'dedication',
         'acknowledgments',

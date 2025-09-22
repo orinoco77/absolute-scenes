@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { getPdfFont } from './fontManager';
+import { processTextForExport } from './textProcessing';
 
 // Page size definitions in inches (width x height)
 const PAGE_SIZES = {
@@ -154,15 +155,17 @@ function getPageMargins(template, pageNumber) {
 function parseMarkdownForPDF(text) {
   if (!text) return [{ type: 'normal', text: '' }];
 
+  // First convert double dashes to em-dashes
+  const processedText = processTextForExport(text);
+
   const segments = [];
-  const _processedText = text;
 
   // First, handle headings (they should be on their own lines)
   const headingMatches = [];
   const headingRegex = /^(#{1,3})\s+(.*?)$/gm;
   let headingMatch;
 
-  while ((headingMatch = headingRegex.exec(text)) !== null) {
+  while ((headingMatch = headingRegex.exec(processedText)) !== null) {
     const level = headingMatch[1].length;
     headingMatches.push({
       type: level === 1 ? 'h1' : level === 2 ? 'h2' : 'h3',
@@ -179,7 +182,7 @@ function parseMarkdownForPDF(text) {
   // Bold text (**text**)
   const boldRegex = /\*\*(.*?)\*\*/g;
   let boldMatch;
-  while ((boldMatch = boldRegex.exec(text)) !== null) {
+  while ((boldMatch = boldRegex.exec(processedText)) !== null) {
     inlineMatches.push({
       type: 'bold',
       start: boldMatch.index,
@@ -192,7 +195,7 @@ function parseMarkdownForPDF(text) {
   // Italic text (*text*) - but not if it's part of bold
   const italicRegex = /(?<!\*)\*([^*\n]+?)\*(?!\*)/g;
   let italicMatch;
-  while ((italicMatch = italicRegex.exec(text)) !== null) {
+  while ((italicMatch = italicRegex.exec(processedText)) !== null) {
     // Check if this italic is inside a bold
     const isInsideBold = inlineMatches.some(
       // eslint-disable-next-line no-loop-func
@@ -236,7 +239,7 @@ function parseMarkdownForPDF(text) {
   filteredMatches.forEach(match => {
     // Add normal text before this match
     if (currentPos < match.start) {
-      const normalText = text.substring(currentPos, match.start);
+      const normalText = processedText.substring(currentPos, match.start);
       if (normalText.trim()) {
         segments.push({ type: 'normal', text: normalText });
       }
@@ -248,8 +251,8 @@ function parseMarkdownForPDF(text) {
   });
 
   // Add remaining normal text
-  if (currentPos < text.length) {
-    const remainingText = text.substring(currentPos);
+  if (currentPos < processedText.length) {
+    const remainingText = processedText.substring(currentPos);
     if (remainingText.trim()) {
       segments.push({ type: 'normal', text: remainingText });
     }
@@ -257,7 +260,7 @@ function parseMarkdownForPDF(text) {
 
   // If no segments were created, return the whole text as normal
   if (segments.length === 0) {
-    segments.push({ type: 'normal', text: text });
+    segments.push({ type: 'normal', text: processedText });
   }
 
   return segments;
@@ -314,14 +317,23 @@ function renderFormattedTextToPDF(
       const words = line.split(' ').filter(word => word.length > 0);
 
       words.forEach((word, wordIndex) => {
+        // Determine if this word needs a space before it
+        let needsSpace = false;
+
+        if (wordIndex > 0) {
+          // Not the first word in this segment - always needs space
+          needsSpace = true;
+        } else if (lineIndex === 0 && formattedWords.length > 0) {
+          // First word of segment, but not first word overall
+          const lastWord = formattedWords[formattedWords.length - 1];
+          // Need space if previous word was not a line break
+          needsSpace = lastWord.type !== 'linebreak';
+        }
+
         formattedWords.push({
           text: word,
           type: segment.type || 'normal',
-          needsSpace:
-            wordIndex > 0 ||
-            (lineIndex === 0 &&
-              formattedWords.length > 0 &&
-              formattedWords[formattedWords.length - 1].type !== 'linebreak')
+          needsSpace: needsSpace
         });
       });
     });
@@ -631,12 +643,187 @@ function safeText(pdf, text, x, y) {
   }
 }
 
+// Create manuscript-style title page
+function createManuscriptTitlePage(pdf, book, pageWidth, pageHeight, pdfFont) {
+  const margins = {
+    top: 72, // 1 inch
+    bottom: 72, // 1 inch
+    left: 72, // 1 inch
+    right: 72 // 1 inch
+  };
+
+  const contentWidth = pageWidth - margins.left - margins.right;
+  let currentY = margins.top;
+
+  // Contact information in top left corner
+  pdf.setFont(pdfFont, 'normal');
+  pdf.setFontSize(12);
+
+  const contactInfo = [
+    book.author || '[Author Name]',
+    '[Address]',
+    '[City, State ZIP]',
+    '[Phone Number]',
+    '[Email Address]'
+  ];
+
+  contactInfo.forEach(line => {
+    safeText(pdf, line, margins.left, currentY);
+    currentY += 18; // 1.5 line spacing
+  });
+
+  // Word count in top right corner
+  const wordCount = book.chapters.reduce(
+    (total, chapter) =>
+      total +
+      chapter.scenes.reduce(
+        (chapterTotal, scene) =>
+          chapterTotal +
+          (scene.content || '').split(/\s+/).filter(word => word.length > 0)
+            .length,
+        0
+      ),
+    0
+  );
+
+  const wordCountText = `Approximately ${Math.round(wordCount / 250) * 250} words`;
+  const wordCountWidth = pdf.getTextWidth(wordCountText);
+  safeText(
+    pdf,
+    wordCountText,
+    pageWidth - margins.right - wordCountWidth,
+    margins.top
+  );
+
+  // Title centered on page (about 1/3 down)
+  currentY = margins.top + (pageHeight - margins.top - margins.bottom) * 0.33;
+
+  pdf.setFont(pdfFont, 'normal');
+  pdf.setFontSize(14);
+
+  if (book.title) {
+    const titleLines = pdf.splitTextToSize(
+      book.title.toUpperCase(),
+      contentWidth
+    );
+    titleLines.forEach(line => {
+      const lineWidth = pdf.getTextWidth(line);
+      const centerX = margins.left + (contentWidth - lineWidth) / 2;
+      safeText(pdf, line, centerX, currentY);
+      currentY += 21; // 1.5 line spacing
+    });
+  }
+
+  // "by" and author name
+  currentY += 36; // Extra space before author
+  if (book.author) {
+    const byAuthorText = `by\n\n${book.author.toUpperCase()}`;
+    const byAuthorLines = byAuthorText.split('\n');
+
+    byAuthorLines.forEach(line => {
+      if (line.trim()) {
+        const lineWidth = pdf.getTextWidth(line);
+        const centerX = margins.left + (contentWidth - lineWidth) / 2;
+        safeText(pdf, line, centerX, currentY);
+      }
+      currentY += 21;
+    });
+  }
+
+  // Note: Manuscript title page is auto-generated with standard placeholders
+  // Users can manually edit contact information in the exported PDF if needed
+}
+
+export async function exportToManuscriptPDF(book, options = {}) {
+  try {
+    // Get selected manuscript page size (default to A4)
+    const pageSize = options.manuscriptPageSize || 'a4';
+
+    // Set margins based on page size
+    const margins =
+      pageSize === 'a4'
+        ? {
+            top: 0.98, // 25mm
+            bottom: 0.98, // 25mm
+            left: 1.18, // 30mm (slightly larger for binding)
+            right: 0.98 // 25mm
+          }
+        : {
+            top: 1,
+            bottom: 1,
+            left: 1.25, // Larger left margin for binding
+            right: 1
+          };
+
+    // Rigid manuscript-specific settings (ignore all template preferences)
+    const manuscriptTemplate = {
+      pageSize: pageSize, // Use selected page size
+      fontFamily: 'Times New Roman', // Standard manuscript font
+      fontSize: 12, // Standard manuscript font size
+      lineHeight: 2.0, // Double-spaced
+      textAlign: 'left', // Left-aligned, not justified
+      paragraphStyle: 'indented', // First-line indent
+      pageMargins: margins,
+      mirrorMargins: false, // No mirror margins for manuscripts
+      chapterHeader: {
+        style: 'both', // Chapter number and title
+        pageBreak: true, // Chapters start on new pages (manuscript standard)
+        startOnRightPage: false, // No concept of left/right in manuscripts
+        alignment: 'center', // Centered for manuscripts
+        fontSize: 12, // Same as body text
+        fontWeight: 'normal', // Not bold
+        spacing: 3, // Triple-spaced after header for better readability
+        lineBreaksBefore: 0 // Chapter title starts at top of page, not 1/3 down
+      },
+      runningHeaders: {
+        enabled: true,
+        alignment: 'outside',
+        skipChapterPages: false // Include on all pages for manuscripts
+      },
+      writingType: 'prose' // Force prose formatting
+    };
+
+    const manuscriptOptions = {
+      ...options,
+      template: manuscriptTemplate,
+      isManuscript: true
+    };
+
+    // Create PDF with manuscript formatting
+    const pdf = createPDFWithConsistentFormat(pageSize);
+    const pageWidth = pdf.internal.pageSize.width;
+    const pageHeight = pdf.internal.pageSize.height;
+
+    // Set manuscript font
+    const pdfFont = 'times'; // Times New Roman equivalent
+    pdf.setFont(pdfFont, 'normal');
+
+    // Create manuscript title page
+    createManuscriptTitlePage(pdf, book, pageWidth, pageHeight, pdfFont);
+
+    // No blank page - manuscripts don't have blank pages
+    // Content starts immediately on page 2
+
+    // Continue with regular content export using manuscript template
+    return await exportToPDFInternal(book, manuscriptOptions, pdf);
+  } catch (error) {
+    console.error('Manuscript PDF export failed:', error);
+    throw error;
+  }
+}
+
 export async function exportToPDF(book, options = {}) {
+  return await exportToPDFInternal(book, options);
+}
+
+async function exportToPDFInternal(book, options = {}, existingPdf = null) {
   const { template } = options;
 
   try {
-    // Create PDF with consistent format handling
-    const pdf = createPDFWithConsistentFormat(template.pageSize || 'letter');
+    // Use existing PDF if provided (for manuscript format), otherwise create new
+    const pdf =
+      existingPdf ||
+      createPDFWithConsistentFormat(template.pageSize || 'letter');
 
     // Get the actual page dimensions in points
     const actualPageSize = pdf.internal.pageSize;
@@ -881,9 +1068,12 @@ export async function exportToPDF(book, options = {}) {
       };
     };
 
-    // Title Page
+    // Title Page (skip for manuscript format as it has its own)
+    const isManuscript = options.isManuscript;
     const hasTitlePage =
-      (book.title && book.title.trim()) || (book.author && book.author.trim());
+      !isManuscript &&
+      ((book.title && book.title.trim()) ||
+        (book.author && book.author.trim()));
     if (hasTitlePage) {
       // Initialize page mapping for title page (page 1)
       const titlePhysicalPage = pdf.internal.getNumberOfPages();
@@ -929,9 +1119,16 @@ export async function exportToPDF(book, options = {}) {
         markBlankPage();
       }
     } else {
-      // No title page - initialize logical page 1 as the first physical page
-      logicalToPhysicalPageMap.set(1, 1);
-      physicalToLogicalPageMap.set(1, 1);
+      // No title page or manuscript format - initialize logical page 1 as the first physical page
+      if (isManuscript) {
+        // For manuscript, title page is unnumbered, content starts at page 1
+        // Physical page 1 = title page (no logical page number)
+        // Physical page 2 = content page 1
+        logicalPageNumber = 0; // Will be incremented to 1 when content starts
+      } else {
+        logicalToPhysicalPageMap.set(1, 1);
+        physicalToLogicalPageMap.set(1, 1);
+      }
     }
 
     // Set content font
@@ -947,14 +1144,29 @@ export async function exportToPDF(book, options = {}) {
           return; // Skip empty front matter items
         }
 
+        // Handle different front matter for different formats
+        if (isManuscript) {
+          // Manuscript: only include prologue (content part of the book)
+          if (frontMatterItem.type !== 'prologue') {
+            return;
+          }
+        } else {
+          // Print-ready: include all front matter except manuscript-title
+          if (frontMatterItem.type === 'manuscript-title') {
+            return;
+          }
+        }
+
         // Use the new page advancement system for front matter
         advanceToNextLogicalPage();
 
-        // Force front matter to start on right-hand (odd) page if needed
-        const currentPhysicalPageNumber = pdf.internal.getNumberOfPages();
-        if (currentPhysicalPageNumber % 2 === 0) {
-          markBlankPage(); // Mark current page as blank
-          advanceToNextLogicalPage(); // Add the actual front matter page
+        // Force front matter to start on right-hand (odd) page if needed (not for manuscripts)
+        if (!isManuscript) {
+          const currentPhysicalPageNumber = pdf.internal.getNumberOfPages();
+          if (currentPhysicalPageNumber % 2 === 0) {
+            markBlankPage(); // Mark current page as blank
+            advanceToNextLogicalPage(); // Add the actual front matter page
+          }
         }
 
         // Mark this as front matter page
@@ -1229,10 +1441,61 @@ export async function exportToPDF(book, options = {}) {
       });
     }
 
+    // Helper function to convert numbers to words for manuscript format
+    const numberToWord = num => {
+      const words = [
+        '',
+        'ONE',
+        'TWO',
+        'THREE',
+        'FOUR',
+        'FIVE',
+        'SIX',
+        'SEVEN',
+        'EIGHT',
+        'NINE',
+        'TEN',
+        'ELEVEN',
+        'TWELVE',
+        'THIRTEEN',
+        'FOURTEEN',
+        'FIFTEEN',
+        'SIXTEEN',
+        'SEVENTEEN',
+        'EIGHTEEN',
+        'NINETEEN',
+        'TWENTY',
+        'TWENTY-ONE',
+        'TWENTY-TWO',
+        'TWENTY-THREE',
+        'TWENTY-FOUR',
+        'TWENTY-FIVE',
+        'TWENTY-SIX',
+        'TWENTY-SEVEN',
+        'TWENTY-EIGHT',
+        'TWENTY-NINE',
+        'THIRTY'
+      ];
+      return words[num] || `${num}`; // Fallback to number if beyond 30
+    };
+
     // Helper function to generate chapter header text
     const generateChapterHeader = (chapter, chapterNumber) => {
-      const { style, format } = template.chapterHeader;
+      if (isManuscript) {
+        // Manuscript format: "CHAPTER ONE" on first line, then blank line, then title on separate line
+        const chapterWord = numberToWord(chapterNumber);
+        const chapterNumberLine = `CHAPTER ${chapterWord}`;
 
+        if (chapter.title && chapter.title.trim()) {
+          // Chapter number, blank line, then title in caps
+          return `${chapterNumberLine}\n\n${chapter.title.toUpperCase()}`;
+        } else {
+          // Just chapter number
+          return chapterNumberLine;
+        }
+      }
+
+      const { style, format } = template.chapterHeader;
       switch (style) {
         case 'numbered':
           return `Chapter ${chapterNumber}`;
@@ -1264,11 +1527,13 @@ export async function exportToPDF(book, options = {}) {
           // Add part page using the new system
           advanceToNextLogicalPage();
 
-          // Force part to start on right-hand (odd) page
-          const currentPageNumber = pdf.internal.getNumberOfPages();
-          if (currentPageNumber % 2 === 0) {
-            markBlankPage(); // Mark current page as blank
-            advanceToNextLogicalPage(); // Add the actual part page
+          // Force part to start on right-hand (odd) page (not for manuscripts)
+          if (!isManuscript) {
+            const currentPageNumber = pdf.internal.getNumberOfPages();
+            if (currentPageNumber % 2 === 0) {
+              markBlankPage(); // Mark current page as blank
+              advanceToNextLogicalPage(); // Add the actual part page
+            }
           }
 
           // Position part title 1/3 to 1/2 way down the page (approximately 40%)
@@ -1289,9 +1554,11 @@ export async function exportToPDF(book, options = {}) {
             currentY += partLineHeight;
           });
 
-          // Add blank page after part page so first chapter starts on odd page
-          advanceToNextLogicalPage();
-          markBlankPage();
+          // Add blank page after part page so first chapter starts on odd page (not for manuscripts)
+          if (!isManuscript) {
+            advanceToNextLogicalPage();
+            markBlankPage();
+          }
 
           // Process chapters in this part
           partChapters.forEach((chapter, localChapterIndex) => {
@@ -1355,8 +1622,8 @@ export async function exportToPDF(book, options = {}) {
         if (shouldAddPageBreak) {
           advanceToNextLogicalPage();
 
-          // Force chapter to start on right-hand (odd) page if requested
-          if (template.chapterHeader.startOnRightPage) {
+          // Force chapter to start on right-hand (odd) page if requested (not for manuscripts)
+          if (!isManuscript && template.chapterHeader.startOnRightPage) {
             const currentPageNumber = pdf.internal.getNumberOfPages();
 
             // If current page is even (left-hand), mark it as blank and add a page for the chapter
@@ -1645,18 +1912,25 @@ export async function exportToPDF(book, options = {}) {
           options.includeSceneBreaks &&
           sceneIndex < chapter.scenes.length - 1
         ) {
-          currentY += lineHeight;
+          // Check if we're near the bottom of the page (within 3 lines)
+          const nearBottomOfPage =
+            currentY + lineHeight * 3 > pageHeight - bottomMargin;
 
-          // Check if we need a new page for scene break
-          if (currentY + lineHeight > pageHeight - bottomMargin) {
+          if (nearBottomOfPage) {
+            // Near end of page: add scene delimiter and force page break
+            currentY += lineHeight;
+
+            const sceneBreak = '* * *';
+            const breakWidth = pdf.getTextWidth(sceneBreak);
+            const breakX = (pageWidth - breakWidth) / 2;
+            safeText(pdf, sceneBreak, breakX, currentY);
+
+            // Force new page for next scene
             advanceToNextLogicalPage();
+          } else {
+            // Middle of page: just add blank line
+            currentY += lineHeight * 2; // One blank line (double-spaced)
           }
-
-          const sceneBreak = '* * *';
-          const breakWidth = pdf.getTextWidth(sceneBreak);
-          const breakX = (pageWidth - breakWidth) / 2;
-          safeText(pdf, sceneBreak, breakX, currentY);
-          currentY += lineHeight * 1.5;
         }
       });
     }
@@ -1676,11 +1950,13 @@ export async function exportToPDF(book, options = {}) {
         // Use the new page advancement system for back matter
         advanceToNextLogicalPage();
 
-        // Force back matter to start on right-hand (odd) page
-        const currentPageNumber = pdf.internal.getNumberOfPages();
-        if (currentPageNumber % 2 === 0) {
-          markBlankPage(); // Mark current page as blank
-          advanceToNextLogicalPage(); // Add the actual back matter page
+        // Force back matter to start on right-hand (odd) page (not for manuscripts)
+        if (!isManuscript) {
+          const currentPageNumber = pdf.internal.getNumberOfPages();
+          if (currentPageNumber % 2 === 0) {
+            markBlankPage(); // Mark current page as blank
+            advanceToNextLogicalPage(); // Add the actual back matter page
+          }
         }
 
         // Mark this as back matter page
@@ -1947,11 +2223,15 @@ export async function exportToPDF(book, options = {}) {
       const isBlankPage = blankPages.has(i);
 
       // Add running headers (now including illustration pages)
+      // For manuscripts, skip title page (page 1)
+      const skipManuscriptTitlePage = isManuscript && i === 1;
+
       if (
         template.runningHeaders?.enabled &&
         !isFirstPage &&
         !isChapterPage &&
-        !isBlankPage
+        !isBlankPage &&
+        !skipManuscriptTitlePage
       ) {
         const pageMargins = getPageMargins(template, i);
         const pageContentWidth =
@@ -1959,18 +2239,38 @@ export async function exportToPDF(book, options = {}) {
         const isLeftPage = i % 2 === 0;
 
         // Determine header text
-        const headerText = isLeftPage ? book.author : book.title;
+        let headerText;
+        if (isManuscript) {
+          // Manuscript format: Author last name / Title / Page number (right-aligned)
+          const authorLastName = book.author
+            ? book.author.split(' ').pop()
+            : 'Author';
+          const shortTitle =
+            book.title && book.title.length > 30
+              ? book.title.substring(0, 27) + '...'
+              : book.title || 'Title';
+          // For manuscripts, page numbering starts at 1 for first content page (physical page 2)
+          const manuscriptPageNum = i - 1; // Physical page 2 becomes page 1, etc.
+          headerText = `${authorLastName} / ${shortTitle} / ${manuscriptPageNum}`;
+        } else {
+          headerText = isLeftPage ? book.author : book.title;
+        }
 
         if (headerText) {
-          // Make running header font size proportional to body text (75% of body text, min 8pt, max 12pt)
-          const runningHeaderSize = Math.max(8, Math.min(12, fontSize * 0.75));
+          // For manuscripts, running headers are same size as body text; otherwise proportional
+          const runningHeaderSize = isManuscript
+            ? fontSize
+            : Math.max(8, Math.min(12, fontSize * 0.75));
           pdf.setFontSize(runningHeaderSize);
           pdf.setFont(pdfFont, 'normal');
 
           const headerWidth = pdf.getTextWidth(headerText);
           let headerX;
 
-          if (template.runningHeaders?.alignment === 'center') {
+          if (isManuscript) {
+            // Manuscript: always right-aligned
+            headerX = pageMargins.left + pageContentWidth - headerWidth;
+          } else if (template.runningHeaders?.alignment === 'center') {
             // Centered
             headerX = pageMargins.left + (pageContentWidth - headerWidth) / 2;
           } else {
@@ -1990,15 +2290,17 @@ export async function exportToPDF(book, options = {}) {
         }
       }
 
-      // Add page numbers (skip on title page)
-      if (!(i === 1 && hasTitlePage)) {
+      // Add page numbers (skip on title page and skip for manuscript format since it's in header)
+      if (!(i === 1 && hasTitlePage) && !isManuscript) {
         // Use logical page number for display, but physical page for positioning
         const logicalPageNum = physicalToLogicalPageMap.get(i) || i;
 
         // Show page numbers on all pages including illustration pages
         {
-          // Make page number font size proportional to body text (70% of body text, min 8pt, max 11pt)
-          const pageNumberSize = Math.max(8, Math.min(11, fontSize * 0.7));
+          // For manuscripts, page numbers are same size as body text; otherwise proportional
+          const pageNumberSize = isManuscript
+            ? fontSize
+            : Math.max(8, Math.min(11, fontSize * 0.7));
           pdf.setFontSize(pageNumberSize);
           pdf.setFont(pdfFont, 'normal');
           const pageNumberText = logicalPageNum.toString();
@@ -2020,7 +2322,9 @@ export async function exportToPDF(book, options = {}) {
     }
 
     // Save the PDF with proper error handling
-    const filename = `${book.title || 'Book'}.pdf`;
+    const filename = isManuscript
+      ? `${book.title || 'Manuscript'}-Manuscript.pdf`
+      : `${book.title || 'Book'}.pdf`;
 
     // Check if we're in Electron environment and use native save dialog
     const isElectron =

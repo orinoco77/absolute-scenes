@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import { getCssFontFamily } from './fontManager';
+import { processTextForExport } from './textProcessing';
 
 // EPUB export function
 export async function exportToEPUB(book, options = {}) {
@@ -196,8 +197,11 @@ p, div {
     const parseMarkdownToHTML = text => {
       if (!text) return '';
 
+      // First convert double dashes to em-dashes
+      const processedText = processTextForExport(text);
+
       return (
-        text
+        processedText
           // Handle headings
           .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
           .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
@@ -215,8 +219,11 @@ p, div {
     const parseVerseToHTML = text => {
       if (!text) return '';
 
+      // First convert double dashes to em-dashes
+      const processedText = processTextForExport(text);
+
       return (
-        text
+        processedText
           // Escape HTML characters but preserve formatting
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')

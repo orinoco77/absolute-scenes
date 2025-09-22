@@ -4,6 +4,7 @@
 
 // Define the canonical order for front matter sections
 export const FRONT_MATTER_ORDER = [
+  'manuscript-title',
   'copyright',
   'dedication',
   'acknowledgments',

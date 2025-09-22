@@ -109,92 +109,207 @@ describe('Scrivener Import Functionality', () => {
   });
 
   describe('convertRtfToPlainText', () => {
-    test('should convert basic RTF to plain text', () => {
+    test('should convert basic RTF to plain text', async () => {
       const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
         {\\f0\\fs24 This is a test paragraph.}}`;
 
-      const result = convertRtfToPlainText(rtfContent);
+      const result = await convertRtfToPlainText(rtfContent);
 
       expect(result).toBe('This is a test paragraph.');
     });
 
-    test('should handle smart quotes conversion', () => {
+    test('should handle smart quotes conversion', async () => {
       const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
         {\\f0\\fs24 "Hello" and 'world' with smart quotes.}}`;
 
-      const result = convertRtfToPlainText(rtfContent);
+      const result = await convertRtfToPlainText(rtfContent);
 
       expect(result).toBe('"Hello" and \'world\' with smart quotes.');
     });
 
-    test('should remove RTF formatting codes', () => {
+    test('should convert RTF formatting to Markdown', async () => {
       const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
         {\\f0\\fs24\\b Bold text} and {\\i italic text}.}`;
 
-      const result = convertRtfToPlainText(rtfContent);
+      const result = await convertRtfToPlainText(rtfContent);
 
-      expect(result).toBe('Bold text and italic text.');
+      expect(result).toBe('**Bold text** and *italic text*.');
     });
 
-    test('should handle line breaks properly', () => {
+    test('should handle line breaks properly', async () => {
       const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
         {\\f0\\fs24 First line\\par Second line\\par Third line}}`;
 
-      const result = convertRtfToPlainText(rtfContent);
+      const result = await convertRtfToPlainText(rtfContent);
 
-      expect(result).toBe('First line Second line Third line');
+      expect(result).toBe('First line\n\nSecond line\n\nThird line');
     });
 
-    test('should remove font name artifacts', () => {
+    test('should remove font name artifacts', async () => {
       const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 PalatinoLinotype-Italic;}}
         PalatinoLinotype-Italic; This is the actual content.}`;
 
-      const result = convertRtfToPlainText(rtfContent);
+      const result = await convertRtfToPlainText(rtfContent);
 
       expect(result).toBe('This is the actual content.');
     });
 
-    test('should handle Windows-1252 encoding characters', () => {
+    test('should handle Windows-1252 encoding characters', async () => {
       const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
         {\\f0\\fs24 Smart quotes \\u8220?Hello\\u8221? and apostrophe \\u8217?s}}`;
 
-      const result = convertRtfToPlainText(rtfContent);
+      const result = await convertRtfToPlainText(rtfContent);
 
       expect(result).toBe('Smart quotes Hello and apostrophe s');
     });
 
-    test('should clean up leading artifacts', () => {
+    test('should handle Windows-1252 RTF escape sequences', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+        {\\f0\\fs24 Left quote \\'91Hello\\'92 and double quotes \\'93world\\'94}}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      expect(result).toBe('Left quote \'Hello\' and double quotes "world"');
+    });
+
+    test('should handle dash characters (em-dash and en-dash)', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+        {\\f0\\fs24 We can\\'92t get to Lantis, my\\'97Beth said, using an en\\'96dash.}}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      expect(result).toBe(
+        "We can't get to Lantis, my--Beth said, using an en–dash."
+      );
+    });
+
+    test('should clean up leading artifacts', async () => {
       const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
         ;;*irnatural This is the real content.}`;
 
-      const result = convertRtfToPlainText(rtfContent);
+      const result = await convertRtfToPlainText(rtfContent);
 
       expect(result).toBe('This is the real content.');
     });
 
-    test('should handle empty RTF content', () => {
+    test('should handle empty RTF content', async () => {
       const rtfContent = '';
 
-      const result = convertRtfToPlainText(rtfContent);
+      const result = await convertRtfToPlainText(rtfContent);
 
       expect(result).toBe('');
     });
 
-    test('should handle non-RTF content gracefully', () => {
+    test('should handle non-RTF content gracefully', async () => {
       const rtfContent = 'This is plain text, not RTF';
 
-      const result = convertRtfToPlainText(rtfContent);
+      const result = await convertRtfToPlainText(rtfContent);
 
       expect(result).toBe('This is plain text, not RTF');
     });
 
-    test('should remove multiple consecutive spaces', () => {
+    test('should remove multiple consecutive spaces', async () => {
       const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
         {\\f0\\fs24 Text   with    multiple     spaces.}}`;
 
-      const result = convertRtfToPlainText(rtfContent);
+      const result = await convertRtfToPlainText(rtfContent);
 
       expect(result).toBe('Text with multiple spaces.');
+    });
+
+    test('should handle paragraph breaks with proper spacing', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+        {\\f0\\fs24 First paragraph.\\pard Second paragraph.\\pard Third paragraph.}}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      expect(result).toContain('First paragraph.');
+      expect(result).toContain('Second paragraph.');
+      expect(result).toContain('Third paragraph.');
+      // Should have paragraph breaks (double newlines)
+      expect(result.split('\n\n').length).toBeGreaterThan(1);
+    });
+
+    test('should preserve italics with proper spacing', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+        {\\f0\\fs24 Before \\i1italic text\\i0 after.}}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      expect(result).toBe('Before *italic text* after.');
+    });
+
+    test('should handle complex Scrivener-style RTF with italics and paragraphs', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\ansicpg1252\\cocoartf1561\\cocoasubrtf610
+        {\\fonttbl\\f0\\froman\\fcharset0 Palatino-Roman;}
+        {\\colortbl;\\red255\\green255\\blue255;}
+        {\\*\\expandedcolortbl;;}
+        \\pard\\tx360\\tx720\\tx1080\\tx1440\\tx1800\\pardirnatural\\partightenfactor0
+        \\f0\\fs24 \\cf0 Regular text and \\i1italic text\\i0 here.\\
+        \\pard\\tx360\\tx720\\tx1080\\tx1440\\tx1800\\pardirnatural\\partightenfactor0
+        \\cf0 Second paragraph with \\i1more italics\\i0.}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      expect(result).toContain('*italic text*');
+      expect(result).toContain('*more italics*');
+      // Should have multiple paragraphs
+      expect(result.split('\n\n').length).toBeGreaterThan(1);
+    });
+
+    test('should filter out RTF formatting junk', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\ansicpg1252\\cocoartf1561\\cocoasubrtf610
+        {\\fonttbl\\f0\\froman\\fcharset0 Palatino-Roman;}
+        {\\colortbl;\\red255\\green255\\blue255;}
+        {\\*\\expandedcolortbl;;}
+        ;;\\
+        *;;
+        This is the real content.}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      expect(result).toBe('This is the real content.');
+      expect(result).not.toContain(';;');
+      expect(result).not.toContain('*;;');
+    });
+
+    test('should remove trailing backslashes', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+        {\\f0\\fs24 Text with trailing backslash\\\\\\}}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      expect(result).toBe('Text with trailing backslash');
+      expect(result).not.toMatch(/\\+$/);
+    });
+
+    test('should handle smart quote conversion correctly', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+        {\\f0\\fs24 She said, \\'93Hello,\\'94 and he replied, \\'92Yes.\\'92}}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      expect(result).toBe('She said, "Hello," and he replied, \'Yes.\'');
+    });
+
+    test('should handle intelligent spacing around formatting', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+        {\\f0\\fs24 He said "\\i italic text\\i0" and then—\\i more italics\\i0.}}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      // Should not add extra spaces after quote or before quote, or after em-dash
+      expect(result).toBe('He said "*italic text*" and then—*more italics*.');
+    });
+
+    test('should add spaces where appropriate around formatting', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+        {\\f0\\fs24 Regular text \\i italic text\\i0 more text.}}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      // Should add spaces around formatting when surrounded by regular text
+      expect(result).toBe('Regular text *italic text* more text.');
     });
   });
 

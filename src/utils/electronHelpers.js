@@ -266,7 +266,40 @@ export function validateScrivenerProject(projectPath) {
 }
 
 /**
- * RTF to plain text conversion (simplified for testing)
+ * Convert Windows-1252 RTF escape sequences to Unicode characters
+ */
+export function convertRtfCharacterEscapes(text) {
+  // Convert Windows-1252 RTF escape sequences
+  text = text.replace(/\\'91/g, "'"); // Left single quote
+  text = text.replace(/\\'92/g, "'"); // Right single quote/apostrophe
+  text = text.replace(/\\'93/g, '"'); // Left double quote
+  text = text.replace(/\\'94/g, '"'); // Right double quote
+  text = text.replace(/\\'96/g, '–'); // En-dash
+  text = text.replace(/\\'97/g, '--'); // Em-dash (as double dash for export conversion)
+  text = text.replace(/\\'85/g, '...'); // Ellipsis
+  text = text.replace(/\\'a0/g, ' '); // Non-breaking space
+
+  return text;
+}
+
+/**
+ * Convert Unicode escape sequences combined with RTF escape sequences
+ */
+export function convertRtfUnicodeEscapes(text) {
+  // Clean up Unicode escapes combined with RTF escapes
+  text = text.replace(/\\u8220\\'93/g, '"'); // Left double quote
+  text = text.replace(/\\u8221\\'94/g, '"'); // Right double quote
+  text = text.replace(/\\u8216\\'91/g, "'"); // Left single quote
+  text = text.replace(/\\u8217\\'92/g, "'"); // Right single quote/apostrophe
+  text = text.replace(/\\u8211\\'96/g, '–'); // En-dash
+  text = text.replace(/\\u8212\\'97/g, '--'); // Em-dash (as double dash for export conversion)
+  text = text.replace(/\\u8230\\'85/g, '...'); // Ellipsis
+
+  return text;
+}
+
+/**
+ * RTF to Markdown text conversion with formatting preservation
  */
 export function convertRtfToPlainText(rtfContent) {
   if (!rtfContent || rtfContent.trim() === '') {
@@ -278,14 +311,71 @@ export function convertRtfToPlainText(rtfContent) {
     return rtfContent.trim();
   }
 
-  // Basic RTF stripping for testing
   let text = rtfContent;
 
-  // Remove RTF control sequences but preserve text
-  text = text.replace(/{\\rtf1[^}]*}/g, ''); // Remove RTF header
-  text = text.replace(/\\[a-z]+\d*/g, ' '); // Replace control words with space
-  text = text.replace(/[{}]/g, ''); // Remove braces
-  text = text.replace(/\s+/g, ' '); // Normalize whitespace
+  // Remove RTF header and font table
+  text = text.replace(/{\\rtf1[^}]*}/g, '');
+  text = text.replace(/{\\fonttbl[^}]*}/g, '');
+  text = text.replace(/{\\colortbl[^}]*}/g, '');
+  text = text.replace(/{\\stylesheet[^}]*}/g, '');
+
+  // Convert RTF formatting to Markdown BEFORE removing control words
+  // Handle bold formatting: \b text } -> **text**
+  text = text.replace(/\\b\s+([^{}]*?)(?=\s*[{}])/g, '**$1**');
+  text = text.replace(/\\b([^{}]*?)(?=\s*[{}])/g, '**$1**');
+
+  // Handle italic formatting: \i text } -> *text*
+  text = text.replace(/\\i\s+([^{}]*?)(?=\s*[{}])/g, '*$1*');
+  text = text.replace(/\\i([^{}]*?)(?=\s*[{}])/g, '*$1*');
+
+  // Handle underline formatting: \ul text } -> <u>text</u>
+  text = text.replace(/\\ul\s+([^{}]*?)(?=\s*[{}])/g, '<u>$1</u>');
+  text = text.replace(/\\ul([^{}]*?)(?=\s*[{}])/g, '<u>$1</u>');
+
+  // Remove other RTF control words (font size, etc.)
+  text = text.replace(/\\[a-z]+\d*/g, '');
+  text = text.replace(/\\[^a-z]/g, '');
+
+  // Handle Unicode characters
+  text = text.replace(/\\u(\d+)\?/g, (match, code) => {
+    const charCode = parseInt(code, 10);
+    if (charCode === 8220 || charCode === 8221) return '"'; // Smart quotes
+    if (charCode === 8217) return "'"; // Smart apostrophe
+    if (charCode === 8216) return "'"; // Left single quote
+    if (charCode === 8212) return '—'; // Em dash
+    if (charCode === 8211) return '–'; // En dash
+    if (charCode === 8230) return '...'; // Ellipsis
+    return String.fromCharCode(charCode);
+  });
+
+  // Handle Windows-1252 RTF escape sequences
+  text = convertRtfCharacterEscapes(text);
+
+  // Convert paragraph breaks
+  text = text.replace(/\\par\b/g, '\n');
+  text = text.replace(/\\par/g, '\n');
+
+  // Remove RTF braces
+  text = text.replace(/[{}]/g, '');
+
+  // Clean up smart quotes and apostrophes
+  text = text.replace(/[""]/g, '"');
+  text = text.replace(/['']/g, "'");
+
+  // Clean up whitespace while preserving markdown
+  text = text.replace(/\s+/g, ' ');
+  text = text.replace(/\n\s+/g, '\n');
+
+  // Clean up markdown formatting
+  text = text.replace(/\*\*\s+/g, '**');
+  text = text.replace(/\s+\*\*/g, '**');
+  text = text.replace(/\*\s+/g, '*');
+  text = text.replace(/\s+\*/g, '*');
+
+  // Final cleanup
+  text = text.replace(/^[\\*;irnatuldh\s]*/, '');
+  text = text.replace(/^[A-Za-z]+-[A-Za-z]+;\s*/, '');
+  text = text.replace(/^;;\s*/, '');
 
   return text.trim();
 }
