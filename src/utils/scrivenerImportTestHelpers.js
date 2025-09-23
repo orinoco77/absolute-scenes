@@ -305,6 +305,10 @@ function convertRtfDocumentToMarkdown(doc) {
   result = result.replace(/\* ([""'—–.,:;!?])/g, '*$1');
   result = result.replace(/\*\* ([""'—–.,:;!?])/g, '**$1');
 
+  // Remove space after punctuation that doesn't typically have spaces (quotes, apostrophes, dashes)
+  result = result.replace(/([""'—–]) \*/g, '$1*'); // Remove space after no-space punctuation before italics
+  result = result.replace(/([""'—–]) \*\*/g, '$1**'); // Remove space after no-space punctuation before bold
+
   // Remove double spaces
   result = result.replace(/  +/g, ' ');
 

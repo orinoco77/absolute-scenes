@@ -1628,6 +1628,17 @@ function convertRtfDocumentToMarkdown(doc) {
   result = result.replace(/\\+$/gm, ''); // Remove trailing backslashes from each line
   result = result.replace(/\\+\n/g, '\n'); // Remove backslashes before newlines
 
+  // Clean up spacing around formatted text and punctuation
+  result = result.replace(/\* ([""'—–.,:;!?])/g, '*$1'); // Remove space before punctuation after italics
+  result = result.replace(/\*\* ([""'—–.,:;!?])/g, '**$1'); // Remove space before punctuation after bold
+
+  // Remove space after punctuation that doesn't typically have spaces (quotes, apostrophes, dashes)
+  result = result.replace(/([""'—–]) \*/g, '$1*'); // Remove space after no-space punctuation before italics
+  result = result.replace(/([""'—–]) \*\*/g, '$1**'); // Remove space after no-space punctuation before bold
+
+  // Keep space after punctuation that typically has spaces (.,:;!?)
+  // No changes needed - these should naturally have spaces
+
   const finalResult = result;
 
   return finalResult;

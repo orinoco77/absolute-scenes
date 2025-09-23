@@ -311,6 +311,30 @@ describe('Scrivener Import Functionality', () => {
       // Should add spaces around formatting when surrounded by regular text
       expect(result).toBe('Regular text *italic text* more text.');
     });
+
+    test('should handle punctuation spacing correctly around italics', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+        {\\f0\\fs24 I said \\i no\\i0, but she said \\i yes\\i0. The \\i end\\i0! He said "\\i hello\\i0" and then \\i world\\i0.}}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      // No space before punctuation after italics, and proper spacing after punctuation before italics
+      expect(result).toBe(
+        'I said *no*, but she said *yes*. The *end*! He said "*hello*" and then *world*.'
+      );
+    });
+
+    test('should distinguish punctuation spacing types', async () => {
+      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+        {\\f0\\fs24 After period. \\i italic\\i0 text, after quote "\\i italic\\i0" text.}}`;
+
+      const result = await convertRtfToPlainText(rtfContent);
+
+      // Period should have space after, quote should not
+      expect(result).toBe(
+        'After period. *italic* text, after quote "*italic*" text.'
+      );
+    });
   });
 
   describe('importScrivenerProjectSync', () => {
