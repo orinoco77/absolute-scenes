@@ -443,11 +443,7 @@ class GitHubService {
       // Create or update file
       const updateData = {
         message: commitMessage,
-        content: btoa(
-          new TextEncoder()
-            .encode(fileContent)
-            .reduce((data, byte) => data + String.fromCharCode(byte), '')
-        ), // Proper UTF-8 to Base64
+        content: btoa(unescape(encodeURIComponent(fileContent))), // Proper UTF-8 to Base64
         branch: 'main'
       };
 
@@ -615,9 +611,9 @@ class GitHubService {
   }
 
   /**
-   * Download book file from repository
+   * Download book file from repository with retry logic
    */
-  async downloadBookFromRepository(repo, bookFile) {
+  async downloadBookFromRepository(repo, bookFile, retryCount = 0) {
     if (!this.token) {
       throw new Error('Not authenticated');
     }
@@ -640,14 +636,59 @@ class GitHubService {
 
       const fileData = await response.json();
 
-      // Decode base64 content with proper UTF-8 handling
-      const base64Content = fileData.content.replace(/\s/g, '');
-      const binaryString = atob(base64Content);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+      // Check if content exists - if not, file might be too large for inline content
+      let rawContent;
+
+      if (!fileData.content) {
+        // Use Git Data API to get blob content (stays within CSP domain)
+        const blobResponse = await fetch(
+          `https://api.github.com/repos/${repo.full_name}/git/blobs/${fileData.sha}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.token}`,
+              Accept: 'application/vnd.github.v3+json',
+              'User-Agent': 'AbsoluteScenes-BookWriter'
+            }
+          }
+        );
+
+        if (!blobResponse.ok) {
+          throw new Error(
+            `Failed to download large file via Git API: ${blobResponse.status}`
+          );
+        }
+
+        const blobData = await blobResponse.json();
+
+        if (!blobData.content) {
+          throw new Error('Git API returned no content for the blob');
+        }
+
+        // Decode the base64 content from Git API
+        const base64Content = blobData.content.replace(/\s/g, '');
+        const binaryString = atob(base64Content);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        rawContent = new TextDecoder('utf-8').decode(bytes);
+      } else {
+        // Decode base64 content with proper UTF-8 handling
+        const base64Content = fileData.content.replace(/\s/g, '');
+
+        try {
+          // Always use proper UTF-8 decoding for consistency
+          const binaryString = atob(base64Content);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          rawContent = new TextDecoder('utf-8').decode(bytes);
+        } catch (decodeError) {
+          console.error('Base64 decode error:', decodeError);
+          throw new Error('Failed to decode file content from GitHub');
+        }
       }
-      const rawContent = new TextDecoder('utf-8').decode(bytes);
 
       // Normalize line endings to LF (consistent across platforms)
       const content = rawContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -655,16 +696,37 @@ class GitHubService {
       // Parse and return book data
       try {
         const bookData = JSON.parse(content);
+
+        // Validate that this looks like a book file
+        if (!bookData || typeof bookData !== 'object') {
+          throw new Error('Downloaded content is not a valid object');
+        }
+
         return {
           bookData,
           filename: bookFile.name,
           lastModified: fileData.sha
         };
       } catch (parseError) {
-        throw new Error('Downloaded file is not a valid book format');
+        throw new Error(
+          `Downloaded file is not a valid book format: ${parseError.message}`
+        );
       }
     } catch (error) {
       console.error('Failed to download book:', error);
+
+      // Retry logic for transient errors (up to 2 retries with exponential backoff)
+      if (
+        retryCount < 2 &&
+        (error.message.includes('Failed to download file') ||
+          error.message.includes('not a valid book format') ||
+          error.message.includes('Failed to decode'))
+      ) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s delays
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.downloadBookFromRepository(repo, bookFile, retryCount + 1);
+      }
+
       throw error;
     }
   }
