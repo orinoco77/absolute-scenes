@@ -38,8 +38,10 @@ try {
   // Run tests and capture output
   const testOutput = execSync('npm test 2>&1', { encoding: 'utf8', timeout: 60000 });
   
-  // Look for the test summary line: "Tests:       401 passed, 401 total"
-  const testSummaryMatch = testOutput.match(/Tests:\s+(\d+)\s+passed,\s+(\d+)\s+total/);
+  // Look for the test summary line which can have different formats:
+  // "Tests:       401 passed, 401 total" (all passing)
+  // "Tests:       1 failed, 1063 passed, 1064 total" (some failing)
+  const testSummaryMatch = testOutput.match(/Tests:\s+(?:\d+\s+failed,\s+)?(\d+)\s+passed,\s+(\d+)\s+total/);
   if (testSummaryMatch) {
     testCount = testSummaryMatch[1];
     totalTests = testSummaryMatch[2];
