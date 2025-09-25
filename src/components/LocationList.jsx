@@ -65,60 +65,60 @@ function LocationList({
           </div>
         ) : (
           locations.map(location => (
-              <div
-                key={location.id}
-                className={`location-item ${currentLocationId === location.id ? 'active' : ''}`}
-                onClick={() => onLocationSelect(location.id)}
-              >
-                <div className="location-icon">{location.icon || '📍'}</div>
+            <div
+              key={location.id}
+              className={`location-item ${currentLocationId === location.id ? 'active' : ''}`}
+              onClick={() => onLocationSelect(location.id)}
+            >
+              <div className="location-icon">{location.icon || '📍'}</div>
 
-                <div className="location-content">
-                  {editingLocationId === location.id ? (
-                    <input
-                      type="text"
-                      value={editingName}
-                      onChange={e => setEditingName(e.target.value)}
-                      onBlur={() => handleNameSave(location.id)}
-                      onKeyDown={e => handleKeyDown(e, location.id)}
-                      className="location-name-edit"
-                      autoFocus
-                      onClick={e => e.stopPropagation()}
-                    />
-                  ) : (
-                    <>
-                      <div
-                        className="location-name"
-                        onDoubleClick={() => handleNameEdit(location)}
-                      >
-                        {location.name}
-                      </div>
-                      <div className="location-type">
-                        {location.type || 'General'}
-                      </div>
-                      <div className="location-meta">
-                        <span>
-                          Created{' '}
-                          {new Date(location.created).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                <div className="location-actions">
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      onLocationDelete(location.id);
-                    }}
-                    className="delete-location-btn"
-                    title="Delete Location"
-                  >
-                    🗑️
-                  </button>
-                </div>
+              <div className="location-content">
+                {editingLocationId === location.id ? (
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={e => setEditingName(e.target.value)}
+                    onBlur={() => handleNameSave(location.id)}
+                    onKeyDown={e => handleKeyDown(e, location.id)}
+                    className="location-name-edit"
+                    autoFocus
+                    onClick={e => e.stopPropagation()}
+                  />
+                ) : (
+                  <>
+                    <div
+                      className="location-name"
+                      onDoubleClick={() => handleNameEdit(location)}
+                    >
+                      {location.name}
+                    </div>
+                    <div className="location-type">
+                      {location.type || 'General'}
+                    </div>
+                    <div className="location-meta">
+                      <span>
+                        Created{' '}
+                        {new Date(location.created).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
-            ))
+
+              <div className="location-actions">
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    onLocationDelete(location.id);
+                  }}
+                  className="delete-location-btn"
+                  title="Delete Location"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+          ))
         )}
 
         {/* Recycle Bin for Locations */}
