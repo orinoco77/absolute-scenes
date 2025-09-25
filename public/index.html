@@ -17,6 +17,14 @@
           sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        background: #f5f5f5;
+      }
+
+      /* Dark mode body background */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #1a1a1a;
+        }
       }
       
       #root {
@@ -33,6 +41,14 @@
         background: #f5f5f5;
         font-size: 18px;
         color: #666;
+      }
+
+      /* Dark mode loading screen */
+      @media (prefers-color-scheme: dark) {
+        .loading {
+          background: #1a1a1a;
+          color: #e5e5e5;
+        }
       }
     </style>
   </head>

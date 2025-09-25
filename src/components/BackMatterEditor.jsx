@@ -24,7 +24,7 @@ function BackMatterEditor({
 
   if (!backMatterItem) {
     return (
-      <div className="no-back-matter">
+      <div className="no-content-selected">
         <h3>📑 No Back Matter Selected</h3>
         <p>
           Select a back matter section from the list to edit it, or add a new

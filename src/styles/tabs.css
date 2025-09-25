@@ -53,34 +53,6 @@
   padding: 0 0 1rem 0;
 }
 
-/* Special handling for locations container */
-.tab-list .tab-content-container.locations-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  padding: 0;
-}
-
-.locations-container .locations-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0.5rem;
-}
-
-.locations-container .empty-state {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.locations-container .location-recycle-bin {
-  flex-shrink: 0;
-  border-top: 1px solid var(--color-border);
-  max-height: 200px;
-  overflow-y: auto;
-}
 
 .tab-info-section {
   padding: var(--spacing-lg);

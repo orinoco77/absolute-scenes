@@ -108,6 +108,8 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 1020,
+    backgroundColor: '#1a1a1a',
+    show: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -128,6 +130,11 @@ async function createWindow() {
       ? 'http://localhost:3000'
       : `file://${path.join(__dirname, '../build/index.html')}`
   );
+
+  // Show window only when ready to prevent white flash
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+  });
 
   if (isDev) {
     mainWindow.webContents.openDevTools();

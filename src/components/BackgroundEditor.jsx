@@ -89,7 +89,7 @@ function BackgroundEditor({ document, template, onDocumentUpdate }) {
   if (!document) {
     return (
       <div className="background-editor">
-        <div className="no-scene">
+        <div className="no-content-selected">
           <h3>No Document Selected</h3>
           <p>
             Select a background document from the folders to start writing, or

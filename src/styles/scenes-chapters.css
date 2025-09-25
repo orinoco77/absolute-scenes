@@ -89,6 +89,7 @@
   margin: 0 10px;
   font-weight: bold;
   cursor: pointer;
+  color: var(--color-text);
 }
 
 .chapter-title-edit {
