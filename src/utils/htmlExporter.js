@@ -45,7 +45,7 @@ function parseVerseToHTML(text) {
 
 export async function exportToHTML(book, options = {}) {
   try {
-    const htmlContent = generateHTML(book, options);
+    const htmlContent = await generateHTML(book, options);
     const filename = `${book.title || 'Book'}.html`;
 
     // Check if we're in Electron environment and use native save dialog
@@ -136,7 +136,7 @@ export async function exportToHTML(book, options = {}) {
   }
 }
 
-function generateHTML(book, options = {}) {
+async function generateHTML(book, options = {}) {
   const { template } = options;
 
   // Use enhanced font system for HTML preview
@@ -212,10 +212,32 @@ function generateHTML(book, options = {}) {
       max-height: 80vh; 
       height: auto; 
     }
-    .illustration-caption { 
-      font-style: italic; 
-      margin-top: 1em; 
-      font-size: ${template.fontSize * 0.9}pt; 
+    .illustration-caption {
+      font-style: italic;
+      margin-top: 1em;
+      font-size: ${template.fontSize * 0.9}pt;
+    }
+    .front-matter, .back-matter {
+      page-break-before: always;
+      margin-bottom: 2em;
+    }
+    .front-matter-title, .back-matter-title {
+      font-size: ${template.fontSize * 1.5}pt;
+      font-weight: bold;
+      text-align: center;
+      margin: 2em 0 1em 0;
+    }
+    .front-matter-content, .back-matter-content {
+      margin: 1em 0;
+    }
+    .front-matter-map {
+      text-align: center;
+      margin: 2em 0;
+    }
+    .front-matter-map img {
+      max-width: 100%;
+      max-height: 80vh;
+      height: auto;
     }
     </style>
   `;
@@ -267,7 +289,7 @@ function generateHTML(book, options = {}) {
 
   // Front Matter Processing
   if (book.frontMatter && book.frontMatter.length > 0) {
-    const { sortFrontMatter } = require('./frontMatterUtils');
+    const { sortFrontMatter } = await import('./frontMatterUtils');
     const sortedFrontMatter = sortFrontMatter(book.frontMatter);
 
     sortedFrontMatter.forEach(frontMatterItem => {
@@ -404,6 +426,53 @@ function generateHTML(book, options = {}) {
 
   // Insert any remaining illustrations
   insertIllustrationsUpToPage(999);
+
+  // Back Matter Processing
+  if (book.backMatter && book.backMatter.length > 0) {
+    const { sortBackMatter } = await import('./frontMatterUtils');
+    const sortedBackMatter = sortBackMatter(book.backMatter);
+
+    sortedBackMatter.forEach(backMatterItem => {
+      if (
+        !backMatterItem.enabled ||
+        (!backMatterItem.content && !backMatterItem.imageData)
+      ) {
+        return; // Skip disabled or empty back matter items
+      }
+
+      content += `<div class="back-matter ${backMatterItem.type}">`;
+
+      if (backMatterItem.title) {
+        content += `<h1 class="chapter-header">${backMatterItem.title}</h1>`;
+      }
+
+      // Handle image if present
+      if (backMatterItem.imageData) {
+        content += `<div class="illustration">`;
+        content += `<img src="${backMatterItem.imageData}" alt="${backMatterItem.title || 'Back matter image'}" />`;
+        content += `</div>`;
+      }
+
+      // Handle text content if present
+      if (backMatterItem.content && backMatterItem.content.trim()) {
+        const paragraphs = backMatterItem.content
+          .split('\n')
+          .filter(p => p.trim());
+        paragraphs.forEach((paragraph, paragraphIndex) => {
+          if (paragraph.trim()) {
+            const formattedParagraph = parseMarkdownToHTML(paragraph.trim());
+            const paragraphClass =
+              template.paragraphStyle === 'indented' && paragraphIndex === 0
+                ? ' class="first-paragraph"'
+                : '';
+            content += `<p${paragraphClass}>${formattedParagraph}</p>`;
+          }
+        });
+      }
+
+      content += '</div>';
+    });
+  }
 
   content += '</body></html>';
   return content;

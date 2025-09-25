@@ -278,7 +278,7 @@ p, div {
       oebps.file('title.xhtml', titlePageContent);
     }
 
-    // 6. Generate chapter files
+    // 6. Generate front matter, chapter, and back matter files
     const chapterFiles = [];
     const manifestItems = [];
     const spineItems = [];
@@ -290,6 +290,115 @@ p, div {
         `    <item id="title" href="title.xhtml" media-type="application/xhtml+xml"/>`
       );
       spineItems.push(`    <itemref idref="title"/>`);
+    }
+
+    // Process front matter
+    if (book.frontMatter && book.frontMatter.length > 0) {
+      const { sortFrontMatter } = await import('./frontMatterUtils');
+      const sortedFrontMatter = sortFrontMatter(book.frontMatter);
+
+      sortedFrontMatter.forEach((frontMatterItem, index) => {
+        if (!frontMatterItem.content || !frontMatterItem.content.trim()) {
+          return; // Skip empty front matter items
+        }
+
+        const frontMatterNumber = index + 1;
+        const frontMatterId = `frontmatter-${frontMatterNumber}`;
+        const filename = `frontmatter-${frontMatterNumber}.xhtml`;
+
+        // Generate front matter content
+        let frontMatterContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>${frontMatterItem.title || frontMatterItem.type}</title>
+  <link rel="stylesheet" type="text/css" href="styles.css"/>
+</head>
+<body>`;
+
+        // Add title if present and not copyright (copyright has special formatting)
+        if (frontMatterItem.title && frontMatterItem.type !== 'copyright') {
+          frontMatterContent += `\n  <h1 class="chapter-header">${frontMatterItem.title}</h1>`;
+        }
+
+        // Process content based on type
+        if (frontMatterItem.type === 'copyright') {
+          // Copyright page has special formatting - no title header, just content
+          const lines = frontMatterItem.content.split('\n');
+          lines.forEach(line => {
+            if (line.trim()) {
+              const formattedLine = parseMarkdownToHTML(line.trim());
+              frontMatterContent += `\n  <p>${formattedLine}</p>`;
+            } else {
+              frontMatterContent += `\n  <p></p>`; // Empty paragraph for spacing
+            }
+          });
+        } else if (frontMatterItem.type === 'prologue') {
+          // Prologue is formatted like a chapter
+          if (template.writingType === 'verse') {
+            const contentWithForcedBreaks = frontMatterItem.content.replace(
+              /\n<!--FORCED_BREAK-->\n/g,
+              '\n\n'
+            );
+            const formattedContent = parseVerseToHTML(contentWithForcedBreaks);
+            frontMatterContent += `\n  <p>${formattedContent}</p>`;
+          } else {
+            const contentWithForcedBreaks = frontMatterItem.content.replace(
+              /\n<!--FORCED_BREAK-->\n/g,
+              '\n\n'
+            );
+            const paragraphs = contentWithForcedBreaks
+              .split('\n')
+              .filter(p => p.trim());
+            paragraphs.forEach((paragraph, paragraphIndex) => {
+              if (paragraph.trim()) {
+                const formattedParagraph = parseMarkdownToHTML(
+                  paragraph.trim()
+                );
+                const paragraphClass =
+                  template.paragraphStyle === 'indented' && paragraphIndex === 0
+                    ? ' class="first-paragraph"'
+                    : '';
+                frontMatterContent += `\n  <p${paragraphClass}>${formattedParagraph}</p>`;
+              }
+            });
+          }
+        } else {
+          // Other front matter types (dedication, acknowledgments, etc.)
+          const paragraphs = frontMatterItem.content
+            .split('\n')
+            .filter(p => p.trim());
+          paragraphs.forEach((paragraph, paragraphIndex) => {
+            if (paragraph.trim()) {
+              const formattedParagraph = parseMarkdownToHTML(paragraph.trim());
+              const paragraphClass =
+                template.paragraphStyle === 'indented' && paragraphIndex === 0
+                  ? ' class="first-paragraph"'
+                  : '';
+              frontMatterContent += `\n  <p${paragraphClass}>${formattedParagraph}</p>`;
+            }
+          });
+        }
+
+        frontMatterContent += '\n</body>\n</html>';
+
+        // Save front matter file
+        oebps.file(filename, frontMatterContent);
+
+        // Add to manifest and spine
+        manifestItems.push(
+          `    <item id="${frontMatterId}" href="${filename}" media-type="application/xhtml+xml"/>`
+        );
+        spineItems.push(`    <itemref idref="${frontMatterId}"/>`);
+
+        // Add to navigation (except for copyright which doesn't typically appear in TOC)
+        if (frontMatterItem.type !== 'copyright') {
+          navItems.push(`    <navPoint id="${frontMatterId}-nav" playOrder="${navItems.length + 1}">
+      <navLabel><text>${frontMatterItem.title || frontMatterItem.type}</text></navLabel>
+      <content src="${filename}"/>
+    </navPoint>`);
+        }
+      });
     }
 
     // Process illustrations and add them as separate files
@@ -429,8 +538,9 @@ p, div {
       );
       spineItems.push(`    <itemref idref="${chapterId}"/>`);
 
-      // Add to navigation
-      navItems.push(`    <navPoint id="${chapterId}-nav" playOrder="${chapterIndex + 1}">
+      // Add to navigation (adjust playOrder to account for front matter)
+      const playOrder = navItems.length + 1;
+      navItems.push(`    <navPoint id="${chapterId}-nav" playOrder="${playOrder}">
       <navLabel><text>${chapterHeaderText}</text></navLabel>
       <content src="${filename}"/>
     </navPoint>`);
@@ -452,6 +562,98 @@ p, div {
         `    <itemref idref="${illustrationFiles[illustrationIndex].illustrationId}"/>`
       );
       illustrationIndex++;
+    }
+
+    // Process back matter
+    if (book.backMatter && book.backMatter.length > 0) {
+      const { sortBackMatter } = await import('./frontMatterUtils');
+      const sortedBackMatter = sortBackMatter(book.backMatter);
+
+      sortedBackMatter.forEach((backMatterItem, index) => {
+        if (
+          !backMatterItem.enabled ||
+          (!backMatterItem.content && !backMatterItem.imageData)
+        ) {
+          return; // Skip disabled or empty back matter items
+        }
+
+        const backMatterNumber = index + 1;
+        const backMatterId = `backmatter-${backMatterNumber}`;
+        const filename = `backmatter-${backMatterNumber}.xhtml`;
+
+        // Generate back matter content
+        let backMatterContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>${backMatterItem.title || backMatterItem.type}</title>
+  <link rel="stylesheet" type="text/css" href="styles.css"/>
+</head>
+<body>`;
+
+        // Add title if present
+        if (backMatterItem.title) {
+          backMatterContent += `\n  <h1 class="chapter-header">${backMatterItem.title}</h1>`;
+        }
+
+        // Handle image if present
+        if (backMatterItem.imageData) {
+          backMatterContent += `\n  <div class="illustration">`;
+          backMatterContent += `\n    <img src="${backMatterItem.imageData}" alt="${backMatterItem.title || 'Back matter image'}" />`;
+          backMatterContent += `\n  </div>`;
+
+          // Add content after image if present
+          if (backMatterItem.content && backMatterItem.content.trim()) {
+            const paragraphs = backMatterItem.content
+              .split('\n')
+              .filter(p => p.trim());
+            paragraphs.forEach((paragraph, paragraphIndex) => {
+              if (paragraph.trim()) {
+                const formattedParagraph = parseMarkdownToHTML(
+                  paragraph.trim()
+                );
+                const paragraphClass =
+                  template.paragraphStyle === 'indented' && paragraphIndex === 0
+                    ? ' class="first-paragraph"'
+                    : '';
+                backMatterContent += `\n  <p${paragraphClass}>${formattedParagraph}</p>`;
+              }
+            });
+          }
+        } else if (backMatterItem.content && backMatterItem.content.trim()) {
+          // Text-only back matter
+          const paragraphs = backMatterItem.content
+            .split('\n')
+            .filter(p => p.trim());
+          paragraphs.forEach((paragraph, paragraphIndex) => {
+            if (paragraph.trim()) {
+              const formattedParagraph = parseMarkdownToHTML(paragraph.trim());
+              const paragraphClass =
+                template.paragraphStyle === 'indented' && paragraphIndex === 0
+                  ? ' class="first-paragraph"'
+                  : '';
+              backMatterContent += `\n  <p${paragraphClass}>${formattedParagraph}</p>`;
+            }
+          });
+        }
+
+        backMatterContent += '\n</body>\n</html>';
+
+        // Save back matter file
+        oebps.file(filename, backMatterContent);
+
+        // Add to manifest and spine
+        manifestItems.push(
+          `    <item id="${backMatterId}" href="${filename}" media-type="application/xhtml+xml"/>`
+        );
+        spineItems.push(`    <itemref idref="${backMatterId}"/>`);
+
+        // Add to navigation
+        navItems.push(`    <navPoint id="${backMatterId}-nav" playOrder="${navItems.length + 1}">
+      <navLabel><text>${backMatterItem.title || backMatterItem.type}</text></navLabel>
+      <content src="${filename}"/>
+    </navPoint>`);
+      });
     }
 
     // 7. Generate content.opf (main metadata file)
