@@ -58,14 +58,13 @@ function LocationList({
         </div>
       </div>
 
-      <div className="tab-content-container locations-container">
-        <div className="locations-list">
-          {locations.length === 0 ? (
-            <div className="empty-state">
-              <p>No locations yet. Click "New Location" to get started.</p>
-            </div>
-          ) : (
-            locations.map(location => (
+      <div className="tab-content-container">
+        {locations.length === 0 ? (
+          <div className="empty-state">
+            <p>No locations yet. Click "New Location" to get started.</p>
+          </div>
+        ) : (
+          locations.map(location => (
               <div
                 key={location.id}
                 className={`location-item ${currentLocationId === location.id ? 'active' : ''}`}
@@ -120,8 +119,7 @@ function LocationList({
                 </div>
               </div>
             ))
-          )}
-        </div>
+        )}
 
         {/* Recycle Bin for Locations */}
         {locationRecycleBin && locationRecycleBin.length > 0 && (

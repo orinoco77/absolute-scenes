@@ -24,7 +24,7 @@ function FrontMatterEditor({
 
   if (!frontMatterItem) {
     return (
-      <div className="no-front-matter">
+      <div className="no-content-selected">
         <h3>📄 No Front Matter Selected</h3>
         <p>
           Select a front matter section from the list to edit it, or add a new

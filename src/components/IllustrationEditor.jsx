@@ -25,7 +25,7 @@ function IllustrationEditor({ illustration, onIllustrationUpdate }) {
 
   if (!illustration) {
     return (
-      <div className="no-illustration">
+      <div className="no-content-selected">
         <h3>🎨 No Illustration Selected</h3>
         <p>
           Select an illustration from the list to edit it, or add a new

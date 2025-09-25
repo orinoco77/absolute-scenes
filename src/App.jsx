@@ -943,7 +943,7 @@ function App() {
           />
         ) : (
           <div className="scene-editor">
-            <div className="no-scene">
+            <div className="no-content-selected">
               <h3>No Scene Selected</h3>
               <p>
                 Select a scene from the chapters to start writing, or create a
@@ -962,7 +962,7 @@ function App() {
           />
         ) : (
           <div className="character-editor">
-            <div className="no-character">
+            <div className="no-content-selected">
               <h3>No Character Selected</h3>
               <p>
                 Select a character from the list to edit their information, or
@@ -1002,7 +1002,7 @@ function App() {
           />
         ) : (
           <div className="location-editor">
-            <div className="no-location">
+            <div className="no-content-selected">
               <h3>No Location Selected</h3>
               <p>
                 Select a location from the list to edit its information, or
@@ -1021,7 +1021,7 @@ function App() {
           />
         ) : (
           <div className="background-editor">
-            <div className="no-scene">
+            <div className="no-content-selected">
               <h3>No Document Selected</h3>
               <p>
                 Select a background document from the folders to start writing,
@@ -1060,7 +1060,7 @@ function App() {
       default:
         return (
           <div className="scene-editor">
-            <div className="no-scene">
+            <div className="no-content-selected">
               <h3>No Selection</h3>
               <p>Please select a tab to get started.</p>
             </div>

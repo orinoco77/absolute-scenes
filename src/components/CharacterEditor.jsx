@@ -111,7 +111,7 @@ function CharacterEditor({
   if (!character) {
     return (
       <div className="character-editor">
-        <div className="no-character">
+        <div className="no-content-selected">
           <h3>No Character Selected</h3>
           <p>
             Select a character from the list to edit their information, or

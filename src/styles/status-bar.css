@@ -32,7 +32,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 
 .operation-icon {
@@ -48,7 +48,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #dc3545;
+  color: var(--color-error);
 }
 
 .offline-icon {
@@ -63,23 +63,23 @@
 }
 
 .save-status.unsaved {
-  color: #fd7e14;
+  color: var(--color-warning);
 }
 
 .save-status.saving {
-  color: #0d6efd;
+  color: var(--color-info);
 }
 
 .save-status.saved {
-  color: #198754;
+  color: var(--color-success);
 }
 
 .save-status.synced {
-  color: #0dcaf0;
+  color: var(--color-info);
 }
 
 .save-status.synced-old {
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 
 .save-icon {
@@ -132,12 +132,12 @@
 .chapters-container::-webkit-scrollbar-thumb,
 .characters-container::-webkit-scrollbar-thumb,
 .recycle-bin::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: var(--color-text-muted);
   border-radius: 4px;
 }
 
 .chapters-container::-webkit-scrollbar-thumb:hover,
 .characters-container::-webkit-scrollbar-thumb:hover,
 .recycle-bin::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  background: var(--color-text-secondary);
 }

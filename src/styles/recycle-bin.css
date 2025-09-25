@@ -91,13 +91,13 @@
 .empty-bin {
   padding: 20px;
   text-align: center;
-  color: #999;
+  color: var(--color-text-muted);
   font-style: italic;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-style: italic;
   text-align: center;
 }
@@ -126,20 +126,20 @@
 .recycle-item-title {
   font-weight: bold;
   font-size: 13px;
-  color: #333;
+  color: var(--color-text);
   margin-bottom: 2px;
   font-weight: 500;
-  color: #666;
+  color: var(--color-text-muted);
   margin-bottom: 0.25rem;
 }
 
 .recycle-item-meta {
   font-size: 11px;
-  color: #666;
+  color: var(--color-text-muted);
   display: flex;
   gap: 10px;
   font-size: 0.75rem;
-  color: #999;
+  color: var(--color-text-muted);
 }
 
 .recycle-item-actions {
@@ -169,11 +169,11 @@
 }
 
 .restore-btn:hover {
-  background-color: #e8f5e8;
+  background-color: var(--color-success-background);
 }
 
 .permanent-delete-btn {
-  color: #f44336;
+  color: var(--color-error);
 }
 
 .permanent-delete-btn:hover {
