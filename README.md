@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.105<!--/VERSION--> | **Tests:** <!--TESTS-->1060/1060<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2025-09-24<!--/DATE-->
+**Version:** <!--VERSION-->1.3.106<!--/VERSION--> | **Tests:** <!--TESTS-->1064/1064<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2025-09-25<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -284,9 +284,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1060/1060<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1064/1064<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->127<!--/COMMITS--> | **Latest:** <!--COMMIT-->fdfec13 - Fix italics, etc (21 hours ago)<!--/COMMIT-->
+<!--COMMITS-->128<!--/COMMITS--> | **Latest:** <!--COMMIT-->8ffc208 - Fixes for large files in github (16 hours ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.105<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.3.105<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.3.106<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.106<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -556,11 +556,11 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+- **v1.3.104**: Fix italics, etc
 - **v1.3.103**: Removed extra files
 - **v1.3.101**: Tidy up of various things and some fixes for electron events
 - **v1.3.97**: More dark mode fixes
 - **v1.3.96**: Bump vite from 7.1.4 to 7.1.5
-- **v1.3.91**: Vite migration
 <!--/VERSION_HISTORY-->
 
 ---
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-09-24<!--/DATE--> | Build <!--COMMIT-->fdfec13 - Fix italics, etc (21 hours ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-09-25<!--/DATE--> | Build <!--COMMIT-->8ffc208 - Fixes for large files in github (16 hours ago)<!--/COMMIT-->_

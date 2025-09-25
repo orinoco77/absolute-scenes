@@ -331,10 +331,7 @@ class GitHubService {
         body: JSON.stringify({
           name: repoName,
           description: `Book manuscript: "${bookTitle}" by ${bookAuthor}`,
-          private: true,
-          auto_init: true,
-          gitignore_template: 'Node',
-          license_template: 'mit'
+          private: true
         })
       });
 

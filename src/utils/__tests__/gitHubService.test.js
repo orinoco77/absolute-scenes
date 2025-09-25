@@ -566,6 +566,96 @@ describe('GitHubService', () => {
     });
   });
 
+  describe('setupBookRepository', () => {
+    beforeEach(() => {
+      service.token = 'test-token';
+      service.userInfo = { login: 'testuser' };
+    });
+
+    it('creates repository without license for book files', async () => {
+      const mockRepo = {
+        id: 123,
+        name: 'my-book-by-author',
+        full_name: 'testuser/my-book-by-author',
+        private: true,
+        html_url: 'https://github.com/testuser/my-book-by-author'
+      };
+
+      // Mock getRepository to return null (repo doesn't exist)
+      jest.spyOn(service, 'getRepository').mockResolvedValueOnce(null);
+
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockRepo)
+      });
+
+      const result = await service.setupBookRepository('My Book', 'Author');
+
+      expect(result).toEqual(mockRepo);
+      expect(fetch).toHaveBeenCalledWith('https://api.github.com/user/repos', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer test-token',
+          Accept: 'application/vnd.github.v3+json',
+          'User-Agent': 'AbsoluteScenes-BookWriter',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: 'my-book-by-author',
+          description: 'Book manuscript: "My Book" by Author',
+          private: true
+        })
+      });
+
+      // Verify that no license_template was included in the request
+      const requestBody = JSON.parse(fetch.mock.calls[0][1].body);
+      expect(requestBody.license_template).toBeUndefined();
+    });
+
+    it('returns existing repository if it already exists', async () => {
+      const mockExistingRepo = {
+        id: 456,
+        name: 'existing-book-by-author',
+        full_name: 'testuser/existing-book-by-author'
+      };
+
+      jest
+        .spyOn(service, 'getRepository')
+        .mockResolvedValueOnce(mockExistingRepo);
+
+      const result = await service.setupBookRepository(
+        'Existing Book',
+        'Author'
+      );
+
+      expect(result).toEqual(mockExistingRepo);
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('throws error when not authenticated', async () => {
+      service.token = null;
+
+      await expect(
+        service.setupBookRepository('Test Book', 'Test Author')
+      ).rejects.toThrow('Not authenticated');
+    });
+
+    it('handles repository creation API errors', async () => {
+      jest.spyOn(service, 'getRepository').mockResolvedValueOnce(null);
+
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 422,
+        json: () =>
+          Promise.resolve({ message: 'Repository name already exists' })
+      });
+
+      await expect(
+        service.setupBookRepository('Test Book', 'Test Author')
+      ).rejects.toThrow('Repository name already exists');
+    });
+  });
+
   describe('integration scenarios', () => {
     it('handles complete token validation flow', async () => {
       const mockUserData = { login: 'integrationuser', id: 999 };
