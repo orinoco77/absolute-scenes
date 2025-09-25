@@ -254,7 +254,9 @@ function CharacterThreadVisualization({
         <div className="no-content-selected">
           <h3>No Characters Detected</h3>
           <p>
-            Write scenes with characters or add characters to your character list to start tracking their story threads and visualize how they appear throughout your story.
+            Write scenes with characters or add characters to your character
+            list to start tracking their story threads and visualize how they
+            appear throughout your story.
           </p>
         </div>
       </div>
@@ -267,7 +269,9 @@ function CharacterThreadVisualization({
         <div className="threads-title-section">
           <h2>Character Thread Analysis</h2>
           <p className="threads-description">
-            Visualize character presence and interactions across scenes. Track when characters appear, disappear, and how their story threads weave together.
+            Visualize character presence and interactions across scenes. Track
+            when characters appear, disappear, and how their story threads weave
+            together.
           </p>
         </div>
       </div>
@@ -282,10 +286,7 @@ function CharacterThreadVisualization({
           </button>
 
           {selectedCharacters.size > 0 && (
-            <button
-              onClick={clearSelection}
-              className="threads-btn danger"
-            >
+            <button onClick={clearSelection} className="threads-btn danger">
               Clear Selection ({selectedCharacters.size})
             </button>
           )}
@@ -302,10 +303,7 @@ function CharacterThreadVisualization({
           )}
 
           {excludedCharacters.size > 0 && (
-            <button
-              onClick={clearExclusions}
-              className="threads-btn success"
-            >
+            <button onClick={clearExclusions} className="threads-btn success">
               Restore All
             </button>
           )}
