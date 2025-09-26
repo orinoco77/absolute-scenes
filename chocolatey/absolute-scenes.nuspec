@@ -8,11 +8,10 @@
     <title>Absolute Scenes</title>
     <authors>Adam Short</authors>
     <projectUrl>https://github.com/orinoco77/absolute-scenes</projectUrl>
-    <iconUrl>https://raw.githubusercontent.com/orinoco77/absolute-scenes/main/assets/icon.png</iconUrl>
+    <iconUrl>https://raw.githubusercontent.com/orinoco77/absolute-scenes/main/assets/icon.PNG</iconUrl>
     <copyright>2025 Adam Short</copyright>
     <licenseUrl>https://github.com/orinoco77/absolute-scenes/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <projectSourceUrl>https://github.com/orinoco77/absolute-scenes</projectSourceUrl>
     <docsUrl>https://github.com/orinoco77/absolute-scenes/blob/main/README.md</docsUrl>
     <bugTrackerUrl>https://github.com/orinoco77/absolute-scenes/issues</bugTrackerUrl>
     <tags>writing book-writing scene-based-writing publishing pdf-export github-integration electron authoring creative-writing</tags>
