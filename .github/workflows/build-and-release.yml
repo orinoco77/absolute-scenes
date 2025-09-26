@@ -343,19 +343,19 @@ jobs:
         # Generate changelog with current version and date
         cd "absolute-scenes-${VERSION}"
         CURRENT_DATE=$(date -R)
-        cat > debian/changelog << EOF
-absolute-scenes (${VERSION}-1) jammy; urgency=medium
-
-  * Release version ${VERSION}
-  * Professional scene-based book writing application
-  * Enhanced export capabilities (PDF, HTML, EPUB)
-  * Improved GitHub integration for cloud backup and version control
-  * Character and location management tools
-  * Scene-based writing organization with drag-and-drop
-  * Premium typography options with genre-based font recommendations
-
- -- Adam Short <ajs@shiny.org.uk>  ${CURRENT_DATE}
-EOF
+        {
+          echo "absolute-scenes (${VERSION}-1) jammy; urgency=medium"
+          echo ""
+          echo "  * Release version ${VERSION}"
+          echo "  * Professional scene-based book writing application"
+          echo "  * Enhanced export capabilities (PDF, HTML, EPUB)"
+          echo "  * Improved GitHub integration for cloud backup and version control"
+          echo "  * Character and location management tools"
+          echo "  * Scene-based writing organization with drag-and-drop"
+          echo "  * Premium typography options with genre-based font recommendations"
+          echo ""
+          echo " -- Adam Short <ajs@shiny.org.uk>  ${CURRENT_DATE}"
+        } > debian/changelog
 
         echo "Generated changelog for version ${VERSION}"
 
