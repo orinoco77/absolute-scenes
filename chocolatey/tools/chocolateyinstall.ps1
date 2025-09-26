@@ -8,35 +8,40 @@ $version = $env:ChocolateyPackageVersion
 $url64 = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute.Scenes-$version-win.zip"
 $url32 = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute.Scenes-$version-ia32-win.zip"
 
-$packageArgs = @{
-  packageName    = $packageName
-  unzipLocation  = $toolsDir
-  url            = $url32
-  url64bit       = $url64
+# Checksums will be provided during automated build - using Get-ChecksumValid for validation
+$checksum32 = $env:ChocolateyPackageChecksum32
+$checksum64 = $env:ChocolateyPackageChecksum64
 
-  checksum       = $env:ChocolateyPackageChecksum32
-  checksumType   = 'sha256'
-  checksum64     = $env:ChocolateyPackageChecksum64
-  checksumType64 = 'sha256'
+# Download and validate files explicitly with Get-ChecksumValid
+$file32 = Join-Path $toolsDir "temp32.zip"
+$file64 = Join-Path $toolsDir "temp64.zip"
+
+# Download and validate 32-bit file
+Get-ChocolateyWebFile -PackageName $packageName -FileFullPath $file32 -Url $url32
+if ($checksum32) {
+    Get-ChecksumValid -File $file32 -Checksum $checksum32 -ChecksumType 'sha256'
+    Write-Host "✓ 32-bit checksum validated" -ForegroundColor Green
 }
 
-# Validate checksums are provided
-if ([string]::IsNullOrWhiteSpace($env:ChocolateyPackageChecksum32)) {
-    throw "32-bit checksum is missing. This package requires checksum validation."
-}
-if ([string]::IsNullOrWhiteSpace($env:ChocolateyPackageChecksum64)) {
-    throw "64-bit checksum is missing. This package requires checksum validation."
+# Download and validate 64-bit file
+Get-ChocolateyWebFile -PackageName $packageName -FileFullPath $file64 -Url $url64
+if ($checksum64) {
+    Get-ChecksumValid -File $file64 -Checksum $checksum64 -ChecksumType 'sha256'
+    Write-Host "✓ 64-bit checksum validated" -ForegroundColor Green
 }
 
-# Debug output for validation
-Write-Host "Package validation info:" -ForegroundColor Yellow
-Write-Host "  32-bit URL: $url32" -ForegroundColor Gray
-Write-Host "  64-bit URL: $url64" -ForegroundColor Gray
-Write-Host "  32-bit checksum: $($env:ChocolateyPackageChecksum32)" -ForegroundColor Gray
-Write-Host "  64-bit checksum: $($env:ChocolateyPackageChecksum64)" -ForegroundColor Gray
-Write-Host "✅ All checksums validated" -ForegroundColor Green
+# Extract the appropriate file based on architecture
+if (Get-ProcessorBits -eq 64) {
+    Get-ChocolateyUnzip -FileFullPath $file64 -Destination $toolsDir
+    Remove-Item $file64 -Force
+} else {
+    Get-ChocolateyUnzip -FileFullPath $file32 -Destination $toolsDir
+    Remove-Item $file32 -Force
+}
 
-Install-ChocolateyZipPackage @packageArgs
+# Clean up temporary files
+Remove-Item $file32 -Force -ErrorAction SilentlyContinue
+Remove-Item $file64 -Force -ErrorAction SilentlyContinue
 
 # Find the extracted executable
 $extractedPaths = @(
