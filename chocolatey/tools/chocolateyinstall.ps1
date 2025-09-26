@@ -20,6 +20,13 @@ $packageArgs = @{
   checksumType64 = 'sha256'
 }
 
+# Debug output for validation
+Write-Host "Package validation info:" -ForegroundColor Yellow
+Write-Host "  32-bit URL: $url32" -ForegroundColor Gray
+Write-Host "  64-bit URL: $url64" -ForegroundColor Gray
+Write-Host "  32-bit checksum: $($env:ChocolateyPackageChecksum32)" -ForegroundColor Gray
+Write-Host "  64-bit checksum: $($env:ChocolateyPackageChecksum64)" -ForegroundColor Gray
+
 Install-ChocolateyZipPackage @packageArgs
 
 # Find the extracted executable
