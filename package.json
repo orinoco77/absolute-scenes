@@ -1,6 +1,6 @@
 {
     "name": "absolute-scenes",
-    "version": "1.4.2",
+    "version": "1.4.3",
     "description": "A scene-based book writing application",
     "main": "public/electron.js",
     "homepage": "./",
@@ -103,8 +103,7 @@
                     "arch": [
                         "x64",
                         "ia32"
-                    ],
-                    "artifactName": "${productName} Setup ${version}.${ext}"
+                    ]
                 },
                 {
                     "target": "zip",
@@ -119,6 +118,7 @@
             "publisherName": "Adam Short"
         },
         "nsis": {
+            "artifactName": "${productName} Setup ${version}.${ext}",
             "oneClick": false,
             "perMachine": true,
             "allowElevation": true,
