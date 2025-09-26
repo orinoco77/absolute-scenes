@@ -340,8 +340,24 @@ jobs:
         # Copy Debian packaging files
         cp -r "$GITHUB_WORKSPACE/linux-packaging/ppa/debian" "absolute-scenes-${VERSION}/"
 
-        # Update changelog with current version and date
+        # Generate changelog with current version and date
         cd "absolute-scenes-${VERSION}"
+        CURRENT_DATE=$(date -R)
+        cat > debian/changelog << EOF
+absolute-scenes (${VERSION}-1) jammy; urgency=medium
+
+  * Release version ${VERSION}
+  * Professional scene-based book writing application
+  * Enhanced export capabilities (PDF, HTML, EPUB)
+  * Improved GitHub integration for cloud backup and version control
+  * Character and location management tools
+  * Scene-based writing organization with drag-and-drop
+  * Premium typography options with genre-based font recommendations
+
+ -- Adam Short <ajs@shiny.org.uk>  ${CURRENT_DATE}
+EOF
+
+        echo "Generated changelog for version ${VERSION}"
 
         # Build source package with signing
         if [ -n "$GPG_PASSPHRASE" ]; then
