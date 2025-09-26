@@ -237,9 +237,18 @@ jobs:
           choco upgrade absolute-scenes
           \`\`\``;
 
-          github.rest.issues.createComment({
-            issue_number: context.payload.release.id,
+          // Update the release body instead of creating a comment
+          const release = await github.rest.repos.getRelease({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: body
+            release_id: context.payload.release.id
+          });
+
+          const updatedBody = release.data.body + '\n\n' + body;
+
+          await github.rest.repos.updateRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: context.payload.release.id,
+            body: updatedBody
           });
