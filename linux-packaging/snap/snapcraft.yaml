@@ -1,0 +1,89 @@
+name: absolute-scenes
+base: core22
+version: '1.3.111'
+summary: Professional scene-based book writing application
+description: |
+  Absolute Scenes is designed specifically for authors who want a structured
+  approach to writing books with professional publishing features built-in.
+  Unlike traditional word processors, it organizes your work by scenes and
+  chapters, making it easier to manage complex narratives.
+
+  Key Features:
+  - Scene-based writing organization
+  - Professional typography with premium fonts
+  - Print-ready PDF export with book formatting
+  - Character and location management
+  - GitHub integration for cloud backup
+  - Visual character thread tracking
+
+grade: stable
+confinement: strict
+
+icon: assets/icon.png
+
+architectures:
+  - build-on: amd64
+    build-for: amd64
+
+apps:
+  absolute-scenes:
+    command: bin/absolute-scenes
+    extensions: [gnome]
+    plugs:
+      - home
+      - network
+      - audio-playback
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - unity7
+      - browser-support
+      - gsettings
+      - opengl
+      - removable-media
+
+parts:
+  absolute-scenes:
+    plugin: dump
+    source: https://github.com/orinoco77/absolute-scenes/releases/download/v$SNAPCRAFT_PROJECT_VERSION/Absolute.Scenes-$SNAPCRAFT_PROJECT_VERSION.AppImage
+    source-type: file
+
+    override-build: |
+      # Extract AppImage
+      chmod +x $SNAPCRAFT_PART_SRC/Absolute.Scenes-$SNAPCRAFT_PROJECT_VERSION.AppImage
+      $SNAPCRAFT_PART_SRC/Absolute.Scenes-$SNAPCRAFT_PROJECT_VERSION.AppImage --appimage-extract
+
+      # Move extracted contents
+      cp -r squashfs-root/* $SNAPCRAFT_PART_INSTALL/
+
+      # Create launcher script
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      cat > $SNAPCRAFT_PART_INSTALL/bin/absolute-scenes << 'EOF'
+      #!/bin/bash
+      export ELECTRON_OZONE_PLATFORM_HINT=auto
+      export DISABLE_WAYLAND=1
+
+      # Find the executable
+      if [ -f "$SNAP/AppRun" ]; then
+          exec "$SNAP/AppRun" "$@"
+      elif [ -f "$SNAP/absolute-scenes" ]; then
+          exec "$SNAP/absolute-scenes" "$@"
+      else
+          echo "Error: Could not find Absolute Scenes executable"
+          exit 1
+      fi
+      EOF
+
+      chmod +x $SNAPCRAFT_PART_INSTALL/bin/absolute-scenes
+
+    stage-packages:
+      - libnss3-dev
+      - libatk-bridge2.0-dev
+      - libdrm2
+      - libxcomposite1
+      - libxdamage1
+      - libxrandr2
+      - libgbm1
+      - libxss1
+      - libasound2

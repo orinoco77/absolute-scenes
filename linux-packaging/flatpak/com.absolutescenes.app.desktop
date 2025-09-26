@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Absolute Scenes
+Comment=Professional scene-based book writing application
+GenericName=Book Writing Software
+Exec=absolute-scenes %F
+Icon=com.absolutescenes.app
+Type=Application
+StartupNotify=true
+Categories=Office;WordProcessor;Literature;
+MimeType=application/x-absolute-scenes-book;
+Keywords=writing;book;novel;scenes;chapters;author;publishing;pdf;
+
+# Additional metadata for app stores
+X-Flathub-ReleaseNotesURL=https://github.com/orinoco77/absolute-scenes/releases
+X-Flathub-RepositoryURL=https://github.com/orinoco77/absolute-scenes

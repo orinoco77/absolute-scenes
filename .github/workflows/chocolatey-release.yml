@@ -1,0 +1,191 @@
+name: Build and Publish Chocolatey Package
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to package (e.g., 1.3.111)'
+        required: true
+        type: string
+      publish:
+        description: 'Publish to Chocolatey repository'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  chocolatey-package:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Chocolatey
+      run: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+        iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+    - name: Get version from release or input
+      id: get-version
+      run: |
+        if ("${{ github.event_name }}" -eq "release") {
+          $version = "${{ github.event.release.tag_name }}" -replace "^v", ""
+          $publish = $true
+        } else {
+          $version = "${{ github.event.inputs.version }}"
+          $publish = [System.Convert]::ToBoolean("${{ github.event.inputs.publish }}")
+        }
+
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+        echo "publish=$publish" >> $env:GITHUB_OUTPUT
+        echo "Version: $version"
+        echo "Publish: $publish"
+
+    - name: Download ZIP packages and calculate checksums
+      id: checksum
+      run: |
+        $version = "${{ steps.get-version.outputs.version }}"
+        $zip64Url = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute.Scenes-$version-win32-x64.zip"
+        $zip32Url = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute.Scenes-$version-win32-ia32.zip"
+
+        $zip64Path = "Absolute.Scenes-$version-win32-x64.zip"
+        $zip32Path = "Absolute.Scenes-$version-win32-ia32.zip"
+
+        Write-Host "Downloading ZIP packages..."
+        Write-Host "64-bit: $zip64Url"
+        Write-Host "32-bit: $zip32Url"
+
+        try {
+          # Download 64-bit version
+          Invoke-WebRequest -Uri $zip64Url -OutFile $zip64Path -UseBasicParsing
+
+          if (Test-Path $zip64Path) {
+            $checksum64 = (Get-FileHash $zip64Path -Algorithm SHA256).Hash
+            echo "checksum64=$checksum64" >> $env:GITHUB_OUTPUT
+            echo "64-bit ZIP downloaded successfully"
+            echo "64-bit SHA256 checksum: $checksum64"
+            Remove-Item $zip64Path
+          } else {
+            throw "64-bit ZIP file not found"
+          }
+
+          # Download 32-bit version
+          Invoke-WebRequest -Uri $zip32Url -OutFile $zip32Path -UseBasicParsing
+
+          if (Test-Path $zip32Path) {
+            $checksum32 = (Get-FileHash $zip32Path -Algorithm SHA256).Hash
+            echo "checksum32=$checksum32" >> $env:GITHUB_OUTPUT
+            echo "32-bit ZIP downloaded successfully"
+            echo "32-bit SHA256 checksum: $checksum32"
+            Remove-Item $zip32Path
+          } else {
+            throw "32-bit ZIP file not found"
+          }
+
+        } catch {
+          Write-Error "Failed to download ZIP packages: $_"
+          exit 1
+        }
+
+    - name: Build Chocolatey package
+      run: |
+        $version = "${{ steps.get-version.outputs.version }}"
+        $checksum64 = "${{ steps.checksum.outputs.checksum64 }}"
+        $checksum32 = "${{ steps.checksum.outputs.checksum32 }}"
+        $publish = [System.Convert]::ToBoolean("${{ steps.get-version.outputs.publish }}")
+
+        Write-Host "Building Chocolatey package..."
+        Write-Host "Version: $version"
+        Write-Host "64-bit checksum: $checksum64"
+        Write-Host "32-bit checksum: $checksum32"
+        Write-Host "Publish: $publish"
+
+        # Set environment variables for the package build
+        $env:ChocolateyPackageVersion = $version
+        $env:ChocolateyPackageChecksum64 = $checksum64
+        $env:ChocolateyPackageChecksum32 = $checksum32
+
+        Set-Location chocolatey
+
+        # Build the package
+        choco pack absolute-scenes.nuspec --version $version
+
+        if ($LASTEXITCODE -ne 0) {
+          throw "Chocolatey pack failed"
+        }
+
+        $packageFile = "absolute-scenes.$version.nupkg"
+        if (Test-Path $packageFile) {
+          Write-Host "✓ Package built successfully: $packageFile"
+        } else {
+          throw "Package file not found"
+        }
+
+    - name: Upload package artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: chocolatey-package-${{ steps.get-version.outputs.version }}
+        path: chocolatey/absolute-scenes.${{ steps.get-version.outputs.version }}.nupkg
+        retention-days: 30
+
+    - name: Publish to Chocolatey
+      if: steps.get-version.outputs.publish == 'true'
+      run: |
+        $version = "${{ steps.get-version.outputs.version }}"
+        $packageFile = "absolute-scenes.$version.nupkg"
+
+        Set-Location chocolatey
+
+        if (-not (Test-Path $packageFile)) {
+          throw "Package file not found: $packageFile"
+        }
+
+        Write-Host "Publishing package to Chocolatey Community Repository..."
+
+        choco push $packageFile --api-key "${{ secrets.CHOCOLATEY_API_KEY }}" --source https://push.chocolatey.org/
+
+        if ($LASTEXITCODE -eq 0) {
+          Write-Host "✓ Package published successfully!"
+          Write-Host "Package will be available at: https://community.chocolatey.org/packages/absolute-scenes/$version"
+        } else {
+          throw "Chocolatey push failed with exit code $LASTEXITCODE"
+        }
+
+    - name: Comment on release (if from release)
+      if: github.event_name == 'release' && steps.get-version.outputs.publish == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const version = "${{ steps.get-version.outputs.version }}";
+          const body = `🍫 **Chocolatey Package Published!**
+
+          This release is now available via Chocolatey:
+
+          \`\`\`powershell
+          choco install absolute-scenes
+          \`\`\`
+
+          **Package Details:**
+          - Version: \`${version}\`
+          - Package URL: https://community.chocolatey.org/packages/absolute-scenes/${version}
+          - Installation: No SmartScreen warnings, clean silent install
+
+          **Alternative Installation Commands:**
+          \`\`\`powershell
+          # Install specific version
+          choco install absolute-scenes --version ${version}
+
+          # Upgrade if already installed
+          choco upgrade absolute-scenes
+          \`\`\``;
+
+          github.rest.issues.createComment({
+            issue_number: context.payload.release.id,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });

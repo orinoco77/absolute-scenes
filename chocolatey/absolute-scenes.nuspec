@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>absolute-scenes</id>
+    <version>$version$</version>
+    <packageSourceUrl>https://github.com/orinoco77/absolute-scenes</packageSourceUrl>
+    <owners>Adam Short</owners>
+    <title>Absolute Scenes</title>
+    <authors>Adam Short</authors>
+    <projectUrl>https://github.com/orinoco77/absolute-scenes</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/orinoco77/absolute-scenes/main/assets/icon.png</iconUrl>
+    <copyright>2025 Adam Short</copyright>
+    <licenseUrl>https://github.com/orinoco77/absolute-scenes/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/orinoco77/absolute-scenes</projectSourceUrl>
+    <docsUrl>https://github.com/orinoco77/absolute-scenes/blob/main/README.md</docsUrl>
+    <bugTrackerUrl>https://github.com/orinoco77/absolute-scenes/issues</bugTrackerUrl>
+    <tags>writing book-writing scene-based-writing publishing pdf-export github-integration electron authoring creative-writing</tags>
+    <summary>A professional, scene-based book writing application with print-ready PDF output and GitHub integration</summary>
+    <description><![CDATA[# Absolute Scenes
+
+**A professional, scene-based book writing application with print-ready PDF output and GitHub integration.**
+
+Absolute Scenes is designed specifically for authors who want a structured approach to writing books with professional publishing features built-in. Unlike traditional word processors, it organizes your work by scenes and chapters, making it easier to manage complex narratives.
+
+## Key Features
+
+### Scene-Based Writing
+- Organize your book by chapters and scenes instead of one long document
+- Drag-and-drop to reorder chapters and scenes
+- Move scenes between chapters effortlessly
+- Built-in recycle bin to recover deleted content
+
+### Professional Typography
+- Premium book fonts including Palatino Linotype, Garamond, Baskerville, and more
+- Genre-based font recommendations (Literary Fiction, Romance, Thriller, etc.)
+- Live font preview with sample text
+- Automatic font optimization for different book formats
+
+### Print-Ready Publishing
+- Professional page layouts with mirror margins for book binding
+- Multiple book formats: Trade Paperback (6×9), Mass Market, Hardcover, Large Print
+- Running headers with author name and book title
+- Proper chapter formatting with customizable headers
+- Justified text and traditional paragraph styling
+
+### Character & Location Management
+- Create detailed character profiles with avatars and descriptions
+- Track character roles, development notes, and relationships
+- Manage story locations with descriptions and notes
+- Visual character thread tracking across scenes
+
+### GitHub Integration
+- Automatic cloud backup of your manuscripts
+- Version history to track changes over time
+- Access your work anywhere through GitHub
+- Recovery tools to restore books from backup
+- Automatic sync on save (optional)
+
+### Export Options
+- PDF Export: Print-ready PDFs with professional book formatting
+- HTML Export: Clean web version for sharing or online publishing
+- EPUB Export: E-book format for digital publishing
+- Customizable export settings (scene breaks, titles, formatting)
+
+## Installation Notes
+- Installs to Program Files with system-wide access
+- Creates desktop and Start Menu shortcuts
+- Sets up file associations for .book files
+- Adds command-line access via 'absolute-scenes' command
+- Requires administrator privileges for system-wide installation
+
+## Command Line Usage
+After installation, you can use from any command prompt:
+- `absolute-scenes` - Launch the application
+- `absolute-scenes filename.book` - Open a specific book file
+- `absolute-scenes --last` - Open the last book you were working on
+
+**Made with ❤️ for authors who care about beautiful books**
+]]></description>
+    <releaseNotes>https://github.com/orinoco77/absolute-scenes/releases/tag/v$version$</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

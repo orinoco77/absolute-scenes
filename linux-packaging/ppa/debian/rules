@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	# Nothing to build - we're packaging a pre-built binary
+
+override_dh_auto_install:
+	# Extract the AppImage
+	chmod +x absolute-scenes.AppImage
+	./absolute-scenes.AppImage --appimage-extract
+
+	# Install the application
+	mkdir -p debian/absolute-scenes/opt/absolute-scenes
+	cp -r squashfs-root/* debian/absolute-scenes/opt/absolute-scenes/
+
+	# Install desktop file
+	mkdir -p debian/absolute-scenes/usr/share/applications
+	cp debian/absolute-scenes.desktop debian/absolute-scenes/usr/share/applications/
+
+	# Install icon
+	mkdir -p debian/absolute-scenes/usr/share/pixmaps
+	cp squashfs-root/absolute-scenes.png debian/absolute-scenes/usr/share/pixmaps/ || \
+	cp squashfs-root/usr/share/icons/hicolor/512x512/apps/absolute-scenes.png debian/absolute-scenes/usr/share/pixmaps/absolute-scenes.png || \
+	echo "Warning: Could not find application icon"
+
+	# Create symlink for command line access
+	mkdir -p debian/absolute-scenes/usr/bin
+	ln -s /opt/absolute-scenes/AppRun debian/absolute-scenes/usr/bin/absolute-scenes
+
+override_dh_auto_clean:
+	rm -rf squashfs-root
+
+override_dh_shlibdeps:
+	# Skip automatic dependency detection for AppImage
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info

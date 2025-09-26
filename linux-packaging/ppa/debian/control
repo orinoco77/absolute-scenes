@@ -1,0 +1,42 @@
+Source: absolute-scenes
+Section: editors
+Priority: optional
+Maintainer: Adam Short <ajs@shiny.org.uk>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Homepage: https://github.com/orinoco77/absolute-scenes
+Vcs-Git: https://github.com/orinoco77/absolute-scenes.git
+Vcs-Browser: https://github.com/orinoco77/absolute-scenes
+Rules-Requires-Root: no
+
+Package: absolute-scenes
+Architecture: amd64
+Depends: ${misc:Depends},
+         libgtk-3-0,
+         libnss3,
+         libxss1,
+         libasound2,
+         libxrandr2,
+         libatk1.0-0,
+         libdrm2,
+         libxcomposite1,
+         libxdamage1,
+         libxfixes3,
+         libcups2,
+         libgtk-3-0,
+         libgconf-2-4
+Recommends: git
+Description: Professional scene-based book writing application
+ Absolute Scenes is designed specifically for authors who want a structured
+ approach to writing books with professional publishing features built-in.
+ Unlike traditional word processors, it organizes your work by scenes and
+ chapters, making it easier to manage complex narratives.
+ .
+ Key features include:
+  * Scene-based writing organization
+  * Professional typography with premium fonts
+  * Print-ready PDF export with book formatting
+  * Character and location management
+  * GitHub integration for cloud backup
+  * Visual character thread tracking
+  * Export to PDF, HTML, and EPUB formats

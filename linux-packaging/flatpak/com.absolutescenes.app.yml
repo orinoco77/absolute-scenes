@@ -1,0 +1,63 @@
+app-id: com.absolutescenes.app
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '23.08'
+command: absolute-scenes
+
+separate-locales: false
+
+finish-args:
+  # X11 + XShm access
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+
+  # Sound access (for any app sounds)
+  - --socket=pulseaudio
+
+  # Network access (for GitHub integration)
+  - --share=network
+
+  # File system access (for book files)
+  - --filesystem=home
+  - --filesystem=xdg-documents
+  - --filesystem=xdg-download
+
+  # Desktop integration
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.freedesktop.FileManager1
+
+  # Allow opening files by association
+  - --talk-name=org.freedesktop.portal.OpenURI
+
+modules:
+  - name: absolute-scenes
+    buildsystem: simple
+    build-commands:
+      # Extract the pre-built Electron app
+      - unzip -q absolute-scenes-linux.zip -d /app/
+      - chmod +x /app/absolute-scenes
+
+      # Install desktop file and icon
+      - install -Dm644 com.absolutescenes.app.desktop /app/share/applications/com.absolutescenes.app.desktop
+      - install -Dm644 absolute-scenes-icon.png /app/share/icons/hicolor/512x512/apps/com.absolutescenes.app.png
+
+      # Create wrapper script
+      - install -Dm755 absolute-scenes-wrapper /app/bin/absolute-scenes
+
+    sources:
+      - type: archive
+        url: https://github.com/orinoco77/absolute-scenes/releases/download/v1.3.111/Absolute.Scenes-1.3.111.AppImage
+        sha256: CHECKSUM_PLACEHOLDER
+        strip-components: 0
+
+      - type: file
+        path: com.absolutescenes.app.desktop
+
+      - type: file
+        path: absolute-scenes-icon.png
+
+      - type: file
+        path: absolute-scenes-wrapper

@@ -1,0 +1,14 @@
+#!/bin/bash
+# Flatpak wrapper script for Absolute Scenes
+
+# Set up environment
+export ELECTRON_OZONE_PLATFORM_HINT=auto
+
+# Handle file arguments
+if [ $# -gt 0 ]; then
+    # If arguments provided, pass them through
+    exec /app/absolute-scenes "$@"
+else
+    # If no arguments, just launch the app
+    exec /app/absolute-scenes
+fi
