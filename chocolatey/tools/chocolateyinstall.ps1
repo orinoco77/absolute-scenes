@@ -20,12 +20,21 @@ $packageArgs = @{
   checksumType64 = 'sha256'
 }
 
+# Validate checksums are provided
+if ([string]::IsNullOrWhiteSpace($env:ChocolateyPackageChecksum32)) {
+    throw "32-bit checksum is missing. This package requires checksum validation."
+}
+if ([string]::IsNullOrWhiteSpace($env:ChocolateyPackageChecksum64)) {
+    throw "64-bit checksum is missing. This package requires checksum validation."
+}
+
 # Debug output for validation
 Write-Host "Package validation info:" -ForegroundColor Yellow
 Write-Host "  32-bit URL: $url32" -ForegroundColor Gray
 Write-Host "  64-bit URL: $url64" -ForegroundColor Gray
 Write-Host "  32-bit checksum: $($env:ChocolateyPackageChecksum32)" -ForegroundColor Gray
 Write-Host "  64-bit checksum: $($env:ChocolateyPackageChecksum64)" -ForegroundColor Gray
+Write-Host "✅ All checksums validated" -ForegroundColor Green
 
 Install-ChocolateyZipPackage @packageArgs
 
