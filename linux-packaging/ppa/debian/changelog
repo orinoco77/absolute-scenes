@@ -1,0 +1,9 @@
+absolute-scenes (1.3.111-1) jammy; urgency=medium
+
+  * Initial PPA release
+  * Professional scene-based book writing application
+  * Features include scene organization, professional typography, PDF export
+  * GitHub integration for cloud backup and version control
+  * Character and location management tools
+
+ -- Adam Short <ajs@shiny.org.uk>  Thu, 26 Sep 2024 10:00:00 +0000

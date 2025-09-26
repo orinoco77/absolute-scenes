@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.3.111<!--/VERSION--> | **Tests:** <!--TESTS-->1064/1064<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2025-09-25<!--/DATE-->
+**Version:** <!--VERSION-->1.3.112<!--/VERSION--> | **Tests:** <!--TESTS-->1064/1064<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2025-09-26<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -286,7 +286,7 @@ Access via the 🔗 GitHub Integration button:
 
 **Code Quality:** <!--TESTS-->1064/1064<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->134<!--/COMMITS--> | **Latest:** <!--COMMIT-->c38778e - Fixes for epub and html exporters (12 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->135<!--/COMMITS--> | **Latest:** <!--COMMIT-->2edcb6f - Fix for readme generator (18 hours ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.3.111<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.3.111<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.3.112<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.3.112<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-09-25<!--/DATE--> | Build <!--COMMIT-->c38778e - Fixes for epub and html exporters (12 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-09-26<!--/DATE--> | Build <!--COMMIT-->2edcb6f - Fix for readme generator (18 hours ago)<!--/COMMIT-->_

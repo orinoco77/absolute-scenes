@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Absolute Scenes
+Comment=Professional scene-based book writing application
+GenericName=Book Writing Software
+Exec=absolute-scenes %F
+Icon=absolute-scenes
+Type=Application
+StartupNotify=true
+Categories=Office;WordProcessor;Literature;
+MimeType=application/x-absolute-scenes-book;
+Keywords=writing;book;novel;scenes;chapters;author;publishing;pdf;
