@@ -26,9 +26,9 @@ jobs:
         version="${{ github.event.release.tag_name }}"
         version_clean="${version#v}"  # Remove 'v' prefix if present
 
-        # Expected file URLs (electron-builder default naming)
-        zip64_url="https://github.com/${{ github.repository }}/releases/download/$version/Absolute Scenes-$version_clean-win32-x64.zip"
-        zip32_url="https://github.com/${{ github.repository }}/releases/download/$version/Absolute Scenes-$version_clean-win32-ia32.zip"
+        # Expected file URLs (actual electron-builder naming)
+        zip64_url="https://github.com/${{ github.repository }}/releases/download/$version/Absolute.Scenes-$version_clean-win.zip"
+        zip32_url="https://github.com/${{ github.repository }}/releases/download/$version/Absolute.Scenes-$version_clean-ia32-win.zip"
 
         echo "Checking for:"
         echo "  64-bit: $zip64_url"
@@ -38,15 +38,30 @@ jobs:
         for i in {1..30}; do
           echo "Attempt $i/30..."
 
-          # Check if both files exist
-          if curl -s -f -I "$zip64_url" > /dev/null && curl -s -f -I "$zip32_url" > /dev/null; then
-            echo "✅ Both ZIP files are now available!"
+          # Check file availability
+          zip64_exists=false
+          zip32_exists=false
+
+          if curl -s -f -I "$zip64_url" > /dev/null; then
+            zip64_exists=true
+          fi
+
+          if curl -s -f -I "$zip32_url" > /dev/null; then
+            zip32_exists=true
+          fi
+
+          echo "64-bit ZIP: $($zip64_exists ? 'Found' : 'Not found')"
+          echo "32-bit ZIP: $($zip32_exists ? 'Found' : 'Not found')"
+
+          # If at least one ZIP file exists, proceed (better than no Chocolatey package)
+          if $zip64_exists || $zip32_exists; then
+            echo "✅ At least one ZIP file is available!"
             echo "Waiting additional 30 seconds for upload completion..."
             sleep 30
             exit 0
           fi
 
-          echo "Assets not yet available, waiting 20 seconds..."
+          echo "No ZIP assets available yet, waiting 20 seconds..."
           sleep 20
         done
 
@@ -88,11 +103,11 @@ jobs:
       id: checksum
       run: |
         $version = "${{ steps.get-version.outputs.version }}"
-        $zip64Url = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute Scenes-$version-win32-x64.zip"
-        $zip32Url = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute Scenes-$version-win32-ia32.zip"
+        $zip64Url = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute.Scenes-$version-win.zip"
+        $zip32Url = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute.Scenes-$version-ia32-win.zip"
 
-        $zip64Path = "Absolute Scenes-$version-win32-x64.zip"
-        $zip32Path = "Absolute Scenes-$version-win32-ia32.zip"
+        $zip64Path = "Absolute.Scenes-$version-win.zip"
+        $zip32Path = "Absolute.Scenes-$version-ia32-win.zip"
 
         Write-Host "Downloading ZIP packages..."
         Write-Host "64-bit: $zip64Url"
