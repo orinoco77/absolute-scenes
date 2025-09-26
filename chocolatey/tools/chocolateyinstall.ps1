@@ -5,8 +5,8 @@ $toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
 $version = $env:ChocolateyPackageVersion
 
 # Use portable ZIP instead of installer to avoid certificate issues
-$url64 = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute.Scenes-$version-win32-x64.zip"
-$url32 = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute.Scenes-$version-win32-ia32.zip"
+$url64 = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute Scenes-$version-win32-x64.zip"
+$url32 = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute Scenes-$version-win32-ia32.zip"
 
 $packageArgs = @{
   packageName    = $packageName
@@ -26,8 +26,8 @@ Install-ChocolateyZipPackage @packageArgs
 $extractedPaths = @(
     "$toolsDir\Absolute Scenes.exe",
     "$toolsDir\win-unpacked\Absolute Scenes.exe",
-    "$toolsDir\Absolute.Scenes-$version-win32-x64\Absolute Scenes.exe",
-    "$toolsDir\Absolute.Scenes-$version-win32-ia32\Absolute Scenes.exe"
+    "$toolsDir\Absolute Scenes-$version-win32-x64\Absolute Scenes.exe",
+    "$toolsDir\Absolute Scenes-$version-win32-ia32\Absolute Scenes.exe"
 )
 
 $exePath = $null

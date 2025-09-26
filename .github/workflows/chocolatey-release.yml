@@ -16,8 +16,47 @@ on:
         default: false
 
 jobs:
+  wait-for-assets:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+    - name: Wait for release assets to be uploaded
+      run: |
+        echo "Waiting for release assets to be available..."
+        version="${{ github.event.release.tag_name }}"
+        version_clean="${version#v}"  # Remove 'v' prefix if present
+
+        # Expected file URLs (electron-builder default naming)
+        zip64_url="https://github.com/${{ github.repository }}/releases/download/$version/Absolute Scenes-$version_clean-win32-x64.zip"
+        zip32_url="https://github.com/${{ github.repository }}/releases/download/$version/Absolute Scenes-$version_clean-win32-ia32.zip"
+
+        echo "Checking for:"
+        echo "  64-bit: $zip64_url"
+        echo "  32-bit: $zip32_url"
+
+        # Wait up to 10 minutes for assets to be available
+        for i in {1..30}; do
+          echo "Attempt $i/30..."
+
+          # Check if both files exist
+          if curl -s -f -I "$zip64_url" > /dev/null && curl -s -f -I "$zip32_url" > /dev/null; then
+            echo "✅ Both ZIP files are now available!"
+            echo "Waiting additional 30 seconds for upload completion..."
+            sleep 30
+            exit 0
+          fi
+
+          echo "Assets not yet available, waiting 20 seconds..."
+          sleep 20
+        done
+
+        echo "❌ Timeout waiting for release assets"
+        exit 1
+
   chocolatey-package:
     runs-on: windows-latest
+    needs: [wait-for-assets]
+    if: always() && (github.event_name == 'workflow_dispatch' || needs.wait-for-assets.result == 'success')
 
     steps:
     - name: Checkout repository
@@ -49,11 +88,11 @@ jobs:
       id: checksum
       run: |
         $version = "${{ steps.get-version.outputs.version }}"
-        $zip64Url = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute.Scenes-$version-win32-x64.zip"
-        $zip32Url = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute.Scenes-$version-win32-ia32.zip"
+        $zip64Url = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute Scenes-$version-win32-x64.zip"
+        $zip32Url = "https://github.com/orinoco77/absolute-scenes/releases/download/v$version/Absolute Scenes-$version-win32-ia32.zip"
 
-        $zip64Path = "Absolute.Scenes-$version-win32-x64.zip"
-        $zip32Path = "Absolute.Scenes-$version-win32-ia32.zip"
+        $zip64Path = "Absolute Scenes-$version-win32-x64.zip"
+        $zip32Path = "Absolute Scenes-$version-win32-ia32.zip"
 
         Write-Host "Downloading ZIP packages..."
         Write-Host "64-bit: $zip64Url"
