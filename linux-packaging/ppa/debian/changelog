@@ -1,11 +1,7 @@
-absolute-scenes (1.4.5-1) jammy; urgency=medium
+absolute-scenes (0.0.0-1) jammy; urgency=medium
 
-  * Updated to version 1.4.5
-  * Professional scene-based book writing application
-  * Enhanced export capabilities (PDF, HTML, EPUB)
-  * Improved GitHub integration for cloud backup and version control
-  * Character and location management tools
-  * Scene-based writing organization with drag-and-drop
-  * Premium typography options with genre-based font recommendations
+  * Template changelog - will be generated automatically during build
+  * This file serves as a template for the automated PPA build process
+  * The actual version and date will be dynamically generated
 
- -- Adam Short <ajs@shiny.org.uk>  Thu, 26 Sep 2025 19:30:00 +0000
+ -- Adam Short <ajs@shiny.org.uk>  Thu, 01 Jan 1970 00:00:00 +0000
