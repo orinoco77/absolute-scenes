@@ -64,8 +64,14 @@ jobs:
         mkdir -p "$BUILD_DIR"
         cd "$BUILD_DIR"
 
-        APPIMAGE_URL="https://github.com/orinoco77/absolute-scenes/releases/download/v${VERSION}/absolute-scenes-${VERSION}.AppImage"
-        wget "$APPIMAGE_URL" -O "absolute-scenes-${VERSION}.AppImage"
+        APPIMAGE_URL="https://github.com/orinoco77/absolute-scenes/releases/download/v${VERSION}/Absolute.Scenes-${VERSION}.AppImage"
+        echo "Attempting to download: $APPIMAGE_URL"
+        if ! wget "$APPIMAGE_URL" -O "absolute-scenes-${VERSION}.AppImage"; then
+          echo "❌ Failed to download AppImage for version ${VERSION}"
+          echo "Available releases:"
+          curl -s https://api.github.com/repos/orinoco77/absolute-scenes/releases | grep -E '"tag_name"|"name".*\.AppImage' | head -20
+          exit 1
+        fi
 
         PKG_DIR="absolute-scenes-${VERSION}"
         mkdir -p "$PKG_DIR"
@@ -94,7 +100,11 @@ jobs:
         cp debian/absolute-scenes.desktop usr/share/applications/
         cp "$GITHUB_WORKSPACE/assets/icon.png" usr/share/pixmaps/absolute-scenes.png
 
-        echo "✅ Binary package ready"
+        echo "✅ Binary package structure ready"
+
+        # Build the source package for PPA
+        cd "$BUILD_DIR/$PKG_DIR"
+        debuild -S -sa
 
     - name: Upload to PPA
       if: github.event.inputs.publish == 'true'
@@ -105,7 +115,7 @@ jobs:
         BUILD_DIR="/tmp/ppa-build"
         cd "$BUILD_DIR"
 
-        # Find the changes file
+        # Find the changes file (should be created by debuild)
         CHANGES_FILE=$(ls absolute-scenes_${VERSION}-1_source.changes 2>/dev/null | head -1)
 
         if [ -n "$CHANGES_FILE" ] && [ -f "$CHANGES_FILE" ]; then
