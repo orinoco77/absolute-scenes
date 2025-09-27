@@ -37,9 +37,13 @@ jobs:
           # Import GPG private key
           echo "$LINUX_GPG_PRIVATE_KEY" | base64 --decode | gpg --batch --import
 
-          # Install PPA tools
+          # Install PPA tools and build dependencies
           sudo apt-get update
-          sudo apt-get install -y devscripts build-essential dput
+          sudo apt-get install -y devscripts build-essential dput debhelper
+
+          # Check available debhelper version
+          echo "Available debhelper version:"
+          apt-cache policy debhelper
 
           echo "✅ GPG and PPA tools configured"
         else
