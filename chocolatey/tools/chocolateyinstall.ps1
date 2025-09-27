@@ -29,7 +29,7 @@ Get-ChocolateyWebFile -PackageName $packageName -FileFullPath $file32 -Url $url3
 Write-Host "✓ 32-bit checksum validated" -ForegroundColor Green
 
 # Download and validate 64-bit file
-Get-ChocolateyWebFile -PackageName $packageName -FileFullPath $file64 -Url $url64 -Checksum $checksum64 -ChecksumType 'sha256'
+Get-ChocolateyWebFile -PackageName $packageName -FileFullPath $file64 -Url $url64 -Checksum64 $checksum64 -ChecksumType 'sha256'
 Write-Host "✓ 64-bit checksum validated" -ForegroundColor Green
 
 # Extract the appropriate file based on architecture

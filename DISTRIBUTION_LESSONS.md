@@ -14,9 +14,9 @@
 3. Making checksum validation conditional (`if ($checksum)`)
 4. Using explicit variables instead of `$env:` directly
 
-**What FINALLY Worked:**
-- Use `Get-ChocolateyWebFile` to download files individually
-- Use `Get-ChecksumValid` to validate EACH downloaded file
+**What ACTUALLY Worked:**
+- Use `Get-ChocolateyWebFile` with `-Checksum` and `-ChecksumType` parameters
+- Let Chocolatey handle validation internally (don't use separate `Get-ChecksumValid`)
 - Make validation MANDATORY (no conditional checks)
 - Validate checksums EXIST before downloading anything
 
