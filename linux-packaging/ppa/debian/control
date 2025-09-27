@@ -2,7 +2,7 @@ Source: absolute-scenes
 Section: editors
 Priority: optional
 Maintainer: Adam Short <ajs@shiny.org.uk>
-Build-Depends: debhelper-compat (= 13)
+Build-Depends: debhelper-compat (= 12)
 Standards-Version: 4.6.0
 Homepage: https://github.com/orinoco77/absolute-scenes
 Vcs-Git: https://github.com/orinoco77/absolute-scenes.git
