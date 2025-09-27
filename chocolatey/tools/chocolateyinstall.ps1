@@ -25,13 +25,11 @@ if ([string]::IsNullOrWhiteSpace($checksum64)) {
 }
 
 # Download and validate 32-bit file
-Get-ChocolateyWebFile -PackageName $packageName -FileFullPath $file32 -Url $url32
-Get-ChecksumValid -File $file32 -Checksum $checksum32 -ChecksumType 'sha256'
+Get-ChocolateyWebFile -PackageName $packageName -FileFullPath $file32 -Url $url32 -Checksum $checksum32 -ChecksumType 'sha256'
 Write-Host "✓ 32-bit checksum validated" -ForegroundColor Green
 
 # Download and validate 64-bit file
-Get-ChocolateyWebFile -PackageName $packageName -FileFullPath $file64 -Url $url64
-Get-ChecksumValid -File $file64 -Checksum $checksum64 -ChecksumType 'sha256'
+Get-ChocolateyWebFile -PackageName $packageName -FileFullPath $file64 -Url $url64 -Checksum $checksum64 -ChecksumType 'sha256'
 Write-Host "✓ 64-bit checksum validated" -ForegroundColor Green
 
 # Extract the appropriate file based on architecture
