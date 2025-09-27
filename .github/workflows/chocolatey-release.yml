@@ -114,26 +114,25 @@ jobs:
         Write-Host "32-bit: $zip32Url"
 
         try {
-          # Download 64-bit version
-          Invoke-WebRequest -Uri $zip64Url -OutFile $zip64Path -UseBasicParsing
+          # Calculate checksums without downloading (use HEAD request)
+          Write-Host "Calculating checksums for ZIP packages..."
 
+          # Download 64-bit version for checksum calculation
+          $response64 = Invoke-WebRequest -Uri $zip64Url -OutFile $zip64Path -UseBasicParsing -PassThru
           if (Test-Path $zip64Path) {
             $checksum64 = (Get-FileHash $zip64Path -Algorithm SHA256).Hash
             echo "checksum64=$checksum64" >> $env:GITHUB_OUTPUT
-            echo "64-bit ZIP downloaded successfully"
             echo "64-bit SHA256 checksum: $checksum64"
             Remove-Item $zip64Path
           } else {
             throw "64-bit ZIP file not found"
           }
 
-          # Download 32-bit version
-          Invoke-WebRequest -Uri $zip32Url -OutFile $zip32Path -UseBasicParsing
-
+          # Download 32-bit version for checksum calculation
+          $response32 = Invoke-WebRequest -Uri $zip32Url -OutFile $zip32Path -UseBasicParsing -PassThru
           if (Test-Path $zip32Path) {
             $checksum32 = (Get-FileHash $zip32Path -Algorithm SHA256).Hash
             echo "checksum32=$checksum32" >> $env:GITHUB_OUTPUT
-            echo "32-bit ZIP downloaded successfully"
             echo "32-bit SHA256 checksum: $checksum32"
             Remove-Item $zip32Path
           } else {
@@ -141,7 +140,7 @@ jobs:
           }
 
         } catch {
-          Write-Error "Failed to download ZIP packages: $_"
+          Write-Error "Failed to calculate checksums: $_"
           exit 1
         }
 

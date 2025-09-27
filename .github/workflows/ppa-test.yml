@@ -1,0 +1,141 @@
+name: Test PPA Publishing
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to package (e.g., 1.4.4)'
+        required: true
+        type: string
+      publish:
+        description: 'Actually publish to PPA (false for testing)'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  ppa-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up GPG key for PPA signing
+      env:
+        LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      run: |
+        if [ -n "$LINUX_GPG_PRIVATE_KEY" ]; then
+          echo "Setting up GPG for PPA signing..."
+
+          # Start gpg-agent
+          gpg-agent --daemon || echo "gpg-agent already running"
+
+          # Import GPG private key
+          echo "$LINUX_GPG_PRIVATE_KEY" | base64 --decode | gpg --batch --import
+
+          # Install PPA tools
+          sudo apt-get update
+          sudo apt-get install -y devscripts build-essential dput
+
+          echo "✅ GPG and PPA tools configured"
+        else
+          echo "❌ No GPG key configured for PPA signing"
+          exit 1
+        fi
+
+    - name: Create source package for PPA
+      env:
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      run: |
+        VERSION="${{ github.event.inputs.version }}"
+        echo "Building PPA source package for version $VERSION"
+
+        # Create build directory
+        BUILD_DIR="/tmp/ppa-build"
+        mkdir -p "$BUILD_DIR"
+        cd "$BUILD_DIR"
+
+        # Create original source tarball
+        tar --exclude='.git' --exclude='node_modules' --exclude='dist' --exclude='build' \
+            -czf "absolute-scenes_${VERSION}.orig.tar.gz" \
+            -C "$(dirname "$GITHUB_WORKSPACE")" "$(basename "$GITHUB_WORKSPACE")"
+
+        # Extract source
+        tar -xzf "absolute-scenes_${VERSION}.orig.tar.gz"
+        mv "$(basename "$GITHUB_WORKSPACE")" "absolute-scenes-${VERSION}"
+
+        # Copy Debian packaging files
+        cp -r "$GITHUB_WORKSPACE/linux-packaging/ppa/debian" "absolute-scenes-${VERSION}/"
+
+        # Generate changelog with current version and date
+        cd "absolute-scenes-${VERSION}"
+        CURRENT_DATE=$(date -R)
+        {
+          echo "absolute-scenes (${VERSION}-1) jammy; urgency=medium"
+          echo ""
+          echo "  * Release version ${VERSION}"
+          echo "  * Professional scene-based book writing application"
+          echo "  * Enhanced export capabilities (PDF, HTML, EPUB)"
+          echo "  * Improved GitHub integration for cloud backup and version control"
+          echo "  * Character and location management tools"
+          echo "  * Scene-based writing organization with drag-and-drop"
+          echo "  * Premium typography options with genre-based font recommendations"
+          echo ""
+          echo " -- Adam Short <ajs@shiny.org.uk>  ${CURRENT_DATE}"
+        } > debian/changelog
+
+        echo "Generated changelog for version ${VERSION}"
+
+        # Build source package with signing
+        if [ -n "$GPG_PASSPHRASE" ]; then
+          # Get GPG key ID
+          GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec:' | cut -d: -f5 | head -1)
+          echo "Using GPG key: $GPG_KEY_ID"
+
+          # Build signed source package
+          echo "$GPG_PASSPHRASE" | debuild -S -k"$GPG_KEY_ID" --lintian-opts --no-lintian
+        else
+          debuild -S --no-lintian
+        fi
+
+        # Show generated files
+        cd "$BUILD_DIR"
+        echo "Generated PPA files:"
+        ls -la *.dsc *.changes *.tar.* 2>/dev/null || echo "No PPA files generated"
+
+    - name: Upload to PPA
+      if: github.event.inputs.publish == 'true'
+      env:
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      run: |
+        VERSION="${{ github.event.inputs.version }}"
+        BUILD_DIR="/tmp/ppa-build"
+        cd "$BUILD_DIR"
+
+        # Find the changes file
+        CHANGES_FILE=$(ls absolute-scenes_${VERSION}-1_source.changes 2>/dev/null | head -1)
+
+        if [ -n "$CHANGES_FILE" ] && [ -f "$CHANGES_FILE" ]; then
+          echo "Uploading $CHANGES_FILE to PPA: ppa:b-ajs/absolute-scenes"
+
+          # Upload to PPA
+          dput ppa:b-ajs/absolute-scenes "$CHANGES_FILE"
+
+          echo "✅ Successfully uploaded to PPA"
+          echo "Package will be available at: https://launchpad.net/~b-ajs/+archive/ubuntu/absolute-scenes"
+        else
+          echo "❌ No changes file found for upload"
+          ls -la
+          exit 1
+        fi
+
+    - name: Test Results
+      if: github.event.inputs.publish == 'false'
+      run: |
+        echo "🧪 PPA Test Mode - No files were uploaded"
+        echo "✅ Source package built successfully"
+        echo "To actually publish, re-run with publish=true"
