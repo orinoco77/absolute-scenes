@@ -37,6 +37,10 @@ jobs:
           # Import GPG private key
           echo "$LINUX_GPG_PRIVATE_KEY" | base64 --decode | gpg --batch --import
 
+          # Configure GPG for non-interactive use
+          export GPG_TTY=""
+          export GNUPGHOME="$HOME/.gnupg"
+
           # Install PPA tools and build dependencies
           sudo apt-get update
           sudo apt-get install -y devscripts build-essential dput debhelper
@@ -100,8 +104,12 @@ jobs:
           GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec:' | cut -d: -f5 | head -1)
           echo "Using GPG key: $GPG_KEY_ID"
 
-          # Build signed source package
-          echo "$GPG_PASSPHRASE" | debuild -S -k"$GPG_KEY_ID" --lintian-opts --no-lintian
+          # Configure GPG environment for signing
+          export GPG_TTY=""
+          export GNUPGHOME="$HOME/.gnupg"
+
+          # Build signed source package with proper GPG options
+          echo "$GPG_PASSPHRASE" | DEBSIGN_KEYID="$GPG_KEY_ID" debuild -S --no-lintian
         else
           debuild -S --no-lintian
         fi
