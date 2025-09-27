@@ -55,69 +55,46 @@ jobs:
           exit 1
         fi
 
-    - name: Create source package for PPA
+    - name: Create binary package for PPA
       env:
         GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       run: |
         VERSION="${{ github.event.inputs.version }}"
-        echo "Building PPA source package for version $VERSION"
-
-        # Create build directory
         BUILD_DIR="/tmp/ppa-build"
         mkdir -p "$BUILD_DIR"
         cd "$BUILD_DIR"
 
-        # Create original source tarball
-        tar --exclude='.git' --exclude='node_modules' --exclude='dist' --exclude='build' \
-            -czf "absolute-scenes_${VERSION}.orig.tar.gz" \
-            -C "$(dirname "$GITHUB_WORKSPACE")" "$(basename "$GITHUB_WORKSPACE")"
+        APPIMAGE_URL="https://github.com/orinoco77/absolute-scenes/releases/download/v${VERSION}/absolute-scenes-${VERSION}.AppImage"
+        wget "$APPIMAGE_URL" -O "absolute-scenes-${VERSION}.AppImage"
 
-        # Extract source
-        tar -xzf "absolute-scenes_${VERSION}.orig.tar.gz"
-        mv "$(basename "$GITHUB_WORKSPACE")" "absolute-scenes-${VERSION}"
+        PKG_DIR="absolute-scenes-${VERSION}"
+        mkdir -p "$PKG_DIR"
+        cp -r "$GITHUB_WORKSPACE/linux-packaging/ppa/debian" "$PKG_DIR/"
 
-        # Copy Debian packaging files
-        cp -r "$GITHUB_WORKSPACE/linux-packaging/ppa/debian" "absolute-scenes-${VERSION}/"
-
-        # Generate changelog with current version and date
-        cd "absolute-scenes-${VERSION}"
+        cd "$PKG_DIR"
         CURRENT_DATE=$(date -R)
         {
           echo "absolute-scenes (${VERSION}-1) jammy; urgency=medium"
           echo ""
           echo "  * Release version ${VERSION}"
-          echo "  * Professional scene-based book writing application"
-          echo "  * Enhanced export capabilities (PDF, HTML, EPUB)"
-          echo "  * Improved GitHub integration for cloud backup and version control"
-          echo "  * Character and location management tools"
-          echo "  * Scene-based writing organization with drag-and-drop"
-          echo "  * Premium typography options with genre-based font recommendations"
+          echo "  * Binary package from GitHub releases"
           echo ""
           echo " -- Adam Short <ajs@shiny.org.uk>  ${CURRENT_DATE}"
         } > debian/changelog
 
-        echo "Generated changelog for version ${VERSION}"
+        mkdir -p usr/lib/absolute-scenes usr/bin usr/share/applications usr/share/pixmaps
 
-        # Build source package with signing
-        if [ -n "$GPG_PASSPHRASE" ]; then
-          # Get GPG key ID
-          GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec:' | cut -d: -f5 | head -1)
-          echo "Using GPG key: $GPG_KEY_ID"
+        cp "../absolute-scenes-${VERSION}.AppImage" usr/lib/absolute-scenes/absolute-scenes
+        chmod +x usr/lib/absolute-scenes/absolute-scenes
 
-          # Configure GPG environment for signing
-          export GPG_TTY=""
-          export GNUPGHOME="$HOME/.gnupg"
+        echo '#!/bin/bash' > usr/bin/absolute-scenes
+        echo 'exec /usr/lib/absolute-scenes/absolute-scenes "$@"' >> usr/bin/absolute-scenes
+        chmod +x usr/bin/absolute-scenes
 
-          # Build signed source package with proper GPG options
-          echo "$GPG_PASSPHRASE" | DEBSIGN_KEYID="$GPG_KEY_ID" debuild -S --no-lintian
-        else
-          debuild -S --no-lintian
-        fi
+        cp debian/absolute-scenes.desktop usr/share/applications/
+        cp "$GITHUB_WORKSPACE/assets/icon.png" usr/share/pixmaps/absolute-scenes.png
 
-        # Show generated files
-        cd "$BUILD_DIR"
-        echo "Generated PPA files:"
-        ls -la *.dsc *.changes *.tar.* 2>/dev/null || echo "No PPA files generated"
+        echo "✅ Binary package ready"
 
     - name: Upload to PPA
       if: github.event.inputs.publish == 'true'
