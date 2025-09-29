@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.21<!--/VERSION--> | **Tests:** <!--TESTS-->1064/1064<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2025-09-27<!--/DATE-->
+**Version:** <!--VERSION-->1.4.22<!--/VERSION--> | **Tests:** <!--TESTS-->0/42<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2025-09-29<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -284,9 +284,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1064/1064<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->0/42<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->155<!--/COMMITS--> | **Latest:** <!--COMMIT-->4a1ad69 - More PPA (13 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->156<!--/COMMITS--> | **Latest:** <!--COMMIT-->7b71d0f - Yet more PPA changes (2 days ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.21<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.21<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.22<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.22<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-09-27<!--/DATE--> | Build <!--COMMIT-->4a1ad69 - More PPA (13 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-09-29<!--/DATE--> | Build <!--COMMIT-->7b71d0f - Yet more PPA changes (2 days ago)<!--/COMMIT-->_

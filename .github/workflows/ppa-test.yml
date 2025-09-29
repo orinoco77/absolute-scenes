@@ -102,8 +102,15 @@ jobs:
 
         echo "✅ Binary package structure ready"
 
+        # Create original source tarball (required for Debian source packages)
+        cd "$BUILD_DIR"
+        tar -czf "absolute-scenes_${VERSION}.orig.tar.gz" \
+          --exclude="debian" \
+          --transform="s,^$PKG_DIR,absolute-scenes-${VERSION}," \
+          "$PKG_DIR"
+
         # Build the source package for PPA
-        cd "$BUILD_DIR/$PKG_DIR"
+        cd "$PKG_DIR"
         debuild -S -sa
 
     - name: Upload to PPA
