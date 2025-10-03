@@ -3,6 +3,11 @@
  * Following Single Responsibility Principle
  */
 export class GitHubSyncService {
+  constructor() {
+    this.isSyncing = false; // Lock to prevent concurrent syncs
+    this.pendingSync = null; // Store pending sync request while one is in progress
+  }
+
   /**
    * Handle GitHub synchronization
    */
@@ -14,6 +19,25 @@ export class GitHubSyncService {
     onSyncSuccess,
     onSyncError
   }) {
+    // If a sync is already in progress, store this request and skip
+    if (this.isSyncing) {
+      // eslint-disable-next-line no-console
+      console.log('⏭️  Sync already in progress, storing pending request');
+      this.pendingSync = {
+        bookData,
+        filePath,
+        saveTime,
+        onOperationUpdate,
+        onSyncSuccess,
+        onSyncError
+      };
+      return { success: false, skipped: true };
+    }
+
+    // eslint-disable-next-line no-console
+    console.log('🔄 Starting GitHub sync...');
+    this.isSyncing = true;
+
     try {
       onOperationUpdate?.('Syncing to GitHub...');
 
@@ -47,16 +71,18 @@ export class GitHubSyncService {
         return { success: false, hasConflicts: true, error: conflictMessage };
       } else if (result.success) {
         // Sync successful
+        // eslint-disable-next-line no-console
+        console.log('✅ GitHub sync completed successfully');
         onSyncSuccess?.(saveTime);
         return { success: true, syncTime: saveTime };
       } else if (result.error) {
-        console.warn('Auto-sync failed:', result.error);
+        console.warn('❌ Auto-sync failed:', result.error);
         const errorMessage = `Auto-sync failed: ${result.error}`;
         onSyncError?.(errorMessage);
         return { success: false, error: errorMessage };
       }
     } catch (error) {
-      console.warn('GitHub sync failed:', error.message);
+      console.warn('❌ GitHub sync failed:', error.message);
       // Show user-friendly error for auto-sync failures
       const errorMessage = `GitHub auto-sync failed: ${error.message}. You can manually sync from the GitHub settings.`;
       onSyncError?.(errorMessage);
@@ -64,6 +90,17 @@ export class GitHubSyncService {
     } finally {
       // Clear operation when sync is complete (success or failure)
       onOperationUpdate?.(null);
+      this.isSyncing = false;
+
+      // If there's a pending sync, execute it now
+      if (this.pendingSync) {
+        const pending = this.pendingSync;
+        this.pendingSync = null;
+        // eslint-disable-next-line no-console
+        console.log('⏭️  Executing pending sync request');
+        // Execute the pending sync after a short delay to ensure state is settled
+        setTimeout(() => this.syncWithGitHub(pending), 100);
+      }
     }
   }
 

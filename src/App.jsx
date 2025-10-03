@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo, useRef } from 'react';
 import BackgroundEditor from './components/BackgroundEditor.jsx';
 import BackMatterEditor from './components/BackMatterEditor.jsx';
 import BackupRecovery from './components/BackupRecovery.jsx';
@@ -189,6 +189,11 @@ function App() {
     );
   }, [currentFilePath, hasUnsavedChanges, book.title]);
 
+  // Keep refs to latest values for auto-save interval (declare refs early)
+  const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+  const currentFilePathRef = useRef(currentFilePath);
+  const handleSaveBookRef = useRef(null); // Will be set after handleSaveBook is defined
+
   // Auto-selection effects (following Open/Closed Principle)
   useEffect(() => {
     autoSelectFirstScene(book);
@@ -271,6 +276,79 @@ function App() {
 
     return result;
   }, [book, currentFilePath, handleGitHubSync]);
+
+  // Silent auto-save that doesn't update UI state (prevents lag during typing)
+  const handleSilentAutoSave = useCallback(async () => {
+    if (saveService.isSaveInProgress()) {
+      return;
+    }
+
+    const result = await saveService.saveBookData({
+      book,
+      currentFilePath,
+      onSaveStart: () => {
+        // Silent - no UI update
+      },
+      onSaveEnd: () => {
+        // Silent - no UI update
+      },
+      onSaveSuccess: filePath => {
+        setCurrentFilePath(filePath);
+        setHasUnsavedChanges(false);
+
+        // Handle GitHub sync if configured - also silent
+        if (gitHubSyncService.shouldSyncToGitHub(book)) {
+          const saveTime = new Date().toISOString();
+          // Silent sync - no operation updates
+          gitHubSyncService.syncWithGitHub({
+            bookData: book,
+            filePath,
+            saveTime,
+            onOperationUpdate: () => {}, // No-op to prevent UI updates
+            onSyncSuccess: syncTime => {
+              updateGitHubSyncStatus({ lastSyncTime: syncTime });
+            },
+            onSyncError: () => {} // Silent - errors only logged to console
+          });
+        }
+      },
+      onSaveError: error => {
+        console.error('Auto-save failed:', error);
+        // Silent - no alert
+      },
+      onOperationUpdate: () => {
+        // Silent - no UI update
+      }
+    });
+
+    return result;
+  }, [book, currentFilePath, updateGitHubSyncStatus]);
+
+  // Update refs synchronously after save handlers are defined
+  hasUnsavedChangesRef.current = hasUnsavedChanges;
+  currentFilePathRef.current = currentFilePath;
+  handleSaveBookRef.current = handleSaveBook;
+  const handleSilentAutoSaveRef = useRef(handleSilentAutoSave);
+  handleSilentAutoSaveRef.current = handleSilentAutoSave;
+
+  // Auto-save: Interval-based approach using refs to access current state
+  // Uses silent save to prevent UI lag during typing
+  useEffect(() => {
+    const autoSaveInterval = setInterval(() => {
+      // Use refs to access current values without causing re-runs
+      if (
+        hasUnsavedChangesRef.current &&
+        currentFilePathRef.current &&
+        !saveService.isSaveInProgress()
+      ) {
+        console.log('Auto-saving silently...');
+        handleSilentAutoSaveRef.current();
+      }
+    }, 3000); // Check every 3 seconds
+
+    return () => clearInterval(autoSaveInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - interval runs independently, but refs always have current values
 
   const _handleSaveAsBook = useCallback(async () => {
     if (saveService.isSaveInProgress()) {

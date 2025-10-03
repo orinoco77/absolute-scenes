@@ -68,7 +68,8 @@ describe('SceneEditor Component', () => {
     });
   });
 
-  test('updates content correctly', () => {
+  test('updates content correctly', async () => {
+    jest.useFakeTimers();
     render(
       <SceneEditor
         scene={scene}
@@ -81,9 +82,15 @@ describe('SceneEditor Component', () => {
     );
 
     fireEvent.change(contentTextarea, { target: { value: 'New Content' } });
+
+    // Content is debounced by 300ms
+    jest.advanceTimersByTime(300);
+
     expect(onSceneUpdate).toHaveBeenCalledWith(scene.id, {
       content: 'New Content'
     });
+
+    jest.useRealTimers();
   });
 
   test('updates notes correctly', () => {

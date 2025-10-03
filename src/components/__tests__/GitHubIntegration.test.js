@@ -180,7 +180,7 @@ describe('GitHubIntegration', () => {
           screen.getByText('Step 1: Create Access Token')
         ).toBeInTheDocument();
         expect(
-          screen.getByText(/Don't change anything on the GitHub page!/)
+          screen.getByText(/All permissions are pre-configured/)
         ).toBeInTheDocument();
       });
     });

@@ -11,6 +11,7 @@ class GitHubService {
     this.isElectron =
       typeof window !== 'undefined' && typeof window.require === 'function';
     this._hasCheckedStoredAuth = false; // Track if we've tried loading stored auth
+    this.fileShaCache = new Map(); // Cache SHA values per file to avoid conflicts
   }
 
   /**
@@ -70,7 +71,31 @@ class GitHubService {
     this.token = null;
     this.userInfo = null;
     this._hasCheckedStoredAuth = false; // Reset so we can check again later
+    this.fileShaCache.clear(); // Clear cached SHAs when auth changes
     localStorage.removeItem('github_auth');
+  }
+
+  /**
+   * Handle authentication errors with helpful user guidance
+   */
+  handleAuthError(error, response = null) {
+    // If it's a 401 error, it's likely an expired or invalid token
+    if (response?.status === 401 || error.message?.includes('401')) {
+      // Clear the stored auth since it's no longer valid
+      this.clearAuth();
+
+      throw new Error(
+        '🔑 Your GitHub token has expired or is invalid.\n\n' +
+          'To fix this:\n' +
+          '1. Click "Set Up GitHub Sync" to create a new token\n' +
+          '2. Set expiration to "No expiration" (for long-term use)\n' +
+          '3. Click "Generate token" and copy it\n\n' +
+          'The "repo" permission is already selected for you!'
+      );
+    }
+
+    // Re-throw other errors as-is
+    throw error;
   }
 
   /**
@@ -85,20 +110,17 @@ class GitHubService {
 
     const { shell } = window.require('electron');
 
-    // Create a unique token name with timestamp to avoid conflicts
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[:.]/g, '-')
-      .slice(0, 19);
-    const tokenName = `AbsoluteScenes-Book-Writer-${timestamp}`;
-    const tokenDescription = `Token for AbsoluteScenes Book Writer App (Created: ${new Date().toLocaleString()})`;
+    // Create a descriptive token name
+    const tokenDescription = `Absolute Scenes - Book Writing App (Created: ${new Date().toLocaleString()})`;
 
-    // Open GitHub token creation page with pre-filled settings and unique name
+    // Use classic personal access tokens because they support URL parameters
+    // to preset the scopes and settings - makes it easier for non-technical users
+    // Classic tokens can also be set to "no expiration" just like fine-grained tokens
     const tokenUrl =
       'https://github.com/settings/tokens/new?' +
-      'scopes=repo,user:email&' +
-      `description=${encodeURIComponent(tokenDescription)}&` +
-      `note=${encodeURIComponent(tokenName)}`;
+      `scopes=repo&` + // Preset 'repo' scope for full repository access
+      `description=${encodeURIComponent(tokenDescription)}`;
+    // Note: GitHub doesn't support setting expiration via URL, but we'll guide users to select "No expiration" in the UI
 
     await shell.openExternal(tokenUrl);
     return true;
@@ -108,7 +130,11 @@ class GitHubService {
    * Validate and setup GitHub token
    */
   async validateAndSetupToken(token) {
-    if (!token || !token.startsWith('ghp_')) {
+    // Accept both classic (ghp_) and fine-grained (github_pat_) tokens for flexibility
+    if (
+      !token ||
+      !(token.startsWith('ghp_') || token.startsWith('github_pat_'))
+    ) {
       throw new Error(
         'Please enter a valid GitHub personal access token (starts with "ghp_")'
       );
@@ -127,11 +153,11 @@ class GitHubService {
       if (!response.ok) {
         if (response.status === 401) {
           throw new Error(
-            'Invalid token. Please check that you copied it correctly.'
+            'Invalid or expired token. Please create a new token with "No expiration" selected.'
           );
         } else if (response.status === 403) {
           throw new Error(
-            'Token lacks required permissions. Please ensure "repo" and "user:email" scopes are selected.'
+            'Token lacks required permissions. Please ensure the "repo" scope is checked when creating the token.'
           );
         } else {
           throw new Error(`GitHub API error: ${response.status}`);
@@ -407,34 +433,42 @@ class GitHubService {
         .replace(/\r/g, '\n');
       const fileName = filename;
 
-      // Get current file (if exists) to get SHA for update
-      let fileSha = null;
-      try {
-        const fileResponse = await fetch(
-          `https://api.github.com/repos/${repo.full_name}/contents/${fileName}`,
-          {
-            headers: {
-              Authorization: `Bearer ${this.token}`,
-              Accept: 'application/vnd.github.v3+json',
-              'User-Agent': 'AbsoluteScenes-BookWriter'
-            }
-          }
-        );
+      // Get current file SHA - use cached value if available to avoid conflicts
+      const cacheKey = `${repo.full_name}/${fileName}`;
+      let fileSha = this.fileShaCache.get(cacheKey);
 
-        if (fileResponse.ok) {
-          const fileData = await fileResponse.json();
-          fileSha = fileData.sha;
-        } else if (fileResponse.status === 404) {
-          // File doesn't exist yet - this is expected for new files
-          console.log(`Creating new file: ${fileName}`);
-        } else {
-          console.warn(
-            `Unexpected response when checking for existing file: ${fileResponse.status}`
+      // If no cached SHA, fetch it from GitHub
+      if (!fileSha) {
+        try {
+          const fileResponse = await fetch(
+            `https://api.github.com/repos/${repo.full_name}/contents/${fileName}`,
+            {
+              headers: {
+                Authorization: `Bearer ${this.token}`,
+                Accept: 'application/vnd.github.v3+json',
+                'User-Agent': 'AbsoluteScenes-BookWriter'
+              }
+            }
           );
+
+          if (fileResponse.ok) {
+            const fileData = await fileResponse.json();
+            fileSha = fileData.sha;
+            this.fileShaCache.set(cacheKey, fileSha);
+          } else if (fileResponse.status === 404) {
+            // File doesn't exist yet - this is expected for new files
+            console.log(`Creating new file: ${fileName}`);
+          } else {
+            console.warn(
+              `Unexpected response when checking for existing file: ${fileResponse.status}`
+            );
+          }
+        } catch (error) {
+          // Network error or other issue - proceed without SHA (will create new file)
+          console.log(`File check failed, creating new file: ${fileName}`);
         }
-      } catch (error) {
-        // Network error or other issue - proceed without SHA (will create new file)
-        console.log(`File check failed, creating new file: ${fileName}`);
+      } else {
+        console.log(`Using cached SHA for ${fileName}`);
       }
 
       // Create or update file
@@ -464,12 +498,31 @@ class GitHubService {
 
       if (!response.ok) {
         const error = await response.json();
+
+        // Handle auth errors specially with helpful guidance
+        if (response.status === 401) {
+          this.handleAuthError(new Error('Authentication failed'), response);
+        }
+
+        // On 409 conflict, clear the cached SHA so we fetch fresh on retry
+        if (response.status === 409) {
+          console.log('Conflict detected, clearing cached SHA for', fileName);
+          this.fileShaCache.delete(cacheKey);
+        }
+
         throw new Error(
           error.message || `Failed to save to repository: ${response.status}`
         );
       }
 
       const result = await response.json();
+
+      // Update cached SHA with the new one from the response
+      if (result.content && result.content.sha) {
+        this.fileShaCache.set(cacheKey, result.content.sha);
+        console.log('Updated cached SHA for', fileName);
+      }
+
       console.log('Saved to repository:', result.commit.html_url);
       return result;
     } catch (error) {
