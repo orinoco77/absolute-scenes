@@ -268,13 +268,13 @@ describe('GitHubService', () => {
         expect.stringContaining('https://github.com/settings/tokens/new?')
       );
       expect(mockShell.openExternal).toHaveBeenCalledWith(
-        expect.stringContaining('scopes=repo,user:email')
+        expect.stringContaining('scopes=repo')
       );
     });
   });
 
   describe('validateAndSetupToken', () => {
-    it('validates and sets up valid GitHub token', async () => {
+    it('validates and sets up valid classic GitHub token', async () => {
       const mockUserData = { login: 'testuser', id: 123, name: 'Test User' };
       fetch.mockResolvedValueOnce({
         ok: true,
@@ -296,6 +296,25 @@ describe('GitHubService', () => {
           'User-Agent': 'AbsoluteScenes-BookWriter'
         }
       });
+    });
+
+    it('validates and sets up valid fine-grained GitHub token', async () => {
+      const mockUserData = { login: 'testuser', id: 123, name: 'Test User' };
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockUserData)
+      });
+      jest.spyOn(service, 'storeAuth');
+
+      const result = await service.validateAndSetupToken(
+        'github_pat_validtoken123'
+      );
+
+      expect(result).toEqual(mockUserData);
+      expect(service.storeAuth).toHaveBeenCalledWith(
+        'github_pat_validtoken123',
+        mockUserData
+      );
     });
 
     it('throws error for invalid token format', async () => {
@@ -321,7 +340,7 @@ describe('GitHubService', () => {
       await expect(
         service.validateAndSetupToken('ghp_invalidtoken')
       ).rejects.toThrow(
-        'Invalid token. Please check that you copied it correctly.'
+        'Invalid or expired token. Please create a new token with "No expiration" selected.'
       );
     });
 
@@ -334,7 +353,7 @@ describe('GitHubService', () => {
       await expect(
         service.validateAndSetupToken('ghp_limitedtoken')
       ).rejects.toThrow(
-        'Token lacks required permissions. Please ensure "repo" and "user:email" scopes are selected.'
+        'Token lacks required permissions. Please ensure the "repo" scope is checked when creating the token.'
       );
     });
 

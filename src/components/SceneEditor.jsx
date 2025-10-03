@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import DistractionFreeMode from './DistractionFreeMode';
 import TextEditor from './TextEditor';
 
@@ -10,6 +10,14 @@ function SceneEditor({
 }) {
   const textareaRef = useRef(null);
   const [isDistractionFree, setIsDistractionFree] = useState(false);
+  const [localContent, setLocalContent] = useState(scene?.content || '');
+  const contentUpdateTimerRef = useRef(null);
+
+  // Sync local content when scene changes
+  useEffect(() => {
+    setLocalContent(scene?.content || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene?.id]); // Only update when scene ID changes, not content
 
   // Helper function to enter distraction-free mode
   const enterDistractionFree = () => {
@@ -68,6 +76,34 @@ function SceneEditor({
     }
   };
 
+  // Debounced content update (must be before early return)
+  const handleContentChange = useCallback(
+    e => {
+      const newContent = e.target.value;
+      setLocalContent(newContent); // Update local state immediately for responsive typing
+
+      // Clear any existing timer
+      if (contentUpdateTimerRef.current) {
+        clearTimeout(contentUpdateTimerRef.current);
+      }
+
+      // Debounce the actual book state update
+      contentUpdateTimerRef.current = setTimeout(() => {
+        onSceneUpdate(scene.id, { content: newContent });
+      }, 300); // Update book state 300ms after user stops typing
+    },
+    [scene?.id, onSceneUpdate]
+  );
+
+  // Cleanup timer on unmount (must be before early return)
+  useEffect(() => {
+    return () => {
+      if (contentUpdateTimerRef.current) {
+        clearTimeout(contentUpdateTimerRef.current);
+      }
+    };
+  }, []);
+
   if (!scene) {
     return (
       <div className="scene-editor">
@@ -80,10 +116,6 @@ function SceneEditor({
 
   const handleTitleChange = e => {
     onSceneUpdate(scene.id, { title: e.target.value });
-  };
-
-  const handleContentChange = e => {
-    onSceneUpdate(scene.id, { content: e.target.value });
   };
 
   const handleKeyDown = e => {
@@ -266,7 +298,7 @@ function SceneEditor({
         <div className="scene-editor-textarea">
           <TextEditor
             ref={textareaRef}
-            value={scene.content}
+            value={localContent}
             onChange={handleContentChange}
             onKeyDown={handleKeyDown}
             placeholder="Start writing your scene here..."

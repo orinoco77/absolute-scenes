@@ -556,7 +556,8 @@ function GitHubIntegration({
                       fontWeight: 'bold'
                     }}
                   >
-                    💡 Important: Don't change anything on the GitHub page!
+                    💡 Important: All permissions are pre-configured! Just
+                    follow these 3 simple steps:
                   </div>
                   <ol
                     style={{
@@ -566,15 +567,25 @@ function GitHubIntegration({
                     }}
                   >
                     <li>
-                      ✅ All settings are pre-configured perfectly for you
+                      📅 <strong>Expiration:</strong> Set to "No expiration"
+                      (recommended for book writing)
                     </li>
-                    <li>
-                      📅 The expiration date is optional ("No expiration" is
-                      fine)
-                    </li>
-                    <li>🟢 Simply scroll down and click "Generate token"</li>
-                    <li>📋 Copy the token that appears (starts with "ghp_")</li>
+                    <li>🟢 Scroll down and click "Generate token"</li>
+                    <li>📋 Copy the token (starts with "ghp_")</li>
                   </ol>
+                  <div
+                    className="github-setup-note"
+                    style={{
+                      padding: '12px',
+                      borderRadius: '4px',
+                      marginTop: '12px',
+                      fontSize: '13px',
+                      backgroundColor: 'var(--color-background-tertiary)'
+                    }}
+                  >
+                    ℹ️ The "repo" permission is already selected - this gives
+                    Absolute Scenes access to save your book files.
+                  </div>
                   <div
                     className="github-reconnect-tip"
                     style={{
