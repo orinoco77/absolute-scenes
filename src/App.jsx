@@ -53,9 +53,11 @@ function App() {
     addScene,
     deleteScene,
     moveSceneBetweenChapters,
+    reorderScenesInChapter,
     updateChapter,
     addChapter,
     deleteChapter,
+    reorderChapters,
     updateCharacter,
     addCharacter,
     deleteCharacter,
@@ -65,9 +67,11 @@ function App() {
     addPart,
     updatePart,
     deletePart,
+    reorderParts,
     moveChapterToPart,
     addChapterToPart,
     removeChapterFromPart,
+    reorderChaptersInPart,
     addDocument,
     updateDocument,
     deleteDocument,
@@ -1237,10 +1241,22 @@ function App() {
           onSceneUpdate={contentHandlers.scene.update}
           onChapterUpdate={contentHandlers.chapter.update}
           onPartUpdate={contentHandlers.part.update}
-          onReorderChapters={() => {}} // TODO: Implement reordering
-          onReorderParts={() => {}} // TODO: Implement reordering
-          onReorderChaptersInPart={() => {}} // TODO: Implement reordering
-          onReorderScenesInChapter={() => {}} // TODO: Implement reordering
+          onReorderChapters={(fromIndex, toIndex) => {
+            reorderChapters(fromIndex, toIndex);
+            markAsChanged();
+          }}
+          onReorderParts={(fromIndex, toIndex) => {
+            reorderParts(fromIndex, toIndex);
+            markAsChanged();
+          }}
+          onReorderChaptersInPart={(partId, fromIndex, toIndex) => {
+            reorderChaptersInPart(partId, fromIndex, toIndex);
+            markAsChanged();
+          }}
+          onReorderScenesInChapter={(chapterId, fromIndex, toIndex) => {
+            reorderScenesInChapter(chapterId, fromIndex, toIndex);
+            markAsChanged();
+          }}
           onMoveSceneBetweenChapters={(sceneId, fromChapterId, toChapterId) => {
             moveSceneBetweenChapters(sceneId, fromChapterId, toChapterId);
             markAsChanged();
