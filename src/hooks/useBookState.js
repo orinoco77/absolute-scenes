@@ -267,6 +267,29 @@ export const useBookState = (initialBook = null) => {
     [setBook]
   );
 
+  const reorderScenesInChapter = useCallback(
+    (chapterId, fromIndex, toIndex) => {
+      setBook(prev => {
+        const updatedChapters = prev.chapters.map(chapter => {
+          if (chapter.id === chapterId) {
+            const scenes = [...chapter.scenes];
+            const [movedScene] = scenes.splice(fromIndex, 1);
+            scenes.splice(toIndex, 0, movedScene);
+            return { ...chapter, scenes };
+          }
+          return chapter;
+        });
+
+        return {
+          ...prev,
+          chapters: updatedChapters,
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        };
+      });
+    },
+    [setBook]
+  );
+
   // Chapter operations
   const updateChapter = useCallback(
     (chapterId, updates) => {
@@ -310,6 +333,23 @@ export const useBookState = (initialBook = null) => {
         return {
           ...prev,
           chapters: prev.chapters.filter(ch => ch.id !== chapterId),
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        };
+      });
+    },
+    [setBook]
+  );
+
+  const reorderChapters = useCallback(
+    (fromIndex, toIndex) => {
+      setBook(prev => {
+        const chapters = [...prev.chapters];
+        const [movedChapter] = chapters.splice(fromIndex, 1);
+        chapters.splice(toIndex, 0, movedChapter);
+
+        return {
+          ...prev,
+          chapters,
           metadata: { ...prev.metadata, modified: new Date().toISOString() }
         };
       });
@@ -467,6 +507,23 @@ export const useBookState = (initialBook = null) => {
     [setBook]
   );
 
+  const reorderParts = useCallback(
+    (fromIndex, toIndex) => {
+      setBook(prev => {
+        const parts = [...prev.parts];
+        const [movedPart] = parts.splice(fromIndex, 1);
+        parts.splice(toIndex, 0, movedPart);
+
+        return {
+          ...prev,
+          parts,
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        };
+      });
+    },
+    [setBook]
+  );
+
   // Chapter-to-part operations
   const moveChapterToPart = useCallback(
     (chapterId, fromPartId, toPartId) => {
@@ -539,6 +596,29 @@ export const useBookState = (initialBook = null) => {
               ...part,
               chapterIds: part.chapterIds.filter(id => id !== chapterId)
             };
+          }
+          return part;
+        });
+
+        return {
+          ...prev,
+          parts: newParts,
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        };
+      });
+    },
+    [setBook]
+  );
+
+  const reorderChaptersInPart = useCallback(
+    (partId, fromIndex, toIndex) => {
+      setBook(prev => {
+        const newParts = prev.parts.map(part => {
+          if (part.id === partId) {
+            const chapterIds = [...part.chapterIds];
+            const [movedChapterId] = chapterIds.splice(fromIndex, 1);
+            chapterIds.splice(toIndex, 0, movedChapterId);
+            return { ...part, chapterIds };
           }
           return part;
         });
@@ -956,9 +1036,11 @@ export const useBookState = (initialBook = null) => {
     addScene,
     deleteScene,
     moveSceneBetweenChapters,
+    reorderScenesInChapter,
     updateChapter,
     addChapter,
     deleteChapter,
+    reorderChapters,
     updateCharacter,
     addCharacter,
     deleteCharacter,
@@ -968,9 +1050,11 @@ export const useBookState = (initialBook = null) => {
     addPart,
     updatePart,
     deletePart,
+    reorderParts,
     moveChapterToPart,
     addChapterToPart,
     removeChapterFromPart,
+    reorderChaptersInPart,
     addDocument,
     updateDocument,
     deleteDocument,
