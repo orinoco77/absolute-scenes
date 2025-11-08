@@ -140,9 +140,9 @@ function App() {
     backgroundRecycleBin,
     setRecycleBin,
     setShowRecycleBin,
-    // setCharacterRecycleBin, // Reserved for future use
-    // setLocationRecycleBin, // Reserved for future use
-    // setBackgroundRecycleBin, // Reserved for future use
+    setCharacterRecycleBin,
+    setLocationRecycleBin,
+    setBackgroundRecycleBin,
     currentFilePath,
     hasUnsavedChanges,
     isSaving,
@@ -741,6 +741,198 @@ function App() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Recycle bin handlers
+  const restoreFromRecycleBin = useCallback(
+    recycleBinItemId => {
+      const item = recycleBin.find(i => i.id === recycleBinItemId);
+      if (!item) return;
+
+      if (item.type === 'scene') {
+        // Restore scene to its original chapter at original position
+        const chapter = book.chapters.find(
+          ch => ch.id === item.originalChapterId
+        );
+        if (chapter) {
+          setBook(prev => ({
+            ...prev,
+            chapters: prev.chapters.map(ch => {
+              if (ch.id === item.originalChapterId) {
+                const newScenes = [...ch.scenes];
+                // Insert at original position, or at end if position is out of bounds
+                const insertPosition = Math.min(
+                  item.originalPosition ?? newScenes.length,
+                  newScenes.length
+                );
+                newScenes.splice(insertPosition, 0, item.item);
+                return { ...ch, scenes: newScenes };
+              }
+              return ch;
+            }),
+            metadata: { ...prev.metadata, modified: new Date().toISOString() }
+          }));
+          markAsChanged();
+        }
+      } else if (item.type === 'chapter') {
+        // Restore chapter
+        setBook(prev => ({
+          ...prev,
+          chapters: [...prev.chapters, item.item],
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        }));
+        markAsChanged();
+      } else if (item.type === 'part') {
+        // Restore part
+        setBook(prev => ({
+          ...prev,
+          parts: [...prev.parts, item.item],
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        }));
+        markAsChanged();
+      }
+
+      // Remove from recycle bin
+      setRecycleBin(prev => prev.filter(i => i.id !== recycleBinItemId));
+    },
+    [recycleBin, book, setBook, setRecycleBin, markAsChanged]
+  );
+
+  const permanentlyDeleteFromRecycleBin = useCallback(
+    recycleBinItemId => {
+      setRecycleBin(prev => prev.filter(i => i.id !== recycleBinItemId));
+    },
+    [setRecycleBin]
+  );
+
+  const restoreCharacterFromRecycleBin = useCallback(
+    recycleBinItemId => {
+      const item = characterRecycleBin.find(i => i.id === recycleBinItemId);
+      if (!item) return;
+
+      // Restore character
+      setBook(prev => ({
+        ...prev,
+        characters: [...prev.characters, item.item],
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+      markAsChanged();
+
+      // Remove from recycle bin
+      setCharacterRecycleBin(prev =>
+        prev.filter(i => i.id !== recycleBinItemId)
+      );
+    },
+    [characterRecycleBin, setBook, setCharacterRecycleBin, markAsChanged]
+  );
+
+  const permanentlyDeleteCharacterFromRecycleBin = useCallback(
+    recycleBinItemId => {
+      setCharacterRecycleBin(prev =>
+        prev.filter(i => i.id !== recycleBinItemId)
+      );
+    },
+    [setCharacterRecycleBin]
+  );
+
+  const restoreLocationFromRecycleBin = useCallback(
+    recycleBinItemId => {
+      const item = locationRecycleBin.find(i => i.id === recycleBinItemId);
+      if (!item) return;
+
+      // Restore location
+      setBook(prev => ({
+        ...prev,
+        locations: [...prev.locations, item.item],
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+      markAsChanged();
+
+      // Remove from recycle bin
+      setLocationRecycleBin(prev =>
+        prev.filter(i => i.id !== recycleBinItemId)
+      );
+    },
+    [locationRecycleBin, setBook, setLocationRecycleBin, markAsChanged]
+  );
+
+  const permanentlyDeleteLocationFromRecycleBin = useCallback(
+    recycleBinItemId => {
+      setLocationRecycleBin(prev =>
+        prev.filter(i => i.id !== recycleBinItemId)
+      );
+    },
+    [setLocationRecycleBin]
+  );
+
+  const restoreBackgroundFromRecycleBin = useCallback(
+    recycleBinItemId => {
+      const item = backgroundRecycleBin.find(i => i.id === recycleBinItemId);
+      if (!item) return;
+
+      if (item.type === 'document') {
+        // Try to restore document to its original folder
+        const originalFolder = book.backgroundFolders.find(
+          f => f.id === item.originalFolderId
+        );
+
+        if (originalFolder) {
+          // Original folder still exists - restore to original position
+          setBook(prev => ({
+            ...prev,
+            backgroundFolders: prev.backgroundFolders.map(folder => {
+              if (folder.id === item.originalFolderId) {
+                const newDocuments = [...folder.documents];
+                // Insert at original position, or at end if position is out of bounds
+                const insertPosition = Math.min(
+                  item.originalPosition ?? newDocuments.length,
+                  newDocuments.length
+                );
+                newDocuments.splice(insertPosition, 0, item.item);
+                return { ...folder, documents: newDocuments };
+              }
+              return folder;
+            }),
+            metadata: { ...prev.metadata, modified: new Date().toISOString() }
+          }));
+          markAsChanged();
+        } else if (book.backgroundFolders.length > 0) {
+          // Original folder was deleted - restore to first available folder
+          const firstFolder = book.backgroundFolders[0];
+          setBook(prev => ({
+            ...prev,
+            backgroundFolders: prev.backgroundFolders.map(folder =>
+              folder.id === firstFolder.id
+                ? { ...folder, documents: [...folder.documents, item.item] }
+                : folder
+            ),
+            metadata: { ...prev.metadata, modified: new Date().toISOString() }
+          }));
+          markAsChanged();
+        }
+      }
+
+      // Remove from recycle bin
+      setBackgroundRecycleBin(prev =>
+        prev.filter(i => i.id !== recycleBinItemId)
+      );
+    },
+    [
+      backgroundRecycleBin,
+      book,
+      setBook,
+      setBackgroundRecycleBin,
+      markAsChanged
+    ]
+  );
+
+  const permanentlyDeleteBackgroundFromRecycleBin = useCallback(
+    recycleBinItemId => {
+      setBackgroundRecycleBin(prev =>
+        prev.filter(i => i.id !== recycleBinItemId)
+      );
+    },
+    [setBackgroundRecycleBin]
+  );
+
   // Content handlers (following Interface Segregation Principle)
   const contentHandlers = useMemo(
     () => ({
@@ -755,6 +947,39 @@ function App() {
           markAsChanged();
         },
         delete: sceneId => {
+          // Find the scene and chapter before deleting
+          let sceneToDelete = null;
+          let chapterTitle = '';
+          let chapterId = '';
+          let sceneIndex = -1;
+
+          for (const chapter of book.chapters) {
+            const index = chapter.scenes.findIndex(s => s.id === sceneId);
+            if (index !== -1) {
+              sceneToDelete = chapter.scenes[index];
+              chapterTitle = chapter.title;
+              chapterId = chapter.id;
+              sceneIndex = index;
+              break;
+            }
+          }
+
+          if (sceneToDelete) {
+            // Add to recycle bin
+            setRecycleBin(prev => [
+              ...prev,
+              {
+                id: `scene-${sceneId}-${Date.now()}`,
+                type: 'scene',
+                item: sceneToDelete,
+                originalChapterId: chapterId,
+                originalChapterTitle: chapterTitle,
+                originalPosition: sceneIndex,
+                deletedAt: new Date().toISOString()
+              }
+            ]);
+          }
+
           deleteScene(sceneId);
           markAsChanged();
           if (currentSceneId === sceneId) {
@@ -773,6 +998,22 @@ function App() {
           markAsChanged();
         },
         delete: chapterId => {
+          // Find the chapter before deleting
+          const chapterToDelete = book.chapters.find(ch => ch.id === chapterId);
+
+          if (chapterToDelete) {
+            // Add to recycle bin
+            setRecycleBin(prev => [
+              ...prev,
+              {
+                id: `chapter-${chapterId}-${Date.now()}`,
+                type: 'chapter',
+                item: chapterToDelete,
+                deletedAt: new Date().toISOString()
+              }
+            ]);
+          }
+
           deleteChapter(chapterId);
           markAsChanged();
           if (currentChapterId === chapterId) {
@@ -793,6 +1034,23 @@ function App() {
           markAsChanged();
         },
         delete: characterId => {
+          // Find the character before deleting
+          const characterToDelete = book.characters.find(
+            ch => ch.id === characterId
+          );
+
+          if (characterToDelete) {
+            // Add to character recycle bin
+            setCharacterRecycleBin(prev => [
+              ...prev,
+              {
+                id: `character-${characterId}-${Date.now()}`,
+                item: characterToDelete,
+                deletedAt: new Date().toISOString()
+              }
+            ]);
+          }
+
           deleteCharacter(characterId);
           markAsChanged();
           if (currentCharacterId === characterId) {
@@ -811,6 +1069,23 @@ function App() {
           markAsChanged();
         },
         delete: locationId => {
+          // Find the location before deleting
+          const locationToDelete = book.locations.find(
+            loc => loc.id === locationId
+          );
+
+          if (locationToDelete) {
+            // Add to location recycle bin
+            setLocationRecycleBin(prev => [
+              ...prev,
+              {
+                id: `location-${locationId}-${Date.now()}`,
+                item: locationToDelete,
+                deletedAt: new Date().toISOString()
+              }
+            ]);
+          }
+
           deleteLocation(locationId);
           markAsChanged();
           if (currentLocationId === locationId) {
@@ -829,6 +1104,22 @@ function App() {
           markAsChanged();
         },
         delete: partId => {
+          // Find the part before deleting
+          const partToDelete = book.parts.find(p => p.id === partId);
+
+          if (partToDelete) {
+            // Add to recycle bin
+            setRecycleBin(prev => [
+              ...prev,
+              {
+                id: `part-${partId}-${Date.now()}`,
+                type: 'part',
+                item: partToDelete,
+                deletedAt: new Date().toISOString()
+              }
+            ]);
+          }
+
           deletePart(partId);
           markAsChanged();
           if (currentPartId === partId) {
@@ -847,6 +1138,41 @@ function App() {
           markAsChanged();
         },
         delete: documentId => {
+          // Find the document before deleting
+          let documentToDelete = null;
+          let folderTitle = '';
+          let folderId = '';
+          let documentIndex = -1;
+
+          for (const folder of book.backgroundFolders) {
+            const docIndex = folder.documents.findIndex(
+              d => d.id === documentId
+            );
+            if (docIndex !== -1) {
+              documentToDelete = folder.documents[docIndex];
+              folderTitle = folder.title;
+              folderId = folder.id;
+              documentIndex = docIndex;
+              break;
+            }
+          }
+
+          if (documentToDelete) {
+            // Add to background recycle bin
+            setBackgroundRecycleBin(prev => [
+              ...prev,
+              {
+                id: `document-${documentId}-${Date.now()}`,
+                type: 'document',
+                item: documentToDelete,
+                originalFolderId: folderId,
+                originalFolderTitle: folderTitle,
+                originalPosition: documentIndex,
+                deletedAt: new Date().toISOString()
+              }
+            ]);
+          }
+
           deleteDocument(documentId);
           markAsChanged();
           if (currentDocumentId === documentId) {
@@ -947,6 +1273,10 @@ function App() {
       deleteIllustration,
       currentIllustrationId,
       setCurrentIllustrationId,
+      setRecycleBin,
+      setCharacterRecycleBin,
+      setLocationRecycleBin,
+      setBackgroundRecycleBin,
       markAsChanged
     ]
   );
@@ -1276,8 +1606,8 @@ function App() {
           recycleBin={recycleBin}
           showRecycleBin={showRecycleBin}
           onToggleRecycleBin={() => setShowRecycleBin(!showRecycleBin)}
-          onRestoreFromRecycleBin={() => {}} // TODO: Implement restore
-          onPermanentlyDelete={() => {}} // TODO: Implement permanent delete
+          onRestoreFromRecycleBin={restoreFromRecycleBin}
+          onPermanentlyDelete={permanentlyDeleteFromRecycleBin}
           onEmptyRecycleBin={() => setRecycleBin([])}
           characters={book.characters}
           currentCharacterId={currentCharacterId}
@@ -1286,8 +1616,10 @@ function App() {
           onCharacterDelete={contentHandlers.character.delete}
           onCharacterUpdate={contentHandlers.character.update}
           characterRecycleBin={characterRecycleBin}
-          onRestoreCharacterFromRecycleBin={() => {}} // TODO: Implement restore
-          onPermanentlyDeleteCharacter={() => {}} // TODO: Implement permanent delete
+          onRestoreCharacterFromRecycleBin={restoreCharacterFromRecycleBin}
+          onPermanentlyDeleteCharacter={
+            permanentlyDeleteCharacterFromRecycleBin
+          }
           characterDetectionBlacklist={book.characterDetectionBlacklist}
           onUpdateCharacterDetectionBlacklist={blacklist => {
             setBook(prev => ({
@@ -1312,8 +1644,10 @@ function App() {
           onReorderDocumentsInFolder={() => {}}
           onMoveDocumentBetweenFolders={() => {}}
           backgroundRecycleBin={backgroundRecycleBin}
-          onRestoreBackgroundFromRecycleBin={() => {}} // TODO: Implement restore
-          onPermanentlyDeleteBackground={() => {}} // TODO: Implement permanent delete
+          onRestoreBackgroundFromRecycleBin={restoreBackgroundFromRecycleBin}
+          onPermanentlyDeleteBackground={
+            permanentlyDeleteBackgroundFromRecycleBin
+          }
           locations={book.locations}
           currentLocationId={currentLocationId}
           onLocationSelect={setCurrentLocationId}
@@ -1321,8 +1655,8 @@ function App() {
           onLocationDelete={contentHandlers.location.delete}
           onLocationUpdate={contentHandlers.location.update}
           locationRecycleBin={locationRecycleBin}
-          onRestoreLocationFromRecycleBin={() => {}} // TODO: Implement restore
-          onPermanentlyDeleteLocation={() => {}} // TODO: Implement permanent delete
+          onRestoreLocationFromRecycleBin={restoreLocationFromRecycleBin}
+          onPermanentlyDeleteLocation={permanentlyDeleteLocationFromRecycleBin}
           frontMatter={book.frontMatter}
           currentFrontMatterId={currentFrontMatterId}
           onFrontMatterSelect={setCurrentFrontMatterId}
