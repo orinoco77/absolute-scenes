@@ -293,8 +293,12 @@ async function generateHTML(book, options = {}) {
     const sortedFrontMatter = sortFrontMatter(book.frontMatter);
 
     sortedFrontMatter.forEach(frontMatterItem => {
-      if (!frontMatterItem.content || !frontMatterItem.content.trim()) {
-        return; // Skip empty front matter items
+      if (
+        !frontMatterItem.enabled ||
+        !frontMatterItem.content ||
+        !frontMatterItem.content.trim()
+      ) {
+        return; // Skip disabled or empty front matter items
       }
 
       content += `<div class="front-matter ${frontMatterItem.type}">`;

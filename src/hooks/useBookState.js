@@ -785,6 +785,35 @@ export const useBookState = (initialBook = null) => {
     [setBook]
   );
 
+  const toggleFrontMatter = useCallback(
+    (frontMatterId, enabled) => {
+      setBook(prev => ({
+        ...prev,
+        frontMatter: prev.frontMatter.map(fm =>
+          fm.id === frontMatterId ? { ...fm, enabled } : fm
+        ),
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+    },
+    [setBook]
+  );
+
+  const reorderFrontMatter = useCallback(
+    (fromIndex, toIndex) => {
+      setBook(prev => {
+        const frontMatter = [...prev.frontMatter];
+        const [movedItem] = frontMatter.splice(fromIndex, 1);
+        frontMatter.splice(toIndex, 0, movedItem);
+        return {
+          ...prev,
+          frontMatter,
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        };
+      });
+    },
+    [setBook]
+  );
+
   // Back matter operations
   const addBackMatter = useCallback(
     backMatterItem => {
@@ -819,6 +848,35 @@ export const useBookState = (initialBook = null) => {
         ),
         metadata: { ...prev.metadata, modified: new Date().toISOString() }
       }));
+    },
+    [setBook]
+  );
+
+  const toggleBackMatter = useCallback(
+    (backMatterId, enabled) => {
+      setBook(prev => ({
+        ...prev,
+        backMatter: (prev.backMatter || []).map(bm =>
+          bm.id === backMatterId ? { ...bm, enabled } : bm
+        ),
+        metadata: { ...prev.metadata, modified: new Date().toISOString() }
+      }));
+    },
+    [setBook]
+  );
+
+  const reorderBackMatter = useCallback(
+    (fromIndex, toIndex) => {
+      setBook(prev => {
+        const backMatter = [...(prev.backMatter || [])];
+        const [movedItem] = backMatter.splice(fromIndex, 1);
+        backMatter.splice(toIndex, 0, movedItem);
+        return {
+          ...prev,
+          backMatter,
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        };
+      });
     },
     [setBook]
   );
@@ -1064,9 +1122,13 @@ export const useBookState = (initialBook = null) => {
     addFrontMatter,
     updateFrontMatter,
     deleteFrontMatter,
+    toggleFrontMatter,
+    reorderFrontMatter,
     addBackMatter,
     updateBackMatter,
     deleteBackMatter,
+    toggleBackMatter,
+    reorderBackMatter,
 
     // Illustration operations
     addIllustration,

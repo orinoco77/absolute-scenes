@@ -1140,8 +1140,12 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
       const { sortFrontMatter } = await import('./frontMatterUtils');
       const sortedFrontMatter = sortFrontMatter(book.frontMatter);
       sortedFrontMatter.forEach(frontMatterItem => {
-        if (!frontMatterItem.content || !frontMatterItem.content.trim()) {
-          return; // Skip empty front matter items
+        if (
+          !frontMatterItem.enabled ||
+          !frontMatterItem.content ||
+          !frontMatterItem.content.trim()
+        ) {
+          return; // Skip disabled or empty front matter items
         }
 
         // Handle different front matter for different formats
