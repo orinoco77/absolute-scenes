@@ -298,8 +298,12 @@ p, div {
       const sortedFrontMatter = sortFrontMatter(book.frontMatter);
 
       sortedFrontMatter.forEach((frontMatterItem, index) => {
-        if (!frontMatterItem.content || !frontMatterItem.content.trim()) {
-          return; // Skip empty front matter items
+        if (
+          !frontMatterItem.enabled ||
+          !frontMatterItem.content ||
+          !frontMatterItem.content.trim()
+        ) {
+          return; // Skip disabled or empty front matter items
         }
 
         const frontMatterNumber = index + 1;

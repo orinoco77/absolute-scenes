@@ -81,9 +81,13 @@ function App() {
     addFrontMatter,
     updateFrontMatter,
     deleteFrontMatter,
+    toggleFrontMatter,
+    reorderFrontMatter,
     addBackMatter,
     updateBackMatter,
     deleteBackMatter,
+    toggleBackMatter,
+    reorderBackMatter,
     recoverBook,
     resetBook,
     getCurrentScene,
@@ -392,11 +396,15 @@ function App() {
   // Utility functions
   const emptyRecycleBin = useCallback(() => {
     setRecycleBin([]);
-    // TODO: Also empty other recycle bins when implemented
-    // setCharacterRecycleBin([]);
-    // setLocationRecycleBin([]);
-    // setBackgroundRecycleBin([]);
-  }, [setRecycleBin]);
+    setCharacterRecycleBin([]);
+    setLocationRecycleBin([]);
+    setBackgroundRecycleBin([]);
+  }, [
+    setRecycleBin,
+    setCharacterRecycleBin,
+    setLocationRecycleBin,
+    setBackgroundRecycleBin
+  ]);
 
   const handleExportBook = useCallback(() => {
     setShowExportDialog(true);
@@ -1663,16 +1671,28 @@ function App() {
           onFrontMatterAdd={contentHandlers.frontMatter.add}
           onFrontMatterDelete={contentHandlers.frontMatter.delete}
           onFrontMatterUpdate={contentHandlers.frontMatter.update}
-          onFrontMatterToggle={() => {}} // TODO: Implement toggle
-          onFrontMatterReorder={() => {}} // TODO: Implement reorder
+          onFrontMatterToggle={(frontMatterId, enabled) => {
+            toggleFrontMatter(frontMatterId, enabled);
+            markAsChanged();
+          }}
+          onFrontMatterReorder={(fromIndex, toIndex) => {
+            reorderFrontMatter(fromIndex, toIndex);
+            markAsChanged();
+          }}
           backMatter={book.backMatter || []}
           currentBackMatterId={currentBackMatterId}
           onBackMatterSelect={setCurrentBackMatterId}
           onBackMatterAdd={contentHandlers.backMatter.add}
           onBackMatterDelete={contentHandlers.backMatter.delete}
           onBackMatterUpdate={contentHandlers.backMatter.update}
-          onBackMatterToggle={() => {}} // TODO: Implement toggle
-          onBackMatterReorder={() => {}} // TODO: Implement reorder
+          onBackMatterToggle={(backMatterId, enabled) => {
+            toggleBackMatter(backMatterId, enabled);
+            markAsChanged();
+          }}
+          onBackMatterReorder={(fromIndex, toIndex) => {
+            reorderBackMatter(fromIndex, toIndex);
+            markAsChanged();
+          }}
           illustrations={book.illustrations || []}
           currentIllustrationId={currentIllustrationId}
           onIllustrationSelect={setCurrentIllustrationId}
