@@ -23,6 +23,7 @@ function CharacterThreadVisualization({
   const [filterMentions, setFilterMentions] = useState(true); // New: toggle for presence filtering
   const [presenceThreshold, setPresenceThreshold] = useState(2.0); // New: adjustable threshold
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState(null);
 
   // Handle window resize for responsive width
   useEffect(() => {
@@ -33,7 +34,6 @@ function CharacterThreadVisualization({
 
   // Analyze character presence using rule-based detection
   const analysis = useMemo(() => {
-    setIsAnalyzing(true);
     try {
       const result = CharacterAnalyzer.analyzeCharacterPresence(
         chapters,
@@ -42,12 +42,14 @@ function CharacterThreadVisualization({
         filterMentions,
         presenceThreshold
       );
-      setIsAnalyzing(false);
-      return result;
+      return { result, error: null };
     } catch (error) {
-      setIsAnalyzing(false);
       console.error('Character analysis failed:', error);
-      return { characterPresence: new Map(), allDetectedCharacters: [] };
+      return {
+        result: { characterPresence: new Map(), allDetectedCharacters: [] },
+        error:
+          error.message || 'Unknown error occurred during character analysis'
+      };
     }
   }, [
     chapters,
@@ -57,7 +59,17 @@ function CharacterThreadVisualization({
     presenceThreshold
   ]);
 
-  const { characterPresence, _allDetectedCharacters } = analysis;
+  // Update state based on analysis results
+  useEffect(() => {
+    setIsAnalyzing(false);
+    if (analysis.error) {
+      setAnalysisError(analysis.error);
+    } else {
+      setAnalysisError(null);
+    }
+  }, [analysis]);
+
+  const { characterPresence, _allDetectedCharacters } = analysis.result;
 
   // Get all scenes in order
   const allScenes = useMemo(() => {
@@ -247,6 +259,44 @@ function CharacterThreadVisualization({
       onUpdateCharacterDetectionBlacklist([]);
     }
   };
+
+  const retryAnalysis = () => {
+    // Clear error and force re-render by updating state
+    setAnalysisError(null);
+    // Toggle presence threshold slightly to force re-computation
+    setPresenceThreshold(prev => {
+      const tiny = 0.0001;
+      return prev + tiny;
+    });
+  };
+
+  // Show error message if analysis failed
+  if (analysisError) {
+    return (
+      <div className="threads-editor">
+        <div className="no-content-selected error-state">
+          <h3>❌ Character Analysis Failed</h3>
+          <p className="error-message">{analysisError}</p>
+          <div className="error-actions">
+            <button onClick={retryAnalysis} className="threads-btn primary">
+              🔄 Retry Analysis
+            </button>
+          </div>
+          <div className="error-details">
+            <p>
+              <strong>Troubleshooting tips:</strong>
+            </p>
+            <ul>
+              <li>Check that your scenes contain text content</li>
+              <li>Verify that character names are properly formatted</li>
+              <li>Try adjusting the presence threshold</li>
+              <li>Check the browser console for more details</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (visibleCharacters.length === 0) {
     return (
