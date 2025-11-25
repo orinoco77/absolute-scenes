@@ -817,9 +817,48 @@ export async function exportToPDF(book, options = {}) {
 }
 
 async function exportToPDFInternal(book, options = {}, existingPdf = null) {
-  const { template } = options;
-
   try {
+    const { template, onProgress } = options;
+
+    // Calculate total word count for progress weighting
+    const totalWordCount =
+      book.chapters?.reduce(
+        (sum, ch) =>
+          sum +
+          ch.scenes.reduce(
+            (sceneSum, scene) =>
+              sceneSum +
+              (scene.content || '').split(/\s+/).filter(w => w).length,
+            0
+          ),
+        0
+      ) || 1; // Avoid division by zero
+
+    // Progress budget allocation (percentages)
+    // The bulk of time is spent processing content, so weight it heavily
+    const progressBudget = {
+      preparation: 2,
+      frontMatter: 8,
+      content: 80, // Will be distributed by word count
+      backMatter: 5,
+      saving: 5
+    };
+
+    let currentProgress = 0;
+
+    const reportProgress = async (message, progressIncrement) => {
+      if (progressIncrement !== undefined) {
+        currentProgress += progressIncrement;
+      }
+      if (onProgress) {
+        const percentage = Math.min(99, Math.round(currentProgress)); // Cap at 99% until done
+        onProgress(percentage, message);
+        // Yield to event loop to allow React to re-render
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    };
+
+    // Use existing PDF if provided (for manuscript format), otherwise create new
     // Use existing PDF if provided (for manuscript format), otherwise create new
     const pdf =
       existingPdf ||
@@ -1135,8 +1174,14 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
     pdf.setFontSize(fontSize);
     pdf.setFont(pdfFont, 'normal');
 
+    await reportProgress('Preparing document...', progressBudget.preparation);
+
     // Front Matter Processing
     if (book.frontMatter && book.frontMatter.length > 0) {
+      await reportProgress(
+        'Processing front matter...',
+        progressBudget.frontMatter
+      );
       const { sortFrontMatter } = await import('./frontMatterUtils');
       const sortedFrontMatter = sortFrontMatter(book.frontMatter);
       sortedFrontMatter.forEach(frontMatterItem => {
@@ -1599,14 +1644,23 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
       });
     } else {
       // Process chapters directly (no parts)
-      book.chapters.forEach((chapter, chapterIndex) => {
+      for (const [chapterIndex, chapter] of book.chapters.entries()) {
         const chapterNumber = chapterIndex + 1;
-        processChapter(chapter, chapterNumber, chapterIndex === 0);
-      });
+        // Chapter headers are trivial work, so no progress increment
+        await reportProgress(
+          `Processing chapter ${chapterNumber} of ${book.chapters.length}...`,
+          0
+        );
+        await processChapter(chapter, chapterNumber, chapterIndex === 0);
+      }
     }
 
     // Helper function to process a single chapter
-    function processChapter(chapter, chapterNumber, isFirstChapterOverall) {
+    async function processChapter(
+      chapter,
+      chapterNumber,
+      isFirstChapterOverall
+    ) {
       // Add chapter header
       if (chapter.title || template.chapterHeader.style !== 'none') {
         // Determine if we need a page break for this chapter
@@ -1703,8 +1757,19 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
         pdf.setFontSize(fontSize);
       }
 
+      // Calculate total progress for this chapter
+      let chapterWordCount = 0;
+      for (const scene of chapter.scenes) {
+        const sceneWordCount = (scene.content || '')
+          .split(/\s+/)
+          .filter(w => w).length;
+        chapterWordCount += sceneWordCount;
+      }
+      const chapterProgressShare =
+        (chapterWordCount / totalWordCount) * progressBudget.content;
+
       // Process scenes in this chapter
-      chapter.scenes.forEach((scene, sceneIndex) => {
+      for (const [sceneIndex, scene] of chapter.scenes.entries()) {
         // Add scene title if requested
         if (options.includeSceneTitles && scene.title) {
           // Check if we need a new page for the scene title
@@ -1719,10 +1784,10 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
             scene.title,
             contentWidth
           );
-          sceneTitleLines.forEach(line => {
+          for (const line of sceneTitleLines) {
             safeText(pdf, line, leftMargin, currentY);
             currentY += lineHeight * 1.2;
-          });
+          }
 
           currentY += lineHeight * 0.5; // Extra space after title
           pdf.setFont(pdfFont, 'normal');
@@ -1746,7 +1811,7 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
                   .split(/\n\s*\n/)
                   .filter(block => block.trim());
 
-                verseBlocks.forEach((verseBlock, blockIndex) => {
+                for (const [blockIndex, verseBlock] of verseBlocks.entries()) {
                   const blockContent = verseBlock.trim();
                   if (blockContent) {
                     // Parse markdown for this block
@@ -1777,6 +1842,7 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
                       pageHeight,
                       bottomMargin,
                       topMargin,
+                      // eslint-disable-next-line no-loop-func
                       () => {
                         advanceToNextLogicalPage();
                         return {
@@ -1800,7 +1866,7 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
                       currentY = newY + lineHeight * 0.5; // Regular spacing after last block
                     }
                   }
-                });
+                }
               } else {
                 // Original verse rendering without block grouping
                 // Check if we need a new page
@@ -1823,6 +1889,7 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
                   pageHeight,
                   bottomMargin,
                   topMargin,
+                  // eslint-disable-next-line no-loop-func
                   () => {
                     advanceToNextLogicalPage();
                     return {
@@ -1853,14 +1920,14 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
               .split('\n')
               .filter(p => p.trim());
 
-            paragraphs.forEach((paragraph, paragraphIndex) => {
+            for (const [paragraphIndex, paragraph] of paragraphs.entries()) {
               const trimmedParagraph = paragraph.trim();
 
               // Handle forced line breaks as blank lines
               if (trimmedParagraph === '__FORCED_BREAK_PLACEHOLDER__') {
                 // Add a blank line for forced breaks
                 currentY += lineHeight;
-                return;
+                continue;
               }
 
               if (trimmedParagraph) {
@@ -1884,6 +1951,7 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
                   pageHeight,
                   bottomMargin,
                   topMargin,
+                  // eslint-disable-next-line no-loop-func
                   () => {
                     advanceToNextLogicalPage();
                     return {
@@ -1907,7 +1975,7 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
                   currentY += lineHeight; // Add extra line spacing between paragraphs
                 }
               }
-            });
+            }
           }
         }
 
@@ -1936,11 +2004,21 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
             currentY += lineHeight * 2; // One blank line (double-spaced)
           }
         }
-      });
+      }
+
+      // Report progress once per chapter (yield to event loop)
+      await reportProgress(
+        `Processed chapter ${chapterNumber} of ${book.chapters.length}`,
+        chapterProgressShare
+      );
     }
 
     // Back Matter Processing
     if (book.backMatter && book.backMatter.length > 0) {
+      await reportProgress(
+        'Processing back matter...',
+        progressBudget.backMatter
+      );
       const { sortBackMatter } = await import('./frontMatterUtils');
       const sortedBackMatter = sortBackMatter(book.backMatter);
       sortedBackMatter.forEach(backMatterItem => {
@@ -2330,6 +2408,8 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
       ? `${book.title || 'Manuscript'}-Manuscript.pdf`
       : `${book.title || 'Book'}.pdf`;
 
+    await reportProgress('Saving PDF file...', progressBudget.saving);
+
     // Check if we're in Electron environment and use native save dialog
     const isElectron =
       typeof window !== 'undefined' && typeof window.require === 'function';
@@ -2351,6 +2431,11 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
 
         if (result.success) {
           console.log(`✓ PDF export complete: ${result.filePath}`);
+
+          // Report 100% completion
+          if (onProgress) {
+            onProgress(100, 'Export complete!');
+          }
 
           // Show success notification
           ipcRenderer.send('show-notification', {
@@ -2388,6 +2473,11 @@ async function exportToPDFInternal(book, options = {}, existingPdf = null) {
       }
 
       pdf.save(filename);
+
+      // Report 100% completion for browser save
+      if (onProgress) {
+        onProgress(100, 'Export complete!');
+      }
     }
   } catch (error) {
     console.error('PDF export failed:', error);

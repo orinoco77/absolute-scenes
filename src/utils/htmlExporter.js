@@ -67,6 +67,12 @@ export async function exportToHTML(book, options = {}) {
         if (result.success) {
           console.log(`✓ HTML export complete: ${result.filePath}`);
 
+          // Report 100% completion
+          const { onProgress } = options;
+          if (onProgress) {
+            onProgress(100, 'Export complete!');
+          }
+
           // Show success notification
           ipcRenderer.send('show-notification', {
             title: 'Export Complete',
@@ -119,6 +125,12 @@ export async function exportToHTML(book, options = {}) {
     }, 1000);
 
     console.log(`✓ HTML export initiated: ${filename}`);
+
+    // Report 100% completion for browser save
+    const { onProgress } = options;
+    if (onProgress) {
+      onProgress(100, 'Export complete!');
+    }
   } catch (error) {
     console.error('HTML generation failed:', error);
 
@@ -137,7 +149,48 @@ export async function exportToHTML(book, options = {}) {
 }
 
 async function generateHTML(book, options = {}) {
-  const { template } = options;
+  const { template, onProgress } = options;
+
+  // Calculate total word count for progress weighting
+  const totalWordCount =
+    book.chapters?.reduce(
+      (sum, ch) =>
+        sum +
+        ch.scenes.reduce(
+          (sceneSum, scene) =>
+            sceneSum + (scene.content || '').split(/\s+/).filter(w => w).length,
+          0
+        ),
+      0
+    ) || 1; // Avoid division by zero
+
+  // Progress budget allocation (percentages)
+  const progressBudget = {
+    preparation: 2,
+    frontMatter: 8,
+    content: 80, // Will be distributed by word count
+    backMatter: 5,
+    saving: 5
+  };
+
+  let currentProgress = 0;
+
+  const reportProgress = async (message, progressIncrement) => {
+    if (progressIncrement !== undefined) {
+      currentProgress += progressIncrement;
+    }
+    if (onProgress) {
+      const percentage = Math.min(99, Math.round(currentProgress));
+      onProgress(percentage, message);
+      // Yield to event loop to allow React to re-render
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  };
+
+  await reportProgress(
+    'Preparing HTML structure...',
+    progressBudget.preparation
+  );
 
   // Use enhanced font system for HTML preview
   const cssFont = getCssFontFamily(template.fontFamily);
@@ -289,6 +342,10 @@ async function generateHTML(book, options = {}) {
 
   // Front Matter Processing
   if (book.frontMatter && book.frontMatter.length > 0) {
+    await reportProgress(
+      'Processing front matter...',
+      progressBudget.frontMatter
+    );
     const { sortFrontMatter } = await import('./frontMatterUtils');
     const sortedFrontMatter = sortFrontMatter(book.frontMatter);
 
@@ -355,8 +412,13 @@ async function generateHTML(book, options = {}) {
   };
 
   // Chapters and content
-  book.chapters.forEach((chapter, chapterIndex) => {
+  for (const [chapterIndex, chapter] of book.chapters.entries()) {
     const chapterNumber = chapterIndex + 1;
+    // Chapter headers are trivial work, so no progress increment
+    await reportProgress(
+      `Processing chapter ${chapterNumber} of ${book.chapters.length}...`,
+      0
+    );
 
     // Insert illustrations that should appear before this chapter
     insertIllustrationsUpToPage(currentPageEstimate + 2);
@@ -366,8 +428,19 @@ async function generateHTML(book, options = {}) {
     content += `<h1 class="chapter-header">${chapterHeaderText}</h1>`;
     currentPageEstimate++; // Chapter headers typically start new pages
 
+    // Calculate total progress for this chapter
+    let chapterWordCount = 0;
+    for (const scene of chapter.scenes) {
+      const sceneWordCount = (scene.content || '')
+        .split(/\s+/)
+        .filter(w => w).length;
+      chapterWordCount += sceneWordCount;
+    }
+    const chapterProgressShare =
+      (chapterWordCount / totalWordCount) * progressBudget.content;
+
     // Add scenes
-    chapter.scenes.forEach((scene, sceneIndex) => {
+    for (const [sceneIndex, scene] of chapter.scenes.entries()) {
       if (options.includeSceneTitles && scene.title) {
         content += `<h2 class="scene-title">${scene.title}</h2>`;
       }
@@ -393,7 +466,7 @@ async function generateHTML(book, options = {}) {
           const paragraphs = contentWithForcedBreaks
             .split('\n')
             .filter(p => p.trim());
-          paragraphs.forEach((paragraph, paragraphIndex) => {
+          for (const [paragraphIndex, paragraph] of paragraphs.entries()) {
             if (paragraph.trim()) {
               // Convert markdown to HTML
               const formattedParagraph = parseMarkdownToHTML(paragraph.trim());
@@ -404,7 +477,7 @@ async function generateHTML(book, options = {}) {
                   : '';
               content += `<p${paragraphClass}>${formattedParagraph}</p>`;
             }
-          });
+          }
         }
       }
 
@@ -425,14 +498,24 @@ async function generateHTML(book, options = {}) {
       ) {
         content += '<div class="scene-break">* * *</div>';
       }
-    });
-  });
+    }
+
+    // Report progress once per chapter (yield to event loop)
+    await reportProgress(
+      `Processed chapter ${chapterNumber} of ${book.chapters.length}`,
+      chapterProgressShare
+    );
+  }
 
   // Insert any remaining illustrations
   insertIllustrationsUpToPage(999);
 
   // Back Matter Processing
   if (book.backMatter && book.backMatter.length > 0) {
+    await reportProgress(
+      'Processing back matter...',
+      progressBudget.backMatter
+    );
     const { sortBackMatter } = await import('./frontMatterUtils');
     const sortedBackMatter = sortBackMatter(book.backMatter);
 
@@ -477,6 +560,8 @@ async function generateHTML(book, options = {}) {
       content += '</div>';
     });
   }
+
+  await reportProgress('Finalizing HTML...', progressBudget.saving);
 
   content += '</body></html>';
   return content;

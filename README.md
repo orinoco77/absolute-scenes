@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.27<!--/VERSION--> | **Tests:** <!--TESTS-->1104/1104<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2025-11-10<!--/DATE-->
+**Version:** <!--VERSION-->1.4.28<!--/VERSION--> | **Tests:** <!--TESTS-->0/45<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2025-11-25<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -284,9 +284,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1104/1104<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->0/45<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->161<!--/COMMITS--> | **Latest:** <!--COMMIT-->8c7f4f9 - Allow front and back matter to be enabled and disabled (2 days ago)<!--/COMMIT-->
+<!--COMMITS-->162<!--/COMMITS--> | **Latest:** <!--COMMIT-->bf8de5a - Fixed a couple of bugs and added tests (2 weeks ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.27<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.27<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.28<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.28<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -556,11 +556,11 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+- **v1.4.26**: Allow front and back matter to be enabled and disabled
 - **v1.4.23**: auto save
 - **v1.4.4**: Another go
 - **v1.4.3**: More pipeline fixes
 - **v1.4.2**: Fix package issues
-- **v1.4.1**: Version bump
 <!--/VERSION_HISTORY-->
 
 ---
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-11-10<!--/DATE--> | Build <!--COMMIT-->8c7f4f9 - Allow front and back matter to be enabled and disabled (2 days ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-11-25<!--/DATE--> | Build <!--COMMIT-->bf8de5a - Fixed a couple of bugs and added tests (2 weeks ago)<!--/COMMIT-->_
