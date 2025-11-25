@@ -214,16 +214,19 @@ describe('CharacterThreadVisualization', () => {
 
       expect(screen.getByText('Troubleshooting tips:')).toBeInTheDocument();
       expect(
-        screen.getByText(/Check that your scenes contain text content/)
+        screen.getByText(
+          /Click "🔄 Retry Analysis" above to try again with the current settings/
+        )
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Verify that character names are properly formatted/)
+        screen.getByText(
+          /Check that your scenes contain text content \(not just empty placeholders\)/
+        )
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Try adjusting the presence threshold/)
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText(/Check the browser console for more details/)
+        screen.getByText(
+          /If retry doesn't work, try adjusting the "Presence Threshold" slider/
+        )
       ).toBeInTheDocument();
     });
 

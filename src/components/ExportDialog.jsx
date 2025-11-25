@@ -12,13 +12,20 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
   const [includeSceneTitles, setIncludeSceneTitles] = useState(false);
   const [manuscriptPageSize, setManuscriptPageSize] = useState('a4'); // Default to A4
   const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportMessage, setExportMessage] = useState('');
 
   const handleExport = async () => {
     const options = {
       includeSceneBreaks,
       includeSceneTitles,
       template: book.template,
-      manuscriptPageSize: manuscriptPageSize
+      manuscriptPageSize: manuscriptPageSize,
+      onProgress: (percentage, message) => {
+        setExportProgress(percentage);
+        setExportMessage(message);
+        onOperationUpdate?.(message);
+      }
     };
 
     setIsExporting(true);
@@ -46,6 +53,8 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
       alert('Export failed: ' + error.message);
     } finally {
       setIsExporting(false);
+      setExportProgress(0);
+      setExportMessage('');
       onOperationUpdate?.(null);
     }
   };
@@ -358,6 +367,47 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
             )}
           </div>
         </div>
+
+        {isExporting && (
+          <div
+            style={{
+              padding: '1rem',
+              borderTop: '1px solid var(--color-border)',
+              background: 'var(--color-surface-elevated)'
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginBottom: '0.5rem',
+                fontSize: '0.9em'
+              }}
+            >
+              <span>{exportMessage}</span>
+              <span style={{ fontWeight: 'bold' }}>{exportProgress}%</span>
+            </div>
+            <div
+              style={{
+                width: '100%',
+                height: '8px',
+                background: 'var(--color-background)',
+                borderRadius: '4px',
+                overflow: 'hidden'
+              }}
+            >
+              <div
+                style={{
+                  width: `${exportProgress}%`,
+                  height: '100%',
+                  background: 'var(--color-primary)',
+                  transition: 'width 0.3s ease',
+                  borderRadius: '4px'
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="modal-footer">
           <button

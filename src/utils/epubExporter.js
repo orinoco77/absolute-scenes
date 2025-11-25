@@ -6,7 +6,49 @@ import { processTextForExport } from './textProcessing';
 export async function exportToEPUB(book, options = {}) {
   try {
     const zip = new JSZip();
-    const { template } = options;
+    const { template, onProgress } = options;
+
+    // Calculate total word count for progress weighting
+    const totalWordCount =
+      book.chapters?.reduce(
+        (sum, ch) =>
+          sum +
+          ch.scenes.reduce(
+            (sceneSum, scene) =>
+              sceneSum +
+              (scene.content || '').split(/\s+/).filter(w => w).length,
+            0
+          ),
+        0
+      ) || 1; // Avoid division by zero
+
+    // Progress budget allocation (percentages)
+    const progressBudget = {
+      preparation: 2,
+      frontMatter: 8,
+      content: 80, // Will be distributed by word count
+      backMatter: 5,
+      saving: 5
+    };
+
+    let currentProgress = 0;
+
+    const reportProgress = async (message, progressIncrement) => {
+      if (progressIncrement !== undefined) {
+        currentProgress += progressIncrement;
+      }
+      if (onProgress) {
+        const percentage = Math.min(99, Math.round(currentProgress));
+        onProgress(percentage, message);
+        // Yield to event loop to allow React to re-render
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    };
+
+    await reportProgress(
+      'Preparing EPUB structure...',
+      progressBudget.preparation
+    );
 
     // Helper function to generate unique IDs
     const generateId = (prefix, index) => `${prefix}-${index}`;
@@ -294,6 +336,10 @@ p, div {
 
     // Process front matter
     if (book.frontMatter && book.frontMatter.length > 0) {
+      await reportProgress(
+        'Processing front matter...',
+        progressBudget.frontMatter
+      );
       const { sortFrontMatter } = await import('./frontMatterUtils');
       const sortedFrontMatter = sortFrontMatter(book.frontMatter);
 
@@ -453,8 +499,13 @@ p, div {
     let currentPageEstimate = titlePageContent ? 2 : 1; // Start after title page
     let illustrationIndex = 0;
 
-    book.chapters.forEach((chapter, chapterIndex) => {
+    for (const [chapterIndex, chapter] of book.chapters.entries()) {
       const chapterNumber = chapterIndex + 1;
+      // Chapter headers are trivial work, so no progress increment
+      await reportProgress(
+        `Processing chapter ${chapterNumber} of ${book.chapters.length}...`,
+        0
+      );
       const chapterHeaderText = generateChapterHeader(chapter, chapterNumber);
       const filename = createSafeFilename(chapter.title, chapterIndex);
       const chapterId = generateId('chapter', chapterIndex);
@@ -482,8 +533,19 @@ p, div {
 <body>
   <h1 class="chapter-header">${chapterHeaderText}</h1>`;
 
+      // Calculate total progress for this chapter
+      let chapterWordCount = 0;
+      for (const scene of chapter.scenes) {
+        const sceneWordCount = (scene.content || '')
+          .split(/\s+/)
+          .filter(w => w).length;
+        chapterWordCount += sceneWordCount;
+      }
+      const chapterProgressShare =
+        (chapterWordCount / totalWordCount) * progressBudget.content;
+
       // Add scenes
-      chapter.scenes.forEach((scene, sceneIndex) => {
+      for (const [sceneIndex, scene] of chapter.scenes.entries()) {
         // Note: Scene titles are not included in EPUB format for better reading flow
 
         if (scene.content && scene.content.trim()) {
@@ -506,7 +568,7 @@ p, div {
             const paragraphs = contentWithForcedBreaks
               .split('\n')
               .filter(p => p.trim());
-            paragraphs.forEach((paragraph, paragraphIndex) => {
+            for (const [paragraphIndex, paragraph] of paragraphs.entries()) {
               if (paragraph.trim()) {
                 const formattedParagraph = parseMarkdownToHTML(
                   paragraph.trim()
@@ -517,7 +579,7 @@ p, div {
                     : '';
                 chapterContent += `\n  <p${paragraphClass}>${formattedParagraph}</p>`;
               }
-            });
+            }
           }
         }
 
@@ -528,7 +590,13 @@ p, div {
         ) {
           chapterContent += '\n  <div class="scene-break">* * *</div>';
         }
-      });
+      }
+
+      // Report progress once per chapter (yield to event loop)
+      await reportProgress(
+        `Processed chapter ${chapterNumber} of ${book.chapters.length}`,
+        chapterProgressShare
+      );
 
       chapterContent += '\n</body>\n</html>';
 
@@ -549,16 +617,10 @@ p, div {
       <content src="${filename}"/>
     </navPoint>`);
 
-      // Estimate page progression for this chapter
-      let chapterWordCount = 0;
-      chapter.scenes.forEach(scene => {
-        if (scene.content) {
-          chapterWordCount += scene.content.split(/\s+/).length;
-        }
-      });
+      // Estimate page progression for this chapter (using already calculated word count)
       const wordsPerPage = 300; // Rough estimate for ebooks
       currentPageEstimate += Math.ceil(chapterWordCount / wordsPerPage);
-    });
+    }
 
     // Add any remaining illustrations to the spine
     while (illustrationIndex < illustrationFiles.length) {
@@ -570,6 +632,10 @@ p, div {
 
     // Process back matter
     if (book.backMatter && book.backMatter.length > 0) {
+      await reportProgress(
+        'Processing back matter...',
+        progressBudget.backMatter
+      );
       const { sortBackMatter } = await import('./frontMatterUtils');
       const sortedBackMatter = sortBackMatter(book.backMatter);
 
@@ -706,6 +772,8 @@ ${navItems.join('\n')}
 
     oebps.file('toc.ncx', tocNcx);
 
+    await reportProgress('Generating EPUB file...', progressBudget.saving);
+
     // 9. Generate the EPUB file
     const blob = await zip.generateAsync({
       type: 'blob',
@@ -748,6 +816,11 @@ ${navItems.join('\n')}
 
         if (result.success) {
           console.log(`✓ EPUB export complete: ${result.filePath}`);
+
+          // Report 100% completion
+          if (onProgress) {
+            onProgress(100, 'Export complete!');
+          }
 
           // Show success notification
           ipcRenderer.send('show-notification', {
@@ -798,6 +871,11 @@ ${navItems.join('\n')}
     }, 1000);
 
     console.log(`✓ EPUB export complete: ${filename}`);
+
+    // Report 100% completion for browser save
+    if (onProgress) {
+      onProgress(100, 'Export complete!');
+    }
   } catch (error) {
     console.error('EPUB export failed:', error);
 

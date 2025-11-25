@@ -287,10 +287,19 @@ function CharacterThreadVisualization({
               <strong>Troubleshooting tips:</strong>
             </p>
             <ul>
-              <li>Check that your scenes contain text content</li>
-              <li>Verify that character names are properly formatted</li>
-              <li>Try adjusting the presence threshold</li>
-              <li>Check the browser console for more details</li>
+              <li>
+                Click &quot;🔄 Retry Analysis&quot; above to try again with the
+                current settings
+              </li>
+              <li>
+                Check that your scenes contain text content (not just empty
+                placeholders)
+              </li>
+              <li>
+                If retry doesn&apos;t work, try adjusting the &quot;Presence
+                Threshold&quot; slider that appears after the analysis runs
+                successfully
+              </li>
             </ul>
           </div>
         </div>

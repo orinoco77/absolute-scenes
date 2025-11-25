@@ -275,6 +275,16 @@ function GitHubIntegration({
       }
     } catch (error) {
       console.warn('Could not analyze repository contributors:', error);
+      // Notify user that collaboration detection failed with actionable guidance
+      if (onStatusMessage) {
+        onStatusMessage(
+          `⚠️ Could not detect repository contributors: ${error.message || 'Unknown error'}. ` +
+            `Collaboration mode has been disabled. ` +
+            `If you're working solo, no action needed. ` +
+            `If you want to test collaboration features, look for the "🧪 Enable Test Collaboration Mode" button below in the GitHub section.`,
+          'warning'
+        );
+      }
       // Continue with single author setup
       const collaborationSettings = {
         enabled: false,
