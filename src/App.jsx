@@ -7,6 +7,7 @@ import BackupRecovery from './components/BackupRecovery.jsx';
 import BookStructure from './components/BookStructure.jsx';
 import CharacterEditor from './components/CharacterEditor.jsx';
 import CharacterThreadVisualization from './components/CharacterThreadVisualization.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import ExportDialog from './components/ExportDialog.jsx';
 import FontSettings from './components/FontSettings.jsx';
 import FrontMatterEditor from './components/FrontMatterEditor.jsx';
@@ -226,6 +227,28 @@ function App() {
   useEffect(() => {
     autoSelectFirstBackMatter(book);
   }, [activeTab, currentBackMatterId, book.backMatter]);
+
+  // Global error handler for unhandled promise rejections
+  useEffect(() => {
+    const handleUnhandledRejection = event => {
+      console.error('Unhandled promise rejection:', event.reason);
+      // Show user-friendly error message
+      alert(
+        'An unexpected error occurred. Your work has been auto-saved.\n\n' +
+          'Error: ' +
+          (event.reason?.message || event.reason || 'Unknown error')
+      );
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener(
+        'unhandledrejection',
+        handleUnhandledRejection
+      );
+    };
+  }, []);
 
   // GitHub sync handler (following Single Responsibility Principle)
   const handleGitHubSync = useCallback(
@@ -1355,12 +1378,14 @@ function App() {
     switch (activeTab) {
       case 'manuscript':
         return currentScene ? (
-          <SceneEditor
-            scene={currentScene}
-            template={book.template}
-            onSceneUpdate={contentHandlers.scene.update}
-            collaboration={book.github?.collaboration || book.collaboration}
-          />
+          <ErrorBoundary section>
+            <SceneEditor
+              scene={currentScene}
+              template={book.template}
+              onSceneUpdate={contentHandlers.scene.update}
+              collaboration={book.github?.collaboration || book.collaboration}
+            />
+          </ErrorBoundary>
         ) : (
           <div className="scene-editor">
             <div className="no-content-selected">
@@ -1375,11 +1400,13 @@ function App() {
 
       case 'characters':
         return currentCharacter ? (
-          <CharacterEditor
-            character={currentCharacter}
-            template={book.template}
-            onCharacterUpdate={contentHandlers.character.update}
-          />
+          <ErrorBoundary section>
+            <CharacterEditor
+              character={currentCharacter}
+              template={book.template}
+              onCharacterUpdate={contentHandlers.character.update}
+            />
+          </ErrorBoundary>
         ) : (
           <div className="character-editor">
             <div className="no-content-selected">
@@ -1394,32 +1421,36 @@ function App() {
 
       case 'threads':
         return (
-          <CharacterThreadVisualization
-            chapters={book.chapters}
-            characters={book.characters}
-            characterDetectionBlacklist={book.characterDetectionBlacklist}
-            onUpdateCharacterDetectionBlacklist={blacklist => {
-              // Update character detection blacklist
-              setBook(prev => ({
-                ...prev,
-                characterDetectionBlacklist: blacklist,
-                metadata: {
-                  ...prev.metadata,
-                  modified: new Date().toISOString()
-                }
-              }));
-              markAsChanged();
-            }}
-          />
+          <ErrorBoundary section>
+            <CharacterThreadVisualization
+              chapters={book.chapters}
+              characters={book.characters}
+              characterDetectionBlacklist={book.characterDetectionBlacklist}
+              onUpdateCharacterDetectionBlacklist={blacklist => {
+                // Update character detection blacklist
+                setBook(prev => ({
+                  ...prev,
+                  characterDetectionBlacklist: blacklist,
+                  metadata: {
+                    ...prev.metadata,
+                    modified: new Date().toISOString()
+                  }
+                }));
+                markAsChanged();
+              }}
+            />
+          </ErrorBoundary>
         );
 
       case 'locations':
         return currentLocation ? (
-          <LocationEditor
-            location={currentLocation}
-            template={book.template}
-            onLocationUpdate={contentHandlers.location.update}
-          />
+          <ErrorBoundary section>
+            <LocationEditor
+              location={currentLocation}
+              template={book.template}
+              onLocationUpdate={contentHandlers.location.update}
+            />
+          </ErrorBoundary>
         ) : (
           <div className="location-editor">
             <div className="no-content-selected">
@@ -1434,11 +1465,13 @@ function App() {
 
       case 'background':
         return currentDocument ? (
-          <BackgroundEditor
-            document={currentDocument}
-            template={book.template}
-            onDocumentUpdate={contentHandlers.document.update}
-          />
+          <ErrorBoundary section>
+            <BackgroundEditor
+              document={currentDocument}
+              template={book.template}
+              onDocumentUpdate={contentHandlers.document.update}
+            />
+          </ErrorBoundary>
         ) : (
           <div className="background-editor">
             <div className="no-content-selected">
@@ -1453,28 +1486,34 @@ function App() {
 
       case 'frontmatter':
         return (
-          <FrontMatterEditor
-            frontMatterItem={currentFrontMatter}
-            onFrontMatterUpdate={contentHandlers.frontMatter.update}
-            authorName={book.author}
-          />
+          <ErrorBoundary section>
+            <FrontMatterEditor
+              frontMatterItem={currentFrontMatter}
+              onFrontMatterUpdate={contentHandlers.frontMatter.update}
+              authorName={book.author}
+            />
+          </ErrorBoundary>
         );
 
       case 'backmatter':
         return (
-          <BackMatterEditor
-            backMatterItem={currentBackMatter}
-            onBackMatterUpdate={contentHandlers.backMatter.update}
-            authorName={book.author}
-          />
+          <ErrorBoundary section>
+            <BackMatterEditor
+              backMatterItem={currentBackMatter}
+              onBackMatterUpdate={contentHandlers.backMatter.update}
+              authorName={book.author}
+            />
+          </ErrorBoundary>
         );
 
       case 'illustrations':
         return (
-          <IllustrationEditor
-            illustration={currentIllustration}
-            onIllustrationUpdate={contentHandlers.illustration.update}
-          />
+          <ErrorBoundary section>
+            <IllustrationEditor
+              illustration={currentIllustration}
+              onIllustrationUpdate={contentHandlers.illustration.update}
+            />
+          </ErrorBoundary>
         );
 
       default:
