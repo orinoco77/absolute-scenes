@@ -174,3 +174,6 @@ Fantasy\ Saga.book
 
 # Claude's workspace (analysis, notes, state information)
 .claude-workspace/
+
+# Rider files
+.idea/
