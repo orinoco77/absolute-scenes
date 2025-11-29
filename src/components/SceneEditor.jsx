@@ -304,7 +304,6 @@ function SceneEditor({
             placeholder="Start writing your scene here..."
             spellCheck={true}
             rows={20}
-            style={{ minHeight: '400px' }}
           />
         </div>
 
