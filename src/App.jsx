@@ -336,27 +336,39 @@ function App() {
         setCurrentFilePath(filePath);
         setHasUnsavedChanges(false);
 
-        // Handle GitHub sync if configured - also silent
+        // Handle GitHub sync if configured - PUSH ONLY, don't overwrite local
         if (gitHubSyncService.shouldSyncToGitHub(book)) {
           const saveTime = new Date().toISOString();
-          // Silent sync - no operation updates
-          const result = await gitHubSyncService.syncWithGitHub({
+          // Capture the book content that we're syncing (for lastSyncedContent)
+          const syncedBookContent = JSON.parse(JSON.stringify(book));
+          delete syncedBookContent.github?.lastSyncedContent; // Clean circular ref
+
+          // Intentionally not using the result - we don't want to overwrite local content
+          await gitHubSyncService.syncWithGitHub({
             bookData: book,
             filePath,
             saveTime,
-            onOperationUpdate: () => {}, // No-op to prevent UI updates
+            onOperationUpdate: () => {}, // Silent
             onSyncSuccess: syncTime => {
-              updateGitHubSyncStatus({ lastSyncTime: syncTime });
+              // Update sync metadata WITHOUT overwriting book content
+              // This preserves any changes user made while sync was in progress
+              setBook(prev => ({
+                ...prev,
+                github: {
+                  ...prev.github,
+                  lastSyncTime: syncTime,
+                  lastSyncedContent: syncedBookContent
+                }
+              }));
             },
-            onSyncError: () => {} // Silent - errors only logged to console
+            onSyncError: () => {
+              // Silent - don't interrupt typing
+            }
           });
 
-          // If sync resulted in merged content, update the local book and save to disk
-          if (result?.success && result.mergedContent) {
-            setBook(result.mergedContent);
-            const { saveBookToFile } = await import('./utils/fileOperations');
-            await saveBookToFile(result.mergedContent, filePath);
-          }
+          // IMPORTANT: We don't use the result here!
+          // Using result.mergedContent would overwrite content the user is actively editing
+          // Only the manual save/sync should update local content from remote
         }
       },
       onSaveError: error => {

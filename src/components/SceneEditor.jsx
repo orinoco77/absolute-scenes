@@ -12,11 +12,48 @@ function SceneEditor({
   const [isDistractionFree, setIsDistractionFree] = useState(false);
   const [localContent, setLocalContent] = useState(scene?.content || '');
   const contentUpdateTimerRef = useRef(null);
+  const lastSentContentRef = useRef(scene?.content || '');
+  const lastSentTimeRef = useRef(0);
 
-  // Sync local content when scene changes
+  // Sync local content when scene ID changes (switching scenes)
   useEffect(() => {
-    setLocalContent(scene?.content || '');
-  }, [scene?.id, scene?.content]); // Update when scene ID or content changes
+    if (scene?.id) {
+      setLocalContent(scene?.content || '');
+      lastSentContentRef.current = scene?.content || '';
+      lastSentTimeRef.current = 0;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene?.id]); // Intentionally only watching scene ID, not content
+
+  // Handle external content updates (like GitHub sync)
+  // Only update if it's truly external, not just echoing our own changes
+  useEffect(() => {
+    const sceneContent = scene?.content || '';
+
+    // Don't update if user is actively typing
+    if (contentUpdateTimerRef.current) {
+      return;
+    }
+
+    // If content hasn't changed, nothing to do
+    if (sceneContent === localContent) {
+      return;
+    }
+
+    // Check if this might be an auto-save echo:
+    // If we sent an update recently (within 5 seconds) and the incoming content
+    // matches what we sent, it's probably just an echo from auto-save
+    const timeSinceLastSent = Date.now() - lastSentTimeRef.current;
+    const isLikelyEcho =
+      timeSinceLastSent < 5000 && sceneContent === lastSentContentRef.current;
+
+    if (!isLikelyEcho) {
+      // This is a true external update (e.g., from GitHub sync)
+      // or enough time has passed that we should accept it
+      setLocalContent(sceneContent);
+      lastSentContentRef.current = sceneContent;
+    }
+  }, [scene?.content, localContent]);
 
   // Helper function to enter distraction-free mode
   const enterDistractionFree = () => {
@@ -89,6 +126,8 @@ function SceneEditor({
       // Debounce the actual book state update
       contentUpdateTimerRef.current = setTimeout(() => {
         onSceneUpdate(scene.id, { content: newContent });
+        lastSentContentRef.current = newContent; // Track what we sent
+        lastSentTimeRef.current = Date.now(); // Track when we sent it
       }, 300); // Update book state 300ms after user stops typing
     },
     [scene?.id, onSceneUpdate]
@@ -131,7 +170,10 @@ function SceneEditor({
         '\n<!--FORCED_BREAK-->\n' + // Special marker for forced breaks
         textEditor.value.substring(end);
 
+      setLocalContent(newContent); // Update local state
       onSceneUpdate(scene.id, { content: newContent });
+      lastSentContentRef.current = newContent; // Track what we sent
+      lastSentTimeRef.current = Date.now(); // Track when we sent it
 
       // Move cursor after the marker
       setTimeout(() => {
@@ -165,7 +207,10 @@ function SceneEditor({
         textEditor.value.substring(0, start) +
         replacement +
         textEditor.value.substring(end);
+      setLocalContent(newContent); // Update local state
       onSceneUpdate(scene.id, { content: newContent });
+      lastSentContentRef.current = newContent; // Track what we sent
+      lastSentTimeRef.current = Date.now(); // Track when we sent it
 
       // Restore cursor position
       setTimeout(() => {
@@ -193,7 +238,10 @@ function SceneEditor({
         '\n<!--FORCED_BREAK-->\n' +
         textEditor.value.substring(end);
 
+      setLocalContent(newContent); // Update local state
       onSceneUpdate(scene.id, { content: newContent });
+      lastSentContentRef.current = newContent; // Track what we sent
+      lastSentTimeRef.current = Date.now(); // Track when we sent it
 
       setTimeout(() => {
         textEditor.focus();
