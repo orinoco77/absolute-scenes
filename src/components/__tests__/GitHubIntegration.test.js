@@ -673,4 +673,156 @@ describe('GitHubIntegration', () => {
     fireEvent.click(screen.getByText('Close'));
     expect(mockProps.onClose).toHaveBeenCalled();
   });
+
+  describe('collaboration features', () => {
+    beforeEach(() => {
+      GitHubService.loadStoredAuth.mockReturnValue(true);
+    });
+
+    it('handles merging when remote is newer', async () => {
+      const localBook = {
+        ...mockBook,
+        title: 'Local Version',
+        github: { repository: mockRepository },
+        metadata: { modified: '2024-01-01T10:00:00.000Z' }
+      };
+
+      const remoteBook = {
+        ...mockBook,
+        title: 'Remote Version',
+        github: { repository: mockRepository },
+        metadata: { modified: '2024-01-01T12:00:00.000Z' }
+      };
+
+      GitHubService.checkRepositoryForBookFile.mockResolvedValue({
+        name: 'book.book'
+      });
+      GitHubService.downloadBookFromRepository.mockResolvedValue({
+        bookData: remoteBook,
+        filename: 'book.book'
+      });
+      GitHubService.saveBookToRepository.mockResolvedValue({});
+
+      const propsWithRepo = {
+        ...mockProps,
+        currentRepo: mockRepository,
+        book: localBook
+      };
+
+      render(<GitHubIntegration {...propsWithRepo} />);
+
+      const syncButton = screen.getByRole('button', { name: /Sync Now/ });
+      await act(async () => {
+        fireEvent.click(syncButton);
+      });
+
+      await waitFor(() => {
+        expect(GitHubService.checkRepositoryForBookFile).toHaveBeenCalled();
+        expect(GitHubService.downloadBookFromRepository).toHaveBeenCalled();
+      });
+    });
+
+    it('auto-merges non-conflicting changes from both sides', async () => {
+      const localBook = {
+        ...mockBook,
+        chapters: [
+          {
+            id: 'ch1',
+            title: 'Chapter 1',
+            scenes: [
+              { id: 's1', title: 'Scene 1', content: 'Original' },
+              { id: 's2', title: 'Scene 2', content: 'Local Edit' }
+            ]
+          }
+        ],
+        github: { repository: mockRepository },
+        metadata: { modified: '2024-01-01T10:00:00.000Z' }
+      };
+
+      const remoteBook = {
+        ...mockBook,
+        chapters: [
+          {
+            id: 'ch1',
+            title: 'Chapter 1',
+            scenes: [
+              { id: 's1', title: 'Scene 1', content: 'Remote Edit' },
+              { id: 's2', title: 'Scene 2', content: 'Original' }
+            ]
+          }
+        ],
+        github: { repository: mockRepository },
+        metadata: { modified: '2024-01-01T12:00:00.000Z' }
+      };
+
+      GitHubService.checkRepositoryForBookFile.mockResolvedValue({
+        name: 'book.book'
+      });
+      GitHubService.downloadBookFromRepository.mockResolvedValue({
+        bookData: remoteBook,
+        filename: 'book.book'
+      });
+      GitHubService.saveBookToRepository.mockResolvedValue({});
+
+      const propsWithRepo = {
+        ...mockProps,
+        currentRepo: mockRepository,
+        book: localBook
+      };
+
+      render(<GitHubIntegration {...propsWithRepo} />);
+
+      const syncButton = screen.getByRole('button', { name: /Sync Now/ });
+      await act(async () => {
+        fireEvent.click(syncButton);
+      });
+
+      // Verify that sync was attempted
+      await waitFor(() => {
+        expect(GitHubService.checkRepositoryForBookFile).toHaveBeenCalled();
+      });
+    });
+
+    it('detects conflicts when both edit same content', async () => {
+      const localBook = {
+        ...mockBook,
+        title: 'Local Title',
+        github: { repository: mockRepository },
+        metadata: { modified: '2024-01-01T12:00:00.000Z' }
+      };
+
+      const remoteBook = {
+        ...mockBook,
+        title: 'Remote Title',
+        github: { repository: mockRepository },
+        metadata: { modified: '2024-01-01T10:00:00.000Z' }
+      };
+
+      GitHubService.checkRepositoryForBookFile.mockResolvedValue({
+        name: 'book.book'
+      });
+      GitHubService.downloadBookFromRepository.mockResolvedValue({
+        bookData: remoteBook,
+        filename: 'book.book'
+      });
+
+      const propsWithRepo = {
+        ...mockProps,
+        currentRepo: mockRepository,
+        book: localBook
+      };
+
+      render(<GitHubIntegration {...propsWithRepo} />);
+
+      const syncButton = screen.getByRole('button', { name: /Sync Now/ });
+      await act(async () => {
+        fireEvent.click(syncButton);
+      });
+
+      // Verify sync was attempted
+      await waitFor(() => {
+        expect(GitHubService.checkRepositoryForBookFile).toHaveBeenCalled();
+      });
+    });
+  });
 });

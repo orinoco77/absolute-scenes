@@ -52,20 +52,37 @@ export class BrowserEnhancedGitHubService {
         };
       }
 
-      // Detect conflicts
-      const conflicts = await this.collaborationService.detectConflicts(
-        bookData,
-        remoteBookData
-      );
+      // Check timestamps to detect if remote is newer than local
+      const localModified = bookData.metadata?.modified
+        ? new Date(bookData.metadata.modified).getTime()
+        : 0;
+      const remoteModified = remoteBookData.metadata?.modified
+        ? new Date(remoteBookData.metadata.modified).getTime()
+        : 0;
 
-      if (conflicts.length === 0) {
-        // No conflicts, perform automatic merge
+      // If remote is newer than local, we need to integrate remote changes
+      if (remoteModified > localModified) {
+        // Remote has changes we don't have - perform a merge
         const mergeResult = await this.collaborationService.mergeContent(
-          remoteBookData, // Use remote as base for 2-way merge
-          bookData,
-          remoteBookData
+          remoteBookData, // Use remote as base (the older common state)
+          remoteBookData, // Remote changes (what's in GitHub)
+          bookData // Local changes (what we're trying to push)
         );
 
+        if (mergeResult.hasConflicts) {
+          // Real conflicts detected that need user resolution
+          this.conflicts = mergeResult.conflicts;
+          return {
+            success: false,
+            conflicts: mergeResult.conflicts,
+            requiresResolution: true,
+            remoteContent: remoteBookData,
+            baseContent: remoteBookData,
+            filename
+          };
+        }
+
+        // Auto-merge succeeded - push the merged content
         await this.collaborationService.createCommit(
           mergeResult.content,
           commitMessage
@@ -83,15 +100,38 @@ export class BrowserEnhancedGitHubService {
           mergedContent: mergeResult.content,
           error: pushResult.error
         };
+      }
+
+      // Local is newer or same age - check for conflicts anyway
+      const conflicts = await this.collaborationService.detectConflicts(
+        bookData,
+        remoteBookData
+      );
+
+      if (conflicts.length === 0) {
+        // No conflicts, local can safely overwrite remote
+        await this.collaborationService.createCommit(bookData, commitMessage);
+        const pushResult = await this.pushToRepository(
+          repository,
+          bookData,
+          commitMessage,
+          filename
+        );
+
+        return {
+          success: pushResult.success,
+          conflicts: [],
+          error: pushResult.error
+        };
       } else {
-        // Conflicts detected, require user resolution
+        // Conflicts detected even though local is newer - require user resolution
         this.conflicts = conflicts;
         return {
           success: false,
           conflicts,
           requiresResolution: true,
           remoteContent: remoteBookData,
-          baseContent: remoteBookData, // Use remote as base for browser
+          baseContent: remoteBookData,
           filename
         };
       }

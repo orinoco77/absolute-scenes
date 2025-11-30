@@ -519,7 +519,7 @@ function App() {
       }
     };
 
-    const handleBookLoaded = (event, bookData) => {
+    const handleBookLoaded = async (event, bookData) => {
       // Extract and remove filePath from book data (it's metadata, not content)
       const filePath = bookData.filePath || null;
       const cleanBookData = { ...bookData };
@@ -569,11 +569,71 @@ function App() {
         ];
       }
 
-      // Load the book and update UI state
+      // Load the book and update UI state first
       setBook(cleanBookData);
       loadBook(cleanBookData, filePath);
       setCurrentFilePath(filePath);
       setHasUnsavedChanges(false);
+
+      // Automatically sync with GitHub if configured
+      if (gitHubSyncService.shouldSyncToGitHub(cleanBookData)) {
+        try {
+          setCurrentOperation('Syncing with GitHub...');
+
+          const { BrowserEnhancedGitHubService } = await import(
+            './utils/browserEnhancedGitHubService'
+          );
+          const enhancedService = new BrowserEnhancedGitHubService();
+
+          const isAuth = enhancedService.gitHubService.isAuthenticated();
+          if (!isAuth) {
+            console.log(
+              '📘 Book has GitHub configured but not authenticated - skipping auto-sync'
+            );
+            setCurrentOperation(null);
+            return;
+          }
+
+          const commitMessage = `Auto-sync on load: ${new Date().toLocaleString()}`;
+          const result = await enhancedService.safeSyncWithRepository(
+            cleanBookData.github.repository,
+            cleanBookData,
+            commitMessage,
+            filePath
+          );
+
+          if (result.success) {
+            console.log('✅ Auto-sync on load completed successfully');
+            // If merge happened, update the book with merged content
+            if (result.mergedContent) {
+              setBook(result.mergedContent);
+              // Save the merged content to disk
+              if (filePath) {
+                const { saveBookToFile } = await import(
+                  './utils/fileOperations'
+                );
+                await saveBookToFile(result.mergedContent, filePath);
+              }
+            }
+            updateGitHubSyncStatus({ lastSyncTime: new Date().toISOString() });
+          } else if (result.conflicts && result.conflicts.length > 0) {
+            console.warn(
+              '⚠️  Auto-sync detected conflicts - user needs to resolve'
+            );
+            alert(
+              'GitHub sync detected conflicts with remote changes. Please use the GitHub Integration dialog to review and resolve conflicts.'
+            );
+          } else if (result.error) {
+            console.warn('❌ Auto-sync on load failed:', result.error);
+            // Silent failure - don't interrupt the user's workflow
+          }
+        } catch (error) {
+          console.warn('❌ Auto-sync on load error:', error.message);
+          // Silent failure - don't interrupt the user's workflow
+        } finally {
+          setCurrentOperation(null);
+        }
+      }
     };
 
     const cleanup3 = eventHandlerService.setupIpcHandlers({

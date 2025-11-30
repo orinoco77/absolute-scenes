@@ -81,18 +81,19 @@ export class BrowserCollaborationService {
 
   /**
    * Merge content from local and remote sources
-   * @param {Object} baseContent - Common ancestor content (or remote for 2-way merge)
-   * @param {Object} localContent - Local changes
-   * @param {Object} remoteContent - Remote changes
+   * @param {Object} baseContent - Common ancestor content (the last known shared state)
+   * @param {Object} remoteContent - Remote changes (what's in GitHub)
+   * @param {Object} localContent - Local changes (what we're trying to push)
    * @returns {Promise<Object>} - Merge result with conflicts if any
    */
-  async mergeContent(baseContent, localContent, remoteContent) {
+  async mergeContent(baseContent, remoteContent, localContent) {
     const conflicts = [];
-    const merged = JSON.parse(JSON.stringify(baseContent)); // Deep clone
+    const merged = JSON.parse(JSON.stringify(baseContent)); // Start with base
 
     // Merge simple string fields
     this.mergeSimpleField(
       'title',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -100,6 +101,7 @@ export class BrowserCollaborationService {
     );
     this.mergeSimpleField(
       'author',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -109,6 +111,7 @@ export class BrowserCollaborationService {
     // Merge array fields with IDs (scenes, characters, chapters, etc.)
     this.mergeArrayWithIds(
       'scenes',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -116,6 +119,7 @@ export class BrowserCollaborationService {
     );
     this.mergeArrayWithIds(
       'characters',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -123,6 +127,7 @@ export class BrowserCollaborationService {
     );
     this.mergeArrayWithIds(
       'chapters',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -130,6 +135,7 @@ export class BrowserCollaborationService {
     );
     this.mergeArrayWithIds(
       'parts',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -137,6 +143,7 @@ export class BrowserCollaborationService {
     );
     this.mergeArrayWithIds(
       'locations',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -144,6 +151,7 @@ export class BrowserCollaborationService {
     );
     this.mergeArrayWithIds(
       'backgroundFolders',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -151,6 +159,7 @@ export class BrowserCollaborationService {
     );
     this.mergeArrayWithIds(
       'frontMatter',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -160,6 +169,7 @@ export class BrowserCollaborationService {
     // Merge simple arrays (like blacklists)
     this.mergeSimpleArray(
       'characterDetectionBlacklist',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -169,14 +179,23 @@ export class BrowserCollaborationService {
     // Merge complex nested objects
     this.mergeObject(
       'template',
+      baseContent,
       localContent,
       remoteContent,
       merged,
       conflicts
     );
-    this.mergeObject('github', localContent, remoteContent, merged, conflicts);
+    this.mergeObject(
+      'github',
+      baseContent,
+      localContent,
+      remoteContent,
+      merged,
+      conflicts
+    );
     this.mergeObject(
       'metadata',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -184,6 +203,7 @@ export class BrowserCollaborationService {
     );
     this.mergeObject(
       'collaboration',
+      baseContent,
       localContent,
       remoteContent,
       merged,
@@ -191,7 +211,13 @@ export class BrowserCollaborationService {
     );
 
     // Handle any remaining fields not explicitly handled above
-    this.mergeRemainingFields(localContent, remoteContent, merged, conflicts);
+    this.mergeRemainingFields(
+      baseContent,
+      localContent,
+      remoteContent,
+      merged,
+      conflicts
+    );
 
     return {
       content: merged,
@@ -200,36 +226,56 @@ export class BrowserCollaborationService {
     };
   }
 
-  mergeSimpleField(fieldName, localContent, remoteContent, merged, conflicts) {
+  mergeSimpleField(
+    fieldName,
+    baseContent,
+    localContent,
+    remoteContent,
+    merged,
+    conflicts
+  ) {
+    const baseValue = baseContent[fieldName];
     const localValue = localContent[fieldName];
     const remoteValue = remoteContent[fieldName];
 
-    if (localValue !== remoteValue) {
-      if (localValue && remoteValue) {
-        // Both have values that differ - conflict
-        conflicts.push({
-          type: fieldName,
-          localContent: localValue,
-          remoteContent: remoteValue
-        });
-        // Default to local value
-        merged[fieldName] = localValue;
-      } else {
-        // One is empty/null - use the non-empty one
-        merged[fieldName] = localValue || remoteValue;
-      }
+    // 3-way merge logic
+    if (localValue === remoteValue) {
+      // Both sides agree - use this value
+      merged[fieldName] = localValue;
+    } else if (localValue === baseValue) {
+      // Local unchanged, remote changed - use remote
+      merged[fieldName] = remoteValue;
+    } else if (remoteValue === baseValue) {
+      // Remote unchanged, local changed - use local
+      merged[fieldName] = localValue;
     } else {
-      // Same value or both empty - use either
-      merged[fieldName] = localValue || remoteValue;
+      // Both changed differently - conflict
+      conflicts.push({
+        type: fieldName,
+        localContent: localValue,
+        remoteContent: remoteValue,
+        baseContent: baseValue
+      });
+      // Default to remote value (newer) for auto-merge
+      merged[fieldName] = remoteValue;
     }
   }
 
-  mergeArrayWithIds(fieldName, localContent, remoteContent, merged, conflicts) {
+  mergeArrayWithIds(
+    fieldName,
+    baseContent,
+    localContent,
+    remoteContent,
+    merged,
+    conflicts
+  ) {
+    const baseArray = baseContent[fieldName] || [];
     const localArray = localContent[fieldName] || [];
     const remoteArray = remoteContent[fieldName] || [];
 
-    // Create a map of all unique IDs
+    // Create a map of all unique IDs from all three versions
     const allIds = new Set([
+      ...baseArray.map(item => item.id),
       ...localArray.map(item => item.id),
       ...remoteArray.map(item => item.id)
     ]);
@@ -237,76 +283,189 @@ export class BrowserCollaborationService {
     merged[fieldName] = [];
 
     for (const id of allIds) {
+      const baseItem = baseArray.find(item => item.id === id);
       const localItem = localArray.find(item => item.id === id);
       const remoteItem = remoteArray.find(item => item.id === id);
 
       if (localItem && remoteItem) {
-        // Both have the item - check for conflicts
-        const itemConflicts = this.compareObjects(
-          localItem,
-          remoteItem,
-          `${fieldName}_${id}`
-        );
-        if (itemConflicts.length > 0) {
-          conflicts.push(...itemConflicts);
-          // Use local version as default
+        // Both local and remote have the item
+        if (JSON.stringify(localItem) === JSON.stringify(remoteItem)) {
+          // Identical - use either
+          merged[fieldName].push({ ...localItem });
+        } else if (
+          baseItem &&
+          JSON.stringify(localItem) === JSON.stringify(baseItem)
+        ) {
+          // Local unchanged, remote changed - use remote
+          merged[fieldName].push({ ...remoteItem });
+        } else if (
+          baseItem &&
+          JSON.stringify(remoteItem) === JSON.stringify(baseItem)
+        ) {
+          // Remote unchanged, local changed - use local
           merged[fieldName].push({ ...localItem });
         } else {
-          // Same content - use either
+          // Both changed - check for conflicts in fields
+          const itemConflicts = this.compareObjectsThreeWay(
+            baseItem || {},
+            localItem,
+            remoteItem,
+            `${fieldName}_${id}`
+          );
+          if (itemConflicts.length > 0) {
+            conflicts.push(...itemConflicts);
+          }
+          // Merge the item fields
+          const mergedItem = this.mergeItemFields(
+            baseItem || {},
+            localItem,
+            remoteItem
+          );
+          merged[fieldName].push(mergedItem);
+        }
+      } else if (localItem && !remoteItem) {
+        // Item in local but not remote
+        if (baseItem) {
+          // Was in base, remote deleted it, local kept/modified it - conflict
+          conflicts.push({
+            type: `${fieldName}_deleted`,
+            id,
+            localContent: localItem,
+            remoteContent: null,
+            baseContent: baseItem
+          });
+          // Keep the local version
+          merged[fieldName].push({ ...localItem });
+        } else {
+          // Not in base, local added it - keep local addition
           merged[fieldName].push({ ...localItem });
         }
-      } else if (localItem) {
-        // Only local has it - keep local
-        merged[fieldName].push({ ...localItem });
-      } else if (remoteItem) {
-        // Only remote has it - keep remote
-        merged[fieldName].push({ ...remoteItem });
+      } else if (remoteItem && !localItem) {
+        // Item in remote but not local
+        if (baseItem) {
+          // Was in base, local deleted it, remote kept/modified it - conflict
+          conflicts.push({
+            type: `${fieldName}_deleted`,
+            id,
+            localContent: null,
+            remoteContent: remoteItem,
+            baseContent: baseItem
+          });
+          // Keep the remote version (newer)
+          merged[fieldName].push({ ...remoteItem });
+        } else {
+          // Not in base, remote added it - keep remote addition
+          merged[fieldName].push({ ...remoteItem });
+        }
       }
     }
   }
 
-  mergeSimpleArray(fieldName, localContent, remoteContent, merged, conflicts) {
+  mergeSimpleArray(
+    fieldName,
+    baseContent,
+    localContent,
+    remoteContent,
+    merged,
+    conflicts
+  ) {
+    const baseArray = baseContent[fieldName] || [];
     const localArray = localContent[fieldName] || [];
     const remoteArray = remoteContent[fieldName] || [];
 
-    // For simple arrays, merge as sets (union)
-    const mergedSet = new Set([...localArray, ...remoteArray]);
-    merged[fieldName] = Array.from(mergedSet);
-
-    // Check if there are any conflicts (items in one but not the other)
+    // For simple arrays like blacklists, merge as sets (union of all additions)
+    const baseSet = new Set(baseArray);
     const localSet = new Set(localArray);
     const remoteSet = new Set(remoteArray);
-    const localOnly = localArray.filter(item => !remoteSet.has(item));
-    const remoteOnly = remoteArray.filter(item => !localSet.has(item));
 
-    if (localOnly.length > 0 || remoteOnly.length > 0) {
+    // Items added in local
+    const localAdded = localArray.filter(item => !baseSet.has(item));
+    // Items added in remote
+    const remoteAdded = remoteArray.filter(item => !baseSet.has(item));
+    // Items removed in local
+    const localRemoved = baseArray.filter(item => !localSet.has(item));
+    // Items removed in remote
+    const remoteRemoved = baseArray.filter(item => !remoteSet.has(item));
+
+    // Start with base, apply non-conflicting changes
+    const mergedSet = new Set(baseArray);
+
+    // Add items added by either side
+    localAdded.forEach(item => mergedSet.add(item));
+    remoteAdded.forEach(item => mergedSet.add(item));
+
+    // Remove items removed by either side (unless the other side modified it)
+    localRemoved.forEach(item => {
+      if (!remoteAdded.includes(item)) {
+        mergedSet.delete(item);
+      }
+    });
+    remoteRemoved.forEach(item => {
+      if (!localAdded.includes(item)) {
+        mergedSet.delete(item);
+      }
+    });
+
+    merged[fieldName] = Array.from(mergedSet);
+
+    // Only report conflicts if there are actual contradictions
+    // (e.g., local added X while remote removed X, or vice versa)
+    const contradictions = [];
+    localAdded.forEach(item => {
+      if (remoteRemoved.includes(item)) {
+        contradictions.push({
+          item,
+          localAction: 'added',
+          remoteAction: 'removed'
+        });
+      }
+    });
+    remoteAdded.forEach(item => {
+      if (localRemoved.includes(item)) {
+        contradictions.push({
+          item,
+          localAction: 'removed',
+          remoteAction: 'added'
+        });
+      }
+    });
+
+    if (contradictions.length > 0) {
       conflicts.push({
         type: `${fieldName}_array`,
-        localContent: localArray,
-        remoteContent: remoteArray,
-        localOnly,
-        remoteOnly
+        contradictions
       });
     }
   }
 
-  mergeObject(fieldName, localContent, remoteContent, merged, conflicts) {
+  mergeObject(
+    fieldName,
+    baseContent,
+    localContent,
+    remoteContent,
+    merged,
+    conflicts
+  ) {
+    const baseObj = baseContent[fieldName] || {};
     const localObj = localContent[fieldName] || {};
     const remoteObj = remoteContent[fieldName] || {};
 
-    // Start with remote object as base
-    merged[fieldName] = JSON.parse(JSON.stringify(remoteObj));
+    // Start with base object
+    merged[fieldName] = JSON.parse(JSON.stringify(baseObj));
 
-    // Compare all fields from both objects
+    // Get all keys from all three versions
     const allKeys = new Set([
+      ...Object.keys(baseObj),
       ...Object.keys(localObj),
       ...Object.keys(remoteObj)
     ]);
 
     for (const key of allKeys) {
+      const baseValue = baseObj[key];
       const localValue = localObj[key];
       const remoteValue = remoteObj[key];
 
+      // 3-way merge for each field
       if (
         typeof localValue === 'object' &&
         typeof remoteValue === 'object' &&
@@ -314,38 +473,40 @@ export class BrowserCollaborationService {
         remoteValue !== null
       ) {
         // Both are objects - recursive merge
-        const subConflicts = this.compareObjects(
+        const subConflicts = this.compareObjectsThreeWay(
+          baseValue || {},
           localValue,
           remoteValue,
           `${fieldName}.${key}`
         );
         if (subConflicts.length > 0) {
           conflicts.push(...subConflicts);
-          // Use local value as default
-          merged[fieldName][key] = localValue;
-        } else {
-          // No conflicts - use local value (prefer local changes)
-          merged[fieldName][key] = localValue;
         }
-      } else if (localValue !== remoteValue) {
-        if (localValue !== undefined && remoteValue !== undefined) {
-          // Both have different values - conflict
-          conflicts.push({
-            type: `${fieldName}.${key}`,
-            localContent: localValue,
-            remoteContent: remoteValue
-          });
-          // Default to local value
-          merged[fieldName][key] = localValue;
-        } else {
-          // One is undefined - use the defined one
-          merged[fieldName][key] =
-            localValue !== undefined ? localValue : remoteValue;
-        }
+        // Merge the sub-objects
+        merged[fieldName][key] = this.mergeObjectFields(
+          baseValue || {},
+          localValue,
+          remoteValue
+        );
+      } else if (localValue === remoteValue) {
+        // Both agree
+        merged[fieldName][key] = localValue;
+      } else if (localValue === baseValue) {
+        // Local unchanged, remote changed
+        merged[fieldName][key] = remoteValue;
+      } else if (remoteValue === baseValue) {
+        // Remote unchanged, local changed
+        merged[fieldName][key] = localValue;
       } else {
-        // Same value - use either
-        merged[fieldName][key] =
-          localValue !== undefined ? localValue : remoteValue;
+        // Both changed differently - conflict
+        conflicts.push({
+          type: `${fieldName}.${key}`,
+          localContent: localValue,
+          remoteContent: remoteValue,
+          baseContent: baseValue
+        });
+        // Default to remote value (newer)
+        merged[fieldName][key] = remoteValue;
       }
     }
   }
@@ -388,7 +549,13 @@ export class BrowserCollaborationService {
     return conflicts;
   }
 
-  mergeRemainingFields(localContent, remoteContent, merged, conflicts) {
+  mergeRemainingFields(
+    baseContent,
+    localContent,
+    remoteContent,
+    merged,
+    conflicts
+  ) {
     const handledFields = new Set([
       'title',
       'author',
@@ -407,6 +574,7 @@ export class BrowserCollaborationService {
     ]);
 
     const allKeys = new Set([
+      ...Object.keys(baseContent),
       ...Object.keys(localContent),
       ...Object.keys(remoteContent)
     ]);
@@ -416,6 +584,7 @@ export class BrowserCollaborationService {
         // Handle unknown fields with simple merge
         this.mergeSimpleField(
           key,
+          baseContent,
           localContent,
           remoteContent,
           merged,
@@ -423,6 +592,260 @@ export class BrowserCollaborationService {
         );
       }
     }
+  }
+
+  /**
+   * 3-way comparison of objects
+   */
+  compareObjectsThreeWay(baseObj, localObj, remoteObj, prefix) {
+    const conflicts = [];
+    const allKeys = new Set([
+      ...Object.keys(baseObj),
+      ...Object.keys(localObj),
+      ...Object.keys(remoteObj)
+    ]);
+
+    for (const key of allKeys) {
+      const baseValue = baseObj[key];
+      const localValue = localObj[key];
+      const remoteValue = remoteObj[key];
+
+      // Handle arrays with IDs by comparing items by ID, not position
+      if (
+        Array.isArray(localValue) &&
+        Array.isArray(remoteValue) &&
+        (localValue.length > 0 || remoteValue.length > 0) &&
+        (localValue[0]?.id || remoteValue[0]?.id)
+      ) {
+        const baseArray = Array.isArray(baseValue) ? baseValue : [];
+        const safeBase = baseArray.filter(item => item && item.id);
+        const safeLocal = localValue.filter(item => item && item.id);
+        const safeRemote = remoteValue.filter(item => item && item.id);
+
+        const allIds = new Set([
+          ...safeBase.map(item => item.id),
+          ...safeLocal.map(item => item.id),
+          ...safeRemote.map(item => item.id)
+        ]);
+
+        // Compare each item by ID
+        for (const id of allIds) {
+          const baseItem = safeBase.find(item => item.id === id);
+          const localItem = safeLocal.find(item => item.id === id);
+          const remoteItem = safeRemote.find(item => item.id === id);
+
+          if (localItem && remoteItem) {
+            // Both have this item - check for conflicts in its fields
+            const itemConflicts = this.compareObjectsThreeWay(
+              baseItem || {},
+              localItem,
+              remoteItem,
+              `${prefix}.${key}.${id}`
+            );
+            conflicts.push(...itemConflicts);
+          }
+          // Additions/deletions aren't conflicts, they're handled in merge
+        }
+        continue;
+      }
+
+      if (
+        typeof localValue === 'object' &&
+        typeof remoteValue === 'object' &&
+        localValue !== null &&
+        remoteValue !== null
+      ) {
+        // Recursive comparison for nested objects
+        const subConflicts = this.compareObjectsThreeWay(
+          baseValue || {},
+          localValue,
+          remoteValue,
+          `${prefix}.${key}`
+        );
+        conflicts.push(...subConflicts);
+      } else if (
+        localValue !== remoteValue &&
+        localValue !== baseValue &&
+        remoteValue !== baseValue
+      ) {
+        // All three differ - conflict
+        conflicts.push({
+          type: `${prefix}.${key}`,
+          localContent: localValue,
+          remoteContent: remoteValue,
+          baseContent: baseValue
+        });
+      }
+    }
+
+    return conflicts;
+  }
+
+  /**
+   * Merge individual item fields using 3-way logic
+   */
+  mergeItemFields(baseItem, localItem, remoteItem) {
+    const merged = { ...baseItem };
+    const allKeys = new Set([
+      ...Object.keys(baseItem),
+      ...Object.keys(localItem),
+      ...Object.keys(remoteItem)
+    ]);
+
+    for (const key of allKeys) {
+      const baseValue = baseItem[key];
+      const localValue = localItem[key];
+      const remoteValue = remoteItem[key];
+
+      // Handle arrays with IDs (like scenes within chapters)
+      if (
+        Array.isArray(localValue) &&
+        Array.isArray(remoteValue) &&
+        (localValue.length > 0 || remoteValue.length > 0) &&
+        (localValue[0]?.id || remoteValue[0]?.id)
+      ) {
+        // This is an array of items with IDs - merge recursively
+        const baseArray = Array.isArray(baseValue) ? baseValue : [];
+        merged[key] = this.mergeNestedArrayWithIds(
+          baseArray,
+          localValue,
+          remoteValue
+        );
+      } else if (JSON.stringify(localValue) === JSON.stringify(remoteValue)) {
+        merged[key] = localValue;
+      } else if (JSON.stringify(localValue) === JSON.stringify(baseValue)) {
+        merged[key] = remoteValue;
+      } else if (JSON.stringify(remoteValue) === JSON.stringify(baseValue)) {
+        merged[key] = localValue;
+      } else {
+        // Both changed - prefer remote (newer)
+        merged[key] = remoteValue;
+      }
+    }
+
+    return merged;
+  }
+
+  /**
+   * Merge nested arrays with IDs (like scenes within chapters)
+   */
+  mergeNestedArrayWithIds(baseArray, localArray, remoteArray) {
+    // Ensure arrays are valid
+    const safeBase = Array.isArray(baseArray) ? baseArray : [];
+    const safeLocal = Array.isArray(localArray) ? localArray : [];
+    const safeRemote = Array.isArray(remoteArray) ? remoteArray : [];
+
+    const allIds = new Set([
+      ...safeBase.filter(item => item && item.id).map(item => item.id),
+      ...safeLocal.filter(item => item && item.id).map(item => item.id),
+      ...safeRemote.filter(item => item && item.id).map(item => item.id)
+    ]);
+
+    const result = [];
+
+    for (const id of allIds) {
+      const baseItem = safeBase.find(item => item && item.id === id);
+      const localItem = safeLocal.find(item => item && item.id === id);
+      const remoteItem = safeRemote.find(item => item && item.id === id);
+
+      if (localItem && remoteItem) {
+        // Both have it
+        if (JSON.stringify(localItem) === JSON.stringify(remoteItem)) {
+          result.push({ ...localItem });
+        } else if (
+          baseItem &&
+          JSON.stringify(localItem) === JSON.stringify(baseItem)
+        ) {
+          // Local unchanged, remote changed
+          result.push({ ...remoteItem });
+        } else if (
+          baseItem &&
+          JSON.stringify(remoteItem) === JSON.stringify(baseItem)
+        ) {
+          // Remote unchanged, local changed
+          result.push({ ...localItem });
+        } else {
+          // Both changed - merge fields recursively (but not infinitely)
+          // Use simpler field-level merge without recursing back into arrays
+          const mergedItem = { ...baseItem, ...remoteItem, ...localItem };
+
+          // For each key, do proper 3-way merge
+          for (const key of Object.keys({
+            ...baseItem,
+            ...localItem,
+            ...remoteItem
+          })) {
+            const baseVal = baseItem?.[key];
+            const localVal = localItem?.[key];
+            const remoteVal = remoteItem?.[key];
+
+            if (JSON.stringify(localVal) === JSON.stringify(remoteVal)) {
+              mergedItem[key] = localVal;
+            } else if (JSON.stringify(localVal) === JSON.stringify(baseVal)) {
+              mergedItem[key] = remoteVal;
+            } else if (JSON.stringify(remoteVal) === JSON.stringify(baseVal)) {
+              mergedItem[key] = localVal;
+            } else {
+              // Both changed - prefer remote (newer)
+              mergedItem[key] = remoteVal;
+            }
+          }
+
+          result.push(mergedItem);
+        }
+      } else if (localItem) {
+        // Only local has it (new addition in local)
+        result.push({ ...localItem });
+      } else if (remoteItem) {
+        // Only remote has it (new addition in remote)
+        result.push({ ...remoteItem });
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Merge object fields using 3-way logic
+   */
+  mergeObjectFields(baseObj, localObj, remoteObj) {
+    const merged = { ...baseObj };
+    const allKeys = new Set([
+      ...Object.keys(baseObj),
+      ...Object.keys(localObj),
+      ...Object.keys(remoteObj)
+    ]);
+
+    for (const key of allKeys) {
+      const baseValue = baseObj[key];
+      const localValue = localObj[key];
+      const remoteValue = remoteObj[key];
+
+      if (
+        typeof localValue === 'object' &&
+        typeof remoteValue === 'object' &&
+        localValue !== null &&
+        remoteValue !== null
+      ) {
+        // Recursive merge
+        merged[key] = this.mergeObjectFields(
+          baseValue || {},
+          localValue,
+          remoteValue
+        );
+      } else if (localValue === remoteValue) {
+        merged[key] = localValue;
+      } else if (localValue === baseValue) {
+        merged[key] = remoteValue;
+      } else if (remoteValue === baseValue) {
+        merged[key] = localValue;
+      } else {
+        // Both changed - prefer remote (newer)
+        merged[key] = remoteValue;
+      }
+    }
+
+    return merged;
   }
 
   /**
