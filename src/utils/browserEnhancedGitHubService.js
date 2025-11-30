@@ -25,9 +25,15 @@ export class BrowserEnhancedGitHubService {
     repository,
     bookData,
     commitMessage,
-    currentFilePath = null
+    currentFilePath = null,
+    retryCount = 0
   ) {
     try {
+      // Clear SHA cache if this is a retry (to get fresh remote)
+      if (retryCount > 0) {
+        this.gitHubService.fileShaCache?.clear();
+      }
+
       // Get remote content and determine filename
       const remoteResult =
         await this.getRemoteBookContentWithFilename(repository);
@@ -52,37 +58,53 @@ export class BrowserEnhancedGitHubService {
         };
       }
 
-      // Check timestamps to detect if remote is newer than local
-      const localModified = bookData.metadata?.modified
-        ? new Date(bookData.metadata.modified).getTime()
-        : 0;
-      const remoteModified = remoteBookData.metadata?.modified
-        ? new Date(remoteBookData.metadata.modified).getTime()
-        : 0;
+      // Get the base content (last synced version) for proper 3-way merge
+      // If we don't have a base, use remote as the base (first sync scenario)
+      let baseContent = bookData.github?.lastSyncedContent || remoteBookData;
 
-      // If remote is newer than local, we need to integrate remote changes
-      if (remoteModified > localModified) {
-        // Remote has changes we don't have - perform a merge
-        const mergeResult = await this.collaborationService.mergeContent(
-          remoteBookData, // Use remote as base (the older common state)
-          remoteBookData, // Remote changes (what's in GitHub)
-          bookData // Local changes (what we're trying to push)
-        );
+      // Strip lastSyncedContent from all versions before comparison
+      // This field is metadata about sync state, not actual content
+      baseContent = JSON.parse(JSON.stringify(baseContent));
+      const cleanRemote = JSON.parse(JSON.stringify(remoteBookData));
+      const cleanLocal = JSON.parse(JSON.stringify(bookData));
 
-        if (mergeResult.hasConflicts) {
-          // Real conflicts detected that need user resolution
-          this.conflicts = mergeResult.conflicts;
-          return {
-            success: false,
-            conflicts: mergeResult.conflicts,
-            requiresResolution: true,
-            remoteContent: remoteBookData,
-            baseContent: remoteBookData,
-            filename
-          };
-        }
+      delete baseContent.github?.lastSyncedContent;
+      delete cleanRemote.github?.lastSyncedContent;
+      delete cleanLocal.github?.lastSyncedContent;
 
-        // Auto-merge succeeded - push the merged content
+      // Perform 3-way merge with proper base
+      // This will only create conflicts when the SAME item was modified in both local and remote
+      const mergeResult = await this.collaborationService.mergeContent(
+        baseContent, // Common ancestor (last synced state)
+        cleanRemote, // Remote changes (what's in GitHub)
+        cleanLocal // Local changes (current local state)
+      );
+
+      if (mergeResult.hasConflicts) {
+        // Real conflicts detected - same item modified in both places
+        this.conflicts = mergeResult.conflicts;
+        return {
+          success: false,
+          conflicts: mergeResult.conflicts,
+          requiresResolution: true,
+          remoteContent: cleanRemote, // Use cleaned version for conflict display
+          baseContent: baseContent,
+          filename
+        };
+      }
+
+      // Check if merged content is different from remote
+      // If identical, no need to push (just update local with sync metadata)
+      const mergedContentClean = JSON.parse(
+        JSON.stringify(mergeResult.content)
+      );
+      delete mergedContentClean.github?.lastSyncedContent;
+
+      const isIdenticalToRemote =
+        JSON.stringify(mergedContentClean) === JSON.stringify(cleanRemote);
+
+      if (!isIdenticalToRemote) {
+        // Content changed - push to GitHub
         await this.collaborationService.createCommit(
           mergeResult.content,
           commitMessage
@@ -94,47 +116,49 @@ export class BrowserEnhancedGitHubService {
           filename
         );
 
-        return {
-          success: pushResult.success,
-          conflicts: [],
-          mergedContent: mergeResult.content,
-          error: pushResult.error
-        };
+        if (!pushResult.success) {
+          // Check if it's a SHA conflict (file changed on GitHub while we were working)
+          if (
+            pushResult.error &&
+            pushResult.error.includes('does not match') &&
+            retryCount === 0
+          ) {
+            // File changed remotely - automatically retry with fresh fetch
+            console.log(
+              '🔄 File changed on GitHub during sync, retrying with latest version...'
+            );
+            return await this.safeSyncWithRepository(
+              repository,
+              bookData,
+              commitMessage,
+              currentFilePath,
+              retryCount + 1
+            );
+          }
+
+          return {
+            success: false,
+            conflicts: [],
+            error: pushResult.error
+          };
+        }
       }
 
-      // Local is newer or same age - check for conflicts anyway
-      const conflicts = await this.collaborationService.detectConflicts(
-        bookData,
-        remoteBookData
-      );
+      // Store the merged/remote content as the new base for future syncs
+      const contentToStore = JSON.parse(JSON.stringify(mergeResult.content));
+      delete contentToStore.github?.lastSyncedContent;
 
-      if (conflicts.length === 0) {
-        // No conflicts, local can safely overwrite remote
-        await this.collaborationService.createCommit(bookData, commitMessage);
-        const pushResult = await this.pushToRepository(
-          repository,
-          bookData,
-          commitMessage,
-          filename
-        );
+      mergeResult.content.github = {
+        ...mergeResult.content.github,
+        lastSyncedContent: contentToStore
+      };
 
-        return {
-          success: pushResult.success,
-          conflicts: [],
-          error: pushResult.error
-        };
-      } else {
-        // Conflicts detected even though local is newer - require user resolution
-        this.conflicts = conflicts;
-        return {
-          success: false,
-          conflicts,
-          requiresResolution: true,
-          remoteContent: remoteBookData,
-          baseContent: remoteBookData,
-          filename
-        };
-      }
+      return {
+        success: true,
+        conflicts: [],
+        mergedContent: mergeResult.content,
+        wasPushed: !isIdenticalToRemote
+      };
     } catch (error) {
       return {
         success: false,
@@ -176,6 +200,18 @@ export class BrowserEnhancedGitHubService {
         commitMessage,
         filename
       );
+
+      if (pushResult.success) {
+        // Store the merged content as the new base for future syncs
+        // Clone without the lastSyncedContent to avoid circular reference
+        const contentToStore = JSON.parse(JSON.stringify(mergedContent));
+        delete contentToStore.github?.lastSyncedContent;
+
+        mergedContent.github = {
+          ...mergedContent.github,
+          lastSyncedContent: contentToStore
+        };
+      }
 
       return {
         success: pushResult.success,

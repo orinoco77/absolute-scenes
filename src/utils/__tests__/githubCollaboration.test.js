@@ -264,7 +264,7 @@ describe('GitHub Collaboration Features', () => {
         });
         GitHubService.saveBookToRepository.mockResolvedValue({});
 
-        // Mock the merge to succeed
+        // Mock the merge to return remote (which means we pulled remote changes)
         service.collaborationService.mergeContent = jest
           .fn()
           .mockResolvedValue({
@@ -282,7 +282,9 @@ describe('GitHub Collaboration Features', () => {
 
         expect(result.success).toBe(true);
         expect(service.collaborationService.mergeContent).toHaveBeenCalled();
-        expect(GitHubService.saveBookToRepository).toHaveBeenCalled();
+        // When merge result = remote, no push needed (optimization)
+        expect(GitHubService.saveBookToRepository).not.toHaveBeenCalled();
+        expect(result.wasPushed).toBe(false);
       });
 
       it('returns conflicts when merge detects them', async () => {
@@ -358,9 +360,14 @@ describe('GitHub Collaboration Features', () => {
         });
         GitHubService.saveBookToRepository.mockResolvedValue({});
 
-        service.collaborationService.detectConflicts = jest
+        // Mock the merge to return no conflicts
+        service.collaborationService.mergeContent = jest
           .fn()
-          .mockResolvedValue([]);
+          .mockResolvedValue({
+            content: localBook,
+            hasConflicts: false,
+            conflicts: []
+          });
 
         const result = await service.safeSyncWithRepository(
           mockRepository,
@@ -370,13 +377,9 @@ describe('GitHub Collaboration Features', () => {
         );
 
         expect(result.success).toBe(true);
-        expect(service.collaborationService.detectConflicts).toHaveBeenCalled();
-        expect(GitHubService.saveBookToRepository).toHaveBeenCalledWith(
-          mockRepository,
-          localBook,
-          'Test commit',
-          'book.book'
-        );
+        // Now uses 3-way merge instead of detectConflicts
+        expect(service.collaborationService.mergeContent).toHaveBeenCalled();
+        expect(GitHubService.saveBookToRepository).toHaveBeenCalled();
       });
     });
 

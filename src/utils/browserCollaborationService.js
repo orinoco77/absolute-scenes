@@ -238,14 +238,19 @@ export class BrowserCollaborationService {
     const localValue = localContent[fieldName];
     const remoteValue = remoteContent[fieldName];
 
+    // Use JSON.stringify for deep equality comparison (handles arrays/objects)
+    const localStr = JSON.stringify(localValue);
+    const remoteStr = JSON.stringify(remoteValue);
+    const baseStr = JSON.stringify(baseValue);
+
     // 3-way merge logic
-    if (localValue === remoteValue) {
+    if (localStr === remoteStr) {
       // Both sides agree - use this value
       merged[fieldName] = localValue;
-    } else if (localValue === baseValue) {
+    } else if (localStr === baseStr) {
       // Local unchanged, remote changed - use remote
       merged[fieldName] = remoteValue;
-    } else if (remoteValue === baseValue) {
+    } else if (remoteStr === baseStr) {
       // Remote unchanged, local changed - use local
       merged[fieldName] = localValue;
     } else {
@@ -860,32 +865,87 @@ export class BrowserCollaborationService {
 
     resolutions.forEach(resolution => {
       const conflict = conflicts[resolution.conflictIndex];
+      const conflictType = conflict.type;
 
-      switch (conflict.type) {
-        case 'title':
-          result.title = resolution.resolvedContent;
-          break;
-        case 'scene_content':
-          if (result.scenes) {
-            const scene = result.scenes.find(s => s.id === conflict.sceneId);
-            if (scene) {
-              scene.content = resolution.resolvedContent;
-            }
+      // Handle legacy specific conflict types for backwards compatibility
+      if (conflictType === 'scene_content') {
+        if (result.scenes) {
+          const scene = result.scenes.find(s => s.id === conflict.sceneId);
+          if (scene) {
+            scene.content = resolution.resolvedContent;
           }
-          break;
-        case 'character':
-          if (result.characters) {
-            const character = result.characters.find(
-              c => c.id === conflict.characterId
-            );
-            if (character) {
-              character[conflict.field] = resolution.resolvedContent;
-            }
-          }
-          break;
-        default:
-          throw new Error(`Unknown conflict type: ${conflict.type}`);
+        }
+        return;
       }
+
+      if (conflictType === 'character') {
+        if (result.characters) {
+          const character = result.characters.find(
+            c => c.id === conflict.characterId
+          );
+          if (character) {
+            character[conflict.field] = resolution.resolvedContent;
+          }
+        }
+        return;
+      }
+
+      // Handle array-level conflicts (e.g., "backMatter_array", "illustrations_array")
+      if (conflictType.endsWith('_array')) {
+        const arrayName = conflictType.replace('_array', '');
+        // For array contradictions, just use the resolved content
+        result[arrayName] = resolution.resolvedContent;
+        return;
+      }
+
+      // Handle deleted array items (e.g., "backMatter_deleted", "chapters_deleted")
+      if (conflictType.endsWith('_deleted')) {
+        const arrayName = conflictType.replace('_deleted', '');
+        // User has chosen to keep or remove the item
+        // If resolution is to keep it, it's already in the result
+        // If resolution is to remove it, remove it
+        if (
+          resolution.resolution === 'remote' &&
+          conflict.remoteContent === null
+        ) {
+          // Remote deleted it, user chose remote, so delete it
+          if (result[arrayName]) {
+            result[arrayName] = result[arrayName].filter(
+              item => item.id !== conflict.id
+            );
+          }
+        } else if (
+          resolution.resolution === 'local' &&
+          conflict.localContent === null
+        ) {
+          // Local deleted it, user chose local, so delete it
+          if (result[arrayName]) {
+            result[arrayName] = result[arrayName].filter(
+              item => item.id !== conflict.id
+            );
+          }
+        }
+        return;
+      }
+
+      // Handle nested path conflicts (e.g., "metadata.modified", "template.pageSize")
+      if (conflictType.includes('.')) {
+        const path = conflictType.split('.');
+        let current = result;
+        // Navigate to parent object
+        for (let i = 0; i < path.length - 1; i++) {
+          if (!current[path[i]]) {
+            current[path[i]] = {};
+          }
+          current = current[path[i]];
+        }
+        // Set the final value
+        current[path[path.length - 1]] = resolution.resolvedContent;
+        return;
+      }
+
+      // Handle simple field conflicts (title, author, etc.)
+      result[conflictType] = resolution.resolvedContent;
     });
 
     return result;

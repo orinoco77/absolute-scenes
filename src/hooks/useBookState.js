@@ -67,7 +67,8 @@ const createDefaultBook = () => ({
   },
   github: {
     repository: null,
-    lastSyncTime: null
+    lastSyncTime: null,
+    lastSyncedContent: null
   },
   metadata: {
     created: new Date().toISOString(),

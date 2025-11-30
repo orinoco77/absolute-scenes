@@ -388,17 +388,32 @@ function GitHubIntegration({
         // Sync completed without conflicts
         onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
         if (result.mergedContent && onBookUpdate) {
-          onBookUpdate(result.mergedContent);
+          // Force a fresh object to ensure React detects the change
+          const updatedBook = JSON.parse(JSON.stringify(result.mergedContent));
+          onBookUpdate(updatedBook);
+
+          // Also save merged content to disk
+          if (currentFilePath) {
+            const { saveBookToFile } = await import('../utils/fileOperations');
+            await saveBookToFile(updatedBook, currentFilePath);
+          }
+
           if (onStatusMessage)
             onStatusMessage('Sync completed with automatic merge!');
+
+          // Close dialog after brief delay to allow parent to re-render with new content
+          setTimeout(() => {
+            if (onStatusMessage) onStatusMessage('');
+            if (onClose) onClose();
+          }, 1500);
         } else {
           if (onStatusMessage) onStatusMessage('Sync completed successfully!');
-        }
 
-        // Clear status message after a short delay
-        setTimeout(() => {
-          if (onStatusMessage) onStatusMessage('');
-        }, 2000);
+          // Clear status message after a short delay
+          setTimeout(() => {
+            if (onStatusMessage) onStatusMessage('');
+          }, 2000);
+        }
       } else if (result.requiresResolution) {
         // Conflicts detected - show resolution UI
         setConflicts(result.conflicts);
