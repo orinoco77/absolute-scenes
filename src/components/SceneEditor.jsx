@@ -16,8 +16,7 @@ function SceneEditor({
   // Sync local content when scene changes
   useEffect(() => {
     setLocalContent(scene?.content || '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene?.id]); // Only update when scene ID changes, not content
+  }, [scene?.id, scene?.content]); // Update when scene ID or content changes
 
   // Helper function to enter distraction-free mode
   const enterDistractionFree = () => {

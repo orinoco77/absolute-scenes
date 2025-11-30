@@ -74,7 +74,11 @@ export class GitHubSyncService {
         // eslint-disable-next-line no-console
         console.log('✅ GitHub sync completed successfully');
         onSyncSuccess?.(saveTime);
-        return { success: true, syncTime: saveTime };
+        return {
+          success: true,
+          syncTime: saveTime,
+          mergedContent: result.mergedContent
+        };
       } else if (result.error) {
         console.warn('❌ Auto-sync failed:', result.error);
         const errorMessage = `Auto-sync failed: ${result.error}`;

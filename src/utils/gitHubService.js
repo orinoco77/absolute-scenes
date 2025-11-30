@@ -676,7 +676,8 @@ class GitHubService {
             Authorization: `Bearer ${this.token}`,
             Accept: 'application/vnd.github.v3+json',
             'User-Agent': 'AbsoluteScenes-BookWriter'
-          }
+          },
+          cache: 'no-store' // Prevent browser caching without triggering CORS
         }
       );
 

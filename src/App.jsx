@@ -255,7 +255,7 @@ function App() {
     async (filePath, saveTime, bookData = null) => {
       const dataToSync = bookData || book;
 
-      await gitHubSyncService.syncWithGitHub({
+      const result = await gitHubSyncService.syncWithGitHub({
         bookData: dataToSync,
         filePath,
         saveTime,
@@ -267,8 +267,17 @@ function App() {
           alert(error);
         }
       });
+
+      // If sync resulted in merged content, update the local book and save to disk
+      if (result?.success && result.mergedContent) {
+        setBook(result.mergedContent);
+        if (filePath) {
+          const { saveBookToFile } = await import('./utils/fileOperations');
+          await saveBookToFile(result.mergedContent, filePath);
+        }
+      }
     },
-    [book, updateGitHubSyncStatus]
+    [book, updateGitHubSyncStatus, setBook]
   );
 
   // Save operation handlers (following Single Responsibility Principle)
@@ -323,7 +332,7 @@ function App() {
       onSaveEnd: () => {
         // Silent - no UI update
       },
-      onSaveSuccess: filePath => {
+      onSaveSuccess: async filePath => {
         setCurrentFilePath(filePath);
         setHasUnsavedChanges(false);
 
@@ -331,7 +340,7 @@ function App() {
         if (gitHubSyncService.shouldSyncToGitHub(book)) {
           const saveTime = new Date().toISOString();
           // Silent sync - no operation updates
-          gitHubSyncService.syncWithGitHub({
+          const result = await gitHubSyncService.syncWithGitHub({
             bookData: book,
             filePath,
             saveTime,
@@ -341,6 +350,13 @@ function App() {
             },
             onSyncError: () => {} // Silent - errors only logged to console
           });
+
+          // If sync resulted in merged content, update the local book and save to disk
+          if (result?.success && result.mergedContent) {
+            setBook(result.mergedContent);
+            const { saveBookToFile } = await import('./utils/fileOperations');
+            await saveBookToFile(result.mergedContent, filePath);
+          }
         }
       },
       onSaveError: error => {

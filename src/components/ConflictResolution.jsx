@@ -43,6 +43,40 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
     onResolve(resolutionArray);
   }, [conflicts, resolutions, onResolve]);
 
+  // Format conflict content for display
+  const formatContent = useCallback(content => {
+    if (content === null || content === undefined) {
+      return '(deleted)';
+    }
+    if (typeof content === 'string') {
+      return content || '(empty)';
+    }
+    if (typeof content === 'object') {
+      return JSON.stringify(content, null, 2);
+    }
+    return String(content);
+  }, []);
+
+  // Get a user-friendly conflict title
+  const getConflictTitle = useCallback(conflict => {
+    if (conflict.type === 'scene_content') return 'Scene Content Conflict';
+    if (conflict.type === 'title') return 'Book Title Conflict';
+    if (conflict.type === 'character')
+      return `Character ${conflict.field} Conflict`;
+    if (conflict.type.endsWith('_deleted')) {
+      const itemType = conflict.type.replace('_deleted', '');
+      return `${itemType} Item Deleted`;
+    }
+    if (conflict.type.includes('.')) {
+      return `${conflict.type} Conflict`;
+    }
+    // Capitalize first letter and add spaces before capitals
+    const formatted = conflict.type
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase());
+    return `${formatted} Conflict`;
+  }, []);
+
   // Don't render if no conflicts
   if (!conflicts || conflicts.length === 0) {
     return null;
@@ -52,6 +86,9 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
 
   const renderConflict = (conflict, index) => {
     const currentResolution = resolutions[index];
+    const isTextConflict =
+      typeof conflict.localContent === 'string' &&
+      typeof conflict.remoteContent === 'string';
 
     return (
       <div
@@ -64,12 +101,7 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
           borderRadius: '5px'
         }}
       >
-        <h4>
-          {conflict.type === 'scene_content' && 'Scene Content Conflict'}
-          {conflict.type === 'title' && 'Book Title Conflict'}
-          {conflict.type === 'character' &&
-            `Character ${conflict.field} Conflict`}
-        </h4>
+        <h4>{getConflictTitle(conflict)}</h4>
 
         <div style={{ display: 'flex', gap: '20px', marginBottom: '15px' }}>
           <div style={{ flex: 1 }}>
@@ -79,10 +111,15 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
                 padding: '10px',
                 backgroundColor: 'var(--color-info-bg)',
                 border: '1px solid var(--color-border)',
-                borderRadius: '3px'
+                borderRadius: '3px',
+                whiteSpace: 'pre-wrap',
+                fontFamily: isTextConflict ? 'inherit' : 'monospace, monospace',
+                fontSize: isTextConflict ? 'inherit' : '12px',
+                maxHeight: '200px',
+                overflow: 'auto'
               }}
             >
-              {conflict.localContent}
+              {formatContent(conflict.localContent)}
             </div>
             <button
               onClick={() =>
@@ -113,10 +150,15 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
                 padding: '10px',
                 backgroundColor: 'var(--color-error-bg)',
                 border: '1px solid var(--color-border)',
-                borderRadius: '3px'
+                borderRadius: '3px',
+                whiteSpace: 'pre-wrap',
+                fontFamily: isTextConflict ? 'inherit' : 'monospace, monospace',
+                fontSize: isTextConflict ? 'inherit' : '12px',
+                maxHeight: '200px',
+                overflow: 'auto'
               }}
             >
-              {conflict.remoteContent}
+              {formatContent(conflict.remoteContent)}
             </div>
             <button
               onClick={() =>
@@ -148,7 +190,12 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
             onClick={() => {
               const defaultContent =
                 currentResolution?.resolvedContent || conflict.localContent;
-              handleResolutionChange(index, 'manual', defaultContent);
+              // For manual editing, convert objects to formatted JSON strings
+              const editableContent =
+                typeof defaultContent === 'object'
+                  ? JSON.stringify(defaultContent, null, 2)
+                  : defaultContent;
+              handleResolutionChange(index, 'manual', editableContent);
             }}
             style={{
               padding: '5px 10px',
@@ -169,17 +216,36 @@ export const ConflictResolution = ({ conflicts, onResolve, onCancel }) => {
 
           {currentResolution?.resolution === 'manual' && (
             <TextEditor
-              value={currentResolution.resolvedContent}
-              onChange={e => handleManualEdit(index, e.target.value)}
+              value={
+                typeof currentResolution.resolvedContent === 'string'
+                  ? currentResolution.resolvedContent
+                  : JSON.stringify(currentResolution.resolvedContent, null, 2)
+              }
+              onChange={e => {
+                // Try to parse JSON if it looks like JSON, otherwise keep as string
+                let value = e.target.value;
+                if (
+                  value.trim().startsWith('{') ||
+                  value.trim().startsWith('[')
+                ) {
+                  try {
+                    value = JSON.parse(value);
+                  } catch {
+                    // Keep as string if invalid JSON
+                  }
+                }
+                handleManualEdit(index, value);
+              }}
               style={{
                 width: '100%',
                 minHeight: '100px',
                 padding: '10px',
                 border: '1px solid var(--color-border)',
                 borderRadius: '3px',
-                fontFamily: 'var(--font-family-primary)'
+                fontFamily: 'monospace, monospace',
+                fontSize: '12px'
               }}
-              spellCheck={true}
+              spellCheck={false}
             />
           )}
         </div>
