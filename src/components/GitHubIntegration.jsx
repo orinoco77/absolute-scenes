@@ -1,5 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
+import { useState, useEffect, useRef } from 'react';
 import { BrowserEnhancedGitHubService } from '../utils/browserEnhancedGitHubService';
 import GitHubService from '../utils/gitHubService';
 import { ConflictResolution } from './ConflictResolution';
@@ -35,6 +36,10 @@ function GitHubIntegration({
   const [conflicts, setConflicts] = useState([]);
   const [enhancedService] = useState(() => new BrowserEnhancedGitHubService());
   const [pendingSyncData, setPendingSyncData] = useState(null);
+
+  // QR code sharing state
+  const [showQRModal, setShowQRModal] = useState(false);
+  const qrCanvasRef = useRef(null);
 
   // Use sync time from book data
   const lastSyncTime = book.github?.lastSyncTime
@@ -519,6 +524,32 @@ function GitHubIntegration({
   const openGitHubSignup = () => {
     const { shell } = window.require('electron');
     shell.openExternal('https://github.com/join');
+  };
+
+  const handleShowQRCode = async () => {
+    setShowQRModal(true);
+    // Generate QR code when modal opens
+    setTimeout(async () => {
+      if (qrCanvasRef.current) {
+        const qrData = {
+          type: 'absolute-scenes-github-token',
+          token: GitHubService.token,
+          userInfo: GitHubService.userInfo
+        };
+        try {
+          await QRCode.toCanvas(qrCanvasRef.current, JSON.stringify(qrData), {
+            width: 300,
+            margin: 2,
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF'
+            }
+          });
+        } catch (err) {
+          console.error('Failed to generate QR code:', err);
+        }
+      }
+    }, 100);
   };
 
   if (showTokenSetup) {
@@ -1263,10 +1294,29 @@ function GitHubIntegration({
                   </strong>
                 </div>
                 <div
-                  style={{ fontSize: '14px', color: 'var(--color-success)' }}
+                  style={{
+                    fontSize: '14px',
+                    color: 'var(--color-success)',
+                    marginBottom: '12px'
+                  }}
                 >
                   Signed in as <strong>{userInfo?.login}</strong>
                 </div>
+                <button
+                  onClick={handleShowQRCode}
+                  style={{
+                    padding: '8px 12px',
+                    background: 'var(--color-primary)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    width: '100%'
+                  }}
+                >
+                  📱 Share Token with Mobile App
+                </button>
               </div>
 
               {currentRepository ? (
@@ -1535,6 +1585,72 @@ function GitHubIntegration({
           onResolve={handleConflictResolution}
           onCancel={handleConflictCancel}
         />
+      )}
+
+      {/* QR Code Sharing Modal */}
+      {showQRModal && (
+        <div className="modal-overlay" style={{ zIndex: 1001 }}>
+          <div className="modal" style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h2>📱 Share with Mobile App</h2>
+              <button
+                onClick={() => setShowQRModal(false)}
+                className="close-btn"
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-content" style={{ textAlign: 'center' }}>
+              <p
+                style={{
+                  marginBottom: '20px',
+                  color: 'var(--color-text-muted)'
+                }}
+              >
+                Scan this QR code with your mobile app to automatically sync
+                your GitHub token.
+              </p>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  marginBottom: '20px',
+                  padding: '20px',
+                  background: 'white',
+                  borderRadius: '8px'
+                }}
+              >
+                <canvas ref={qrCanvasRef} />
+              </div>
+              <div
+                style={{
+                  padding: '12px',
+                  background: 'var(--color-background-secondary)',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  color: 'var(--color-text-muted)',
+                  textAlign: 'left'
+                }}
+              >
+                <strong>📋 Instructions:</strong>
+                <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                  <li>Open Absolute Scenes on your mobile device</li>
+                  <li>Tap "Scan QR Code" on the login screen</li>
+                  <li>Point your camera at this QR code</li>
+                  <li>Your token will be imported automatically</li>
+                </ol>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                onClick={() => setShowQRModal(false)}
+                className="btn-secondary"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
