@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.37<!--/VERSION--> | **Tests:** <!--TESTS-->1137/1137<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.38<!--/VERSION--> | **Tests:** <!--TESTS-->1137/1137<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2025-12-07<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -286,7 +286,7 @@ Access via the 🔗 GitHub Integration button:
 
 **Code Quality:** <!--TESTS-->1137/1137<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->171<!--/COMMITS--> | **Latest:** <!--COMMIT-->bc45497 - Fix for huge QR code (19 hours ago)<!--/COMMIT-->
+<!--COMMITS-->172<!--/COMMITS--> | **Latest:** <!--COMMIT-->3ea2b7e - Remove unnecessary config for QR code (88 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.37<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.37<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.38<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.38<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-12-07<!--/DATE--> | Build <!--COMMIT-->bc45497 - Fix for huge QR code (19 hours ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-12-07<!--/DATE--> | Build <!--COMMIT-->3ea2b7e - Remove unnecessary config for QR code (88 minutes ago)<!--/COMMIT-->_
