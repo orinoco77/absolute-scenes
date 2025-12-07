@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.35<!--/VERSION--> | **Tests:** <!--TESTS-->1137/1137<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2025-12-06<!--/DATE-->
+**Version:** <!--VERSION-->1.4.36<!--/VERSION--> | **Tests:** <!--TESTS-->1137/1137<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2025-12-07<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -286,7 +286,7 @@ Access via the 🔗 GitHub Integration button:
 
 **Code Quality:** <!--TESTS-->1137/1137<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->169<!--/COMMITS--> | **Latest:** <!--COMMIT-->8467ab2 - More github sync fixes (6 days ago)<!--/COMMIT-->
+<!--COMMITS-->170<!--/COMMITS--> | **Latest:** <!--COMMIT-->26ad181 - QR code sharing for github integration (17 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +537,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.35<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.35<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.36<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.36<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -570,4 +570,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-12-06<!--/DATE--> | Build <!--COMMIT-->8467ab2 - More github sync fixes (6 days ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-12-07<!--/DATE--> | Build <!--COMMIT-->26ad181 - QR code sharing for github integration (17 minutes ago)<!--/COMMIT-->_

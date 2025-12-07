@@ -531,15 +531,16 @@ function GitHubIntegration({
     // Generate QR code when modal opens
     setTimeout(async () => {
       if (qrCanvasRef.current) {
+        // Keep QR code data minimal for better scanning
         const qrData = {
           type: 'absolute-scenes-github-token',
-          token: GitHubService.token,
-          userInfo: GitHubService.userInfo
+          token: GitHubService.token
         };
         try {
           await QRCode.toCanvas(qrCanvasRef.current, JSON.stringify(qrData), {
             width: 300,
             margin: 2,
+            errorCorrectionLevel: 'M',
             color: {
               dark: '#000000',
               light: '#FFFFFF'
