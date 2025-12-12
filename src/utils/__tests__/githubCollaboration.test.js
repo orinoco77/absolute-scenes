@@ -14,7 +14,9 @@ jest.mock('../gitHubService', () => ({
     isAuthenticated: jest.fn(),
     saveBookToRepository: jest.fn(),
     checkRepositoryForBookFile: jest.fn(),
-    downloadBookFromRepository: jest.fn()
+    downloadBookFromRepository: jest.fn(),
+    getLatestCommitSha: jest.fn(),
+    getFileAtCommit: jest.fn()
   }
 }));
 
@@ -239,6 +241,13 @@ describe('GitHub Collaboration Features', () => {
       jest.clearAllMocks();
       service = new BrowserEnhancedGitHubService();
       GitHubService.isAuthenticated.mockReturnValue(true);
+      // Mock SHA-related methods for the new SHA comparison optimization
+      GitHubService.getLatestCommitSha.mockResolvedValue(null); // Default: no remote SHA
+      GitHubService.getFileAtCommit.mockResolvedValue(null); // Default: no base content
+      GitHubService.saveBookToRepository.mockResolvedValue({
+        commit: { sha: 'new-commit-sha-123' },
+        content: { sha: 'new-file-sha-456' }
+      });
     });
 
     describe('when remote is newer than local', () => {
