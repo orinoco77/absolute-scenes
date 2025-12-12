@@ -58,19 +58,117 @@ export class BrowserEnhancedGitHubService {
         };
       }
 
-      // Get the base content (last synced version) for proper 3-way merge
-      // If we don't have a base, use remote as the base (first sync scenario)
-      let baseContent = bookData.github?.lastSyncedContent || remoteBookData;
+      // OPTIMIZATION: Compare commit SHAs first
+      // If our stored SHA matches GitHub's current SHA, remote hasn't changed
+      // No need to fetch base or merge - just push our local changes
+      const remoteCommitSha = await this.gitHubService.getLatestCommitSha(
+        repository,
+        filename
+      );
 
-      // Strip lastSyncedContent from all versions before comparison
-      // This field is metadata about sync state, not actual content
+      if (
+        bookData.github?.lastSyncCommitSha &&
+        remoteCommitSha &&
+        bookData.github.lastSyncCommitSha === remoteCommitSha
+      ) {
+        console.log(
+          '✓ Remote unchanged (SHA match) - pushing local changes only'
+        );
+
+        // Remote hasn't changed, just push our local changes
+        await this.collaborationService.createCommit(bookData, commitMessage);
+        const pushResult = await this.pushToRepository(
+          repository,
+          bookData,
+          commitMessage,
+          filename
+        );
+
+        if (!pushResult.success) {
+          return {
+            success: false,
+            conflicts: [],
+            error: pushResult.error
+          };
+        }
+
+        // Update the stored SHA with the new one from this push
+        const updatedBookData = JSON.parse(JSON.stringify(bookData));
+        updatedBookData.github = {
+          ...updatedBookData.github,
+          lastSyncCommitSha: pushResult.commitSha
+        };
+
+        return {
+          success: true,
+          conflicts: [],
+          mergedContent: updatedBookData,
+          wasPushed: true
+        };
+      }
+
+      console.log(
+        '⚠ Remote changed (SHA mismatch or no SHA) - performing 3-way merge'
+      );
+
+      // Get the base content (last synced version) for proper 3-way merge
+      // Try to fetch from GitHub using commit SHA for more reliable base tracking
+      let baseContent = null;
+
+      if (bookData.github?.lastSyncCommitSha) {
+        console.log(
+          `Fetching base content from commit ${bookData.github.lastSyncCommitSha}`
+        );
+        baseContent = await this.gitHubService.getFileAtCommit(
+          repository,
+          filename,
+          bookData.github.lastSyncCommitSha
+        );
+      }
+
+      // Fall back to stored content if SHA fetch fails (backward compatibility)
+      if (!baseContent && bookData.github?.lastSyncedContent) {
+        console.log('Using stored lastSyncedContent as base (fallback)');
+        baseContent = bookData.github.lastSyncedContent;
+      }
+
+      // If still no base, this is first sync - use empty object as base
+      // This makes the 3-way merge treat both local and remote as new changes
+      // and properly merge them instead of favoring one over the other
+      if (!baseContent) {
+        console.warn('No base content found - treating as first sync');
+        console.warn('Will attempt to merge local and remote changes');
+        // Use an empty book structure as base so both local and remote changes are respected
+        baseContent = {
+          title: '',
+          author: '',
+          scenes: [],
+          characters: [],
+          chapters: [],
+          parts: [],
+          locations: [],
+          backgroundFolders: [],
+          frontMatter: [],
+          characterDetectionBlacklist: [],
+          template: {},
+          github: {},
+          metadata: {},
+          collaboration: {}
+        };
+      }
+
+      // Strip sync metadata from all versions before comparison
+      // These fields are metadata about sync state, not actual content
       baseContent = JSON.parse(JSON.stringify(baseContent));
       const cleanRemote = JSON.parse(JSON.stringify(remoteBookData));
       const cleanLocal = JSON.parse(JSON.stringify(bookData));
 
       delete baseContent.github?.lastSyncedContent;
+      delete baseContent.github?.lastSyncCommitSha;
       delete cleanRemote.github?.lastSyncedContent;
+      delete cleanRemote.github?.lastSyncCommitSha;
       delete cleanLocal.github?.lastSyncedContent;
+      delete cleanLocal.github?.lastSyncCommitSha;
 
       // Perform 3-way merge with proper base
       // This will only create conflicts when the SAME item was modified in both local and remote
@@ -99,9 +197,12 @@ export class BrowserEnhancedGitHubService {
         JSON.stringify(mergeResult.content)
       );
       delete mergedContentClean.github?.lastSyncedContent;
+      delete mergedContentClean.github?.lastSyncCommitSha;
 
       const isIdenticalToRemote =
         JSON.stringify(mergedContentClean) === JSON.stringify(cleanRemote);
+
+      let commitSha = null;
 
       if (!isIdenticalToRemote) {
         // Content changed - push to GitHub
@@ -142,16 +243,31 @@ export class BrowserEnhancedGitHubService {
             error: pushResult.error
           };
         }
+
+        // Capture the commit SHA from the push
+        commitSha = pushResult.commitSha;
+        console.log(`Pushed to GitHub, commit SHA: ${commitSha}`);
+      } else {
+        // Content identical to remote, get the latest commit SHA
+        commitSha = await this.gitHubService.getLatestCommitSha(
+          repository,
+          filename
+        );
+        console.log(`No push needed, using remote commit SHA: ${commitSha}`);
       }
 
-      // Store the merged/remote content as the new base for future syncs
-      const contentToStore = JSON.parse(JSON.stringify(mergeResult.content));
-      delete contentToStore.github?.lastSyncedContent;
-
+      // Store the commit SHA for future base tracking
+      // This is much more reliable and efficient than storing full content
       mergeResult.content.github = {
         ...mergeResult.content.github,
-        lastSyncedContent: contentToStore
+        lastSyncCommitSha: commitSha
       };
+
+      // Clean up old lastSyncedContent if it exists (migration)
+      if (mergeResult.content.github?.lastSyncedContent) {
+        delete mergeResult.content.github.lastSyncedContent;
+        console.log('Migrated from lastSyncedContent to lastSyncCommitSha');
+      }
 
       return {
         success: true,
@@ -202,15 +318,20 @@ export class BrowserEnhancedGitHubService {
       );
 
       if (pushResult.success) {
-        // Store the merged content as the new base for future syncs
-        // Clone without the lastSyncedContent to avoid circular reference
-        const contentToStore = JSON.parse(JSON.stringify(mergedContent));
-        delete contentToStore.github?.lastSyncedContent;
-
+        // Store the commit SHA for future base tracking
         mergedContent.github = {
           ...mergedContent.github,
-          lastSyncedContent: contentToStore
+          lastSyncCommitSha: pushResult.commitSha
         };
+
+        // Clean up old lastSyncedContent if it exists (migration)
+        if (mergedContent.github?.lastSyncedContent) {
+          delete mergedContent.github.lastSyncedContent;
+        }
+
+        console.log(
+          `Conflict resolved and synced, commit SHA: ${pushResult.commitSha}`
+        );
       }
 
       return {
@@ -310,13 +431,16 @@ export class BrowserEnhancedGitHubService {
    */
   async pushToRepository(repository, content, commitMessage, filename) {
     try {
-      await this.gitHubService.saveBookToRepository(
+      const result = await this.gitHubService.saveBookToRepository(
         repository,
         content,
         commitMessage,
         filename
       );
-      return { success: true };
+      return {
+        success: true,
+        commitSha: result.commit?.sha // Return the commit SHA for base tracking
+      };
     } catch (error) {
       return { success: false, error: error.message };
     }

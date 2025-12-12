@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.38<!--/VERSION--> | **Tests:** <!--TESTS-->1137/1137<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2025-12-07<!--/DATE-->
+**Version:** <!--VERSION-->1.4.39<!--/VERSION--> | **Tests:** <!--TESTS-->1137/1137<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2025-12-12<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -103,8 +103,13 @@ your work by scenes and chapters, making it easier to manage complex narratives.
 
 1. Download `Absolute Scenes x.x.x.dmg` from [Releases](../../releases)
 2. Open the DMG and drag to Applications folder
-3. First launch: Right-click → Open (to bypass Gatekeeper)
+3. **Important**: First launch will show a "damaged" warning - this is normal for unsigned apps
+   - **Quick fix**: Right-click the app → Select "Open" → Click "Open" in dialog
+   - **Or use Terminal**: `xattr -cr /Applications/Absolute\ Scenes.app`
+   - **See [MACOS-INSTALL.md](MACOS-INSTALL.md) for detailed instructions**
 4. ✅ App installed to Applications with command line access
+
+> **Why the warning?** Absolute Scenes is not code-signed with an Apple Developer certificate. The app is completely safe - you can verify the source code on GitHub. This is common for free open-source software.
 
 #### **Linux**
 
@@ -286,7 +291,7 @@ Access via the 🔗 GitHub Integration button:
 
 **Code Quality:** <!--TESTS-->1137/1137<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->172<!--/COMMITS--> | **Latest:** <!--COMMIT-->3ea2b7e - Remove unnecessary config for QR code (88 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->173<!--/COMMITS--> | **Latest:** <!--COMMIT-->7dfd433 - Fix icons (5 days ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -537,8 +542,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.38<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.38<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.39<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.39<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -570,4 +575,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2025-12-07<!--/DATE--> | Build <!--COMMIT-->3ea2b7e - Remove unnecessary config for QR code (88 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2025-12-12<!--/DATE--> | Build <!--COMMIT-->7dfd433 - Fix icons (5 days ago)<!--/COMMIT-->_
