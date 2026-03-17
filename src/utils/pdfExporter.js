@@ -330,7 +330,7 @@ function renderFormattedTextToPDF(
           // First word of segment/line, check if we need space relative to previous segment
           const lastWord = formattedWords[formattedWords.length - 1];
           if (lastWord.type !== 'linebreak') {
-             needsSpace = prevEndsWithSpace || line.startsWith(' ');
+            needsSpace = prevEndsWithSpace || line.startsWith(' ');
           }
         }
 
@@ -349,9 +349,9 @@ function renderFormattedTextToPDF(
 
     // Update prevEndsWithSpace for the segment end
     if (segment.text.endsWith('\n')) {
-       prevEndsWithSpace = false;
+      prevEndsWithSpace = false;
     } else {
-       prevEndsWithSpace = segment.text.endsWith(' ');
+      prevEndsWithSpace = segment.text.endsWith(' ');
     }
 
     // For headings, add extra space after
@@ -645,7 +645,8 @@ function renderMixedFormattedLine(
 // Helper function to safely render text and catch coordinate errors
 function safeText(pdf, text, x, y) {
   // Validate coordinates
-  if (isNaN(x) || isNaN(y) || x < 0 || y < 0 || !text) {
+  if (!text) return true;
+  if (isNaN(x) || isNaN(y) || x < 0 || y < 0) {
     console.error('Invalid text coordinates or text:', { text, x, y });
     return false;
   }
