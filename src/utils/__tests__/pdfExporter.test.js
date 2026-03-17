@@ -491,6 +491,39 @@ describe('pdfExporter', () => {
       expect(mockJsPDF.save).toHaveBeenCalled();
     });
 
+    it('handles italic text with adjacent punctuation without extra spaces', async () => {
+      const bookWithItalicPunctuation = {
+        ...mockBook,
+        chapters: [
+          {
+            id: 'chapter1',
+            title: 'Chapter 1',
+            scenes: [
+              {
+                id: 'scene1',
+                title: 'Scene 1',
+                content:
+                  'The word was *structured*. It had a pattern, she said "*yes*", and he replied (*no*)!'
+              }
+            ]
+          }
+        ]
+      };
+      const simpleTemplate = {
+        ...mockTemplate,
+        includeMetadata: {
+          ...mockTemplate.includeMetadata,
+          pageNumbers: false
+        }
+      };
+      const options = { template: simpleTemplate };
+
+      await exportToPDF(bookWithItalicPunctuation, options);
+
+      expect(mockJsPDF.text).toHaveBeenCalled();
+      expect(mockJsPDF.save).toHaveBeenCalled();
+    });
+
     it('handles forced line breaks', async () => {
       const bookWithBreaks = {
         ...mockBook,

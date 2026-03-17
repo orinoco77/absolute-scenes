@@ -240,7 +240,7 @@ function parseMarkdownForPDF(text) {
     // Add normal text before this match
     if (currentPos < match.start) {
       const normalText = processedText.substring(currentPos, match.start);
-      if (normalText.trim()) {
+      if (normalText.length > 0) {
         segments.push({ type: 'normal', text: normalText });
       }
     }
@@ -253,7 +253,7 @@ function parseMarkdownForPDF(text) {
   // Add remaining normal text
   if (currentPos < processedText.length) {
     const remainingText = processedText.substring(currentPos);
-    if (remainingText.trim()) {
+    if (remainingText.length > 0) {
       segments.push({ type: 'normal', text: remainingText });
     }
   }
@@ -295,6 +295,7 @@ function renderFormattedTextToPDF(
 
   // Convert segments to a unified word list with formatting information
   const formattedWords = [];
+  let prevEndsWithSpace = false;
 
   segments.forEach(segment => {
     // Handle headings that should start on new lines
@@ -302,6 +303,7 @@ function renderFormattedTextToPDF(
       // If we're not at the start of a line, add a line break
       if (formattedWords.length > 0) {
         formattedWords.push({ text: '\n', type: 'linebreak' });
+        prevEndsWithSpace = false;
       }
     }
 
@@ -311,6 +313,7 @@ function renderFormattedTextToPDF(
     lines.forEach((line, lineIndex) => {
       if (lineIndex > 0) {
         formattedWords.push({ text: '\n', type: 'linebreak' });
+        prevEndsWithSpace = false;
       }
 
       // Split line into words
@@ -321,13 +324,14 @@ function renderFormattedTextToPDF(
         let needsSpace = false;
 
         if (wordIndex > 0) {
-          // Not the first word in this segment - always needs space
+          // Words split by ' ' within the same line always had a space between them
           needsSpace = true;
         } else if (lineIndex === 0 && formattedWords.length > 0) {
-          // First word of segment, but not first word overall
+          // First word of segment/line, check if we need space relative to previous segment
           const lastWord = formattedWords[formattedWords.length - 1];
-          // Need space if previous word was not a line break
-          needsSpace = lastWord.type !== 'linebreak';
+          if (lastWord.type !== 'linebreak') {
+             needsSpace = prevEndsWithSpace || line.startsWith(' ');
+          }
         }
 
         formattedWords.push({
@@ -336,7 +340,19 @@ function renderFormattedTextToPDF(
           needsSpace: needsSpace
         });
       });
+
+      // Update prevEndsWithSpace based on this line
+      if (line.length > 0) {
+        prevEndsWithSpace = line.endsWith(' ');
+      }
     });
+
+    // Update prevEndsWithSpace for the segment end
+    if (segment.text.endsWith('\n')) {
+       prevEndsWithSpace = false;
+    } else {
+       prevEndsWithSpace = segment.text.endsWith(' ');
+    }
 
     // For headings, add extra space after
     if (segment.type.startsWith('h')) {

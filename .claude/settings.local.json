@@ -7,7 +7,7 @@
       "Bash(npm audit:*)",
       "Bash(npx expo install:*)",
       "Bash(npm install)",
-      "Bash(timeout 30s npx expo start)"
+      "Bash(timeout 30s npx expo start)",
       "Bash(npm audit:*)",
       "WebFetch(domain:github.com)"
     ],
