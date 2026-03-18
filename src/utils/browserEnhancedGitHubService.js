@@ -51,10 +51,21 @@ export class BrowserEnhancedGitHubService {
           commitMessage,
           filename
         );
+
+        // Update book data with github config if push succeeded
+        let mergedContent = bookData;
+        if (pushResult.success && pushResult.commitSha) {
+          mergedContent = JSON.parse(JSON.stringify(bookData));
+          mergedContent.github = {
+            ...mergedContent.github,
+            lastSyncCommitSha: pushResult.commitSha
+          };
+        }
         return {
           success: pushResult.success,
           conflicts: [],
-          error: pushResult.error
+          error: pushResult.error,
+          mergedContent
         };
       }
 

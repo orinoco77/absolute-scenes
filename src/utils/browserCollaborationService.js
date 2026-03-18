@@ -3,9 +3,12 @@
  * Provides safe, conflict-aware synchronization without Node.js dependencies
  */
 
+import { TextMergeService } from './textMergeService';
+
 export class BrowserCollaborationService {
   constructor() {
     this.conflicts = [];
+    this.textMergeService = new TextMergeService();
     // Metadata fields that should not trigger conflicts
     // These fields change automatically and the latest value should always win
     this.metadataFields = new Set([
@@ -264,6 +267,13 @@ export class BrowserCollaborationService {
     } else if (remoteStr === baseStr) {
       // Remote unchanged, local changed - use local
       merged[fieldName] = localValue;
+    } else if (
+      baseValue === undefined ||
+      baseValue === null ||
+      baseValue === ''
+    ) {
+      // First sync / no base value - auto-resolve without conflict
+      merged[fieldName] = remoteValue !== undefined ? remoteValue : localValue;
     } else {
       // Both changed differently - conflict
       conflicts.push({
@@ -519,6 +529,14 @@ export class BrowserCollaborationService {
       } else if (remoteValue === baseValue) {
         // Remote unchanged, local changed
         merged[fieldName][key] = localValue;
+      } else if (
+        baseValue === undefined ||
+        baseValue === null ||
+        baseValue === ''
+      ) {
+        // First sync / no base value - auto-resolve without conflict
+        merged[fieldName][key] =
+          remoteValue !== undefined ? remoteValue : localValue;
       } else {
         // Both changed differently - conflict
         conflicts.push({
@@ -693,7 +711,11 @@ export class BrowserCollaborationService {
       } else if (
         localValue !== remoteValue &&
         localValue !== baseValue &&
-        remoteValue !== baseValue
+        remoteValue !== baseValue &&
+        // Only report conflict if base actually had content (not first sync)
+        baseValue !== undefined &&
+        baseValue !== '' &&
+        baseValue !== null
       ) {
         // All three differ - conflict
         conflicts.push({
@@ -751,8 +773,33 @@ export class BrowserCollaborationService {
       } else if (JSON.stringify(remoteValue) === JSON.stringify(baseValue)) {
         merged[key] = localValue;
       } else {
-        // Both changed - prefer remote (newer)
-        merged[key] = remoteValue;
+        // Both changed - use text merge for string fields, otherwise prefer remote
+        if (
+          typeof localValue === 'string' &&
+          typeof remoteValue === 'string' &&
+          typeof baseValue === 'string'
+        ) {
+          // Use diff-match-patch for text content
+          const mergeResult = this.textMergeService.mergeText(
+            baseValue,
+            remoteValue,
+            localValue
+          );
+          merged[key] = mergeResult.merged;
+
+          // Track text conflicts separately
+          if (mergeResult.hasConflict) {
+            // Store conflict info for potential UI display
+            if (!merged._textConflicts) merged._textConflicts = [];
+            merged._textConflicts.push({
+              field: key,
+              regions: mergeResult.conflictRegions
+            });
+          }
+        } else {
+          // For non-text fields, prefer remote (newer)
+          merged[key] = remoteValue;
+        }
       }
     }
 

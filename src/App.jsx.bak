@@ -357,9 +357,7 @@ function App() {
                 github: {
                   ...prev.github,
                   lastSyncTime: syncTime,
-                  lastSyncedContent: syncedBookContent,
-                  lastSyncCommitSha:
-                    syncResult?.mergedContent?.github?.lastSyncCommitSha
+                  lastSyncedContent: syncedBookContent
                 }
               }));
             },

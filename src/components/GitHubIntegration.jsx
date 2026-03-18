@@ -326,6 +326,12 @@ function GitHubIntegration({
       setCurrentRepository(repo);
       onGitHubSettingsUpdate({ repository: repo });
 
+      // Create updated book with github repository info for saving
+      const bookWithRepo = {
+        ...book,
+        github: { ...book.github, repository: repo }
+      };
+
       // Immediately save the current book to the repo with proper filename
       setIsSyncing(true);
       try {
@@ -352,7 +358,7 @@ function GitHubIntegration({
 
         await GitHubService.saveBookToRepository(
           repo,
-          book,
+          bookWithRepo,
           commitMessage,
           filename
         );
