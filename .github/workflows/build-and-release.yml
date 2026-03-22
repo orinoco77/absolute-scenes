@@ -49,8 +49,9 @@ jobs:
         # Patch package.json for Electron Builder
         $pkg = Get-Content package.json -Raw | ConvertFrom-Json
         if (-not $pkg.build.win) { $pkg.build | Add-Member -MemberType NoteProperty -Name win -Value @{} }
-        $pkg.build.win.certificateFile = "cert/windows-cert.p12"
-        $pkg.build.win.certificatePassword = "${{ secrets.WINDOWS_CERT_PASSWORD }}"
+        if (-not $pkg.build.win.signtoolOptions) { $pkg.build.win | Add-Member -MemberType NoteProperty -Name signtoolOptions -Value @{} }
+        $pkg.build.win.signtoolOptions.certificateFile = "cert/windows-cert.p12"
+        $pkg.build.win.signtoolOptions.certificatePassword = "${{ secrets.WINDOWS_CERT_PASSWORD }}"
         $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json -Encoding UTF8
         Write-Host "✅ package.json updated for Windows signing"
 
