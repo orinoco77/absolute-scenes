@@ -324,10 +324,13 @@ describe('fontManager', () => {
     test('loads Google Fonts in browser environment', () => {
       // Reset the initialization state for this test
       delete require.cache[require.resolve('../fontManager')];
-      global.window = {}; // No require function
+      // JSDOM 20 does not allow replacing global.window; remove require instead
+      const savedRequire = window.require;
+      delete window.require;
       const fontManagerFresh = require('../fontManager');
 
       fontManagerFresh.initializeFontSystem();
+      window.require = savedRequire;
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
         'Browser environment detected - loading Google Fonts'
@@ -409,7 +412,9 @@ describe('fontManager', () => {
     test('handles Google Fonts loading error', () => {
       // Reset the initialization state for this test
       delete require.cache[require.resolve('../fontManager')];
-      global.window = {}; // No require function
+      // JSDOM 20 does not allow replacing global.window; remove require instead
+      const savedRequire = window.require;
+      delete window.require;
 
       let linkElement;
       mockCreateElement.mockImplementation(tagName => {
@@ -432,6 +437,8 @@ describe('fontManager', () => {
       if (linkElement && linkElement.onerror) {
         linkElement.onerror();
       }
+
+      window.require = savedRequire;
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         'Failed to load Google Fonts - using system fonts instead'

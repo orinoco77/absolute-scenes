@@ -17,9 +17,7 @@ afterAll(() => {
 });
 
 describe('fileOperations', () => {
-  let mockWindow;
   let mockIpcRenderer;
-  let mockDocument;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -30,28 +28,8 @@ describe('fileOperations', () => {
       invoke: jest.fn()
     };
 
-    // Mock Electron environment
-    mockWindow = {
-      require: jest.fn(() => ({
-        ipcRenderer: mockIpcRenderer
-      }))
-    };
-
-    // Mock DOM for browser fallback
-    mockDocument = {
-      createElement: jest.fn(() => ({
-        href: '',
-        download: '',
-        click: jest.fn()
-      })),
-      body: {
-        appendChild: jest.fn(),
-        removeChild: jest.fn()
-      }
-    };
-
-    global.window = mockWindow;
-    global.document = mockDocument;
+    // JSDOM 20 does not allow replacing global.window; set require directly
+    window.require = jest.fn(() => ({ ipcRenderer: mockIpcRenderer }));
     global.URL = {
       createObjectURL: jest.fn(() => 'mock-blob-url'),
       revokeObjectURL: jest.fn()
@@ -60,10 +38,10 @@ describe('fileOperations', () => {
   });
 
   afterEach(() => {
-    delete global.window;
-    delete global.document;
+    delete window.require;
     delete global.URL;
     delete global.Blob;
+    jest.restoreAllMocks();
   });
 
   const mockBookData = {
@@ -84,23 +62,19 @@ describe('fileOperations', () => {
         download: '',
         click: jest.fn()
       };
-      mockDocument.createElement.mockReturnValue(mockAnchor);
+      const createElementSpy = jest
+        .spyOn(document, 'createElement')
+        .mockReturnValue(mockAnchor);
+      jest.spyOn(document.body, 'appendChild').mockImplementation(() => {});
+      jest.spyOn(document.body, 'removeChild').mockImplementation(() => {});
 
       const { saveBook } = await import('../fileOperations');
       const result = await saveBook(mockBookData);
 
-      // Should use browser fallback successfully
       expect(result).toEqual({ success: true, filePath: 'downloaded' });
-
-      // Check if browser download was triggered
-      if (mockDocument.createElement.mock.calls.length > 0) {
-        expect(mockDocument.createElement).toHaveBeenCalledWith('a');
-        expect(mockAnchor.download).toBe('Test Book.book');
-        expect(mockAnchor.click).toHaveBeenCalled();
-      } else {
-        // If mocks weren't called, verify the result is still correct
-        expect(result.success).toBe(true);
-      }
+      expect(createElementSpy).toHaveBeenCalledWith('a');
+      expect(mockAnchor.download).toBe('Test Book.book');
+      expect(mockAnchor.click).toHaveBeenCalled();
     });
 
     it('uses fallback filename when book title is empty', async () => {
@@ -109,7 +83,9 @@ describe('fileOperations', () => {
         download: '',
         click: jest.fn()
       };
-      mockDocument.createElement.mockReturnValue(mockAnchor);
+      jest.spyOn(document, 'createElement').mockReturnValue(mockAnchor);
+      jest.spyOn(document.body, 'appendChild').mockImplementation(() => {});
+      jest.spyOn(document.body, 'removeChild').mockImplementation(() => {});
 
       const bookWithoutTitle = { ...mockBookData, title: '' };
 
@@ -125,13 +101,19 @@ describe('fileOperations', () => {
         download: '',
         click: jest.fn()
       };
-      mockDocument.createElement.mockReturnValue(mockAnchor);
+      jest.spyOn(document, 'createElement').mockReturnValue(mockAnchor);
+      const appendChildSpy = jest
+        .spyOn(document.body, 'appendChild')
+        .mockImplementation(() => {});
+      const removeChildSpy = jest
+        .spyOn(document.body, 'removeChild')
+        .mockImplementation(() => {});
 
       const { saveBook } = await import('../fileOperations');
       await saveBook(mockBookData);
 
-      expect(mockDocument.body.appendChild).toHaveBeenCalledWith(mockAnchor);
-      expect(mockDocument.body.removeChild).toHaveBeenCalledWith(mockAnchor);
+      expect(appendChildSpy).toHaveBeenCalledWith(mockAnchor);
+      expect(removeChildSpy).toHaveBeenCalledWith(mockAnchor);
       expect(global.URL.revokeObjectURL).toHaveBeenCalledWith('mock-blob-url');
     });
 
@@ -215,7 +197,7 @@ describe('fileOperations', () => {
     });
 
     it('falls back to browser mode when Electron loading fails', async () => {
-      mockWindow.require = jest.fn(() => {
+      window.require = jest.fn(() => {
         throw new Error('Electron not available');
       });
 

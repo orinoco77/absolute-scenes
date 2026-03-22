@@ -369,7 +369,7 @@ describe('LocationEditor Component', () => {
     expect(descriptionTextarea.style.fontFamily).toBe(
       'var(--editor-font-family, inherit)'
     );
-    expect(descriptionTextarea.style.fontSize).toBe(''); // TextEditor applies this but test environment may not reflect it
+    expect(['', 'inherit']).toContain(descriptionTextarea.style.fontSize); // JSDOM 20 returns 'inherit' for unset properties
     expect(descriptionTextarea.style.lineHeight).toBe('1.5');
   });
 });
