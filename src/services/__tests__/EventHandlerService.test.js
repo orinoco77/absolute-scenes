@@ -73,12 +73,14 @@ describe('EventHandlerService', () => {
     });
 
     it('returns false when window is undefined', () => {
-      const originalWindow = global.window;
-      delete global.window;
+      // JSDOM 20 does not allow deleting global.window; test the same
+      // code path by removing window.require instead
+      const originalRequire = window.require;
+      delete window.require;
 
       expect(service.isElectron()).toBe(false);
 
-      global.window = originalWindow;
+      window.require = originalRequire;
     });
 
     it('returns false when window.require is not a function', () => {
