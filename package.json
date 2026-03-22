@@ -1,6 +1,6 @@
 {
     "name": "absolute-scenes",
-    "version": "1.4.46",
+    "version": "1.4.47",
     "description": "A scene-based book writing application",
     "main": "public/electron.js",
     "homepage": "./",
@@ -115,9 +115,11 @@
                     ]
                 }
             ],
-            "certificateFile": "cert/windows-cert.p12",
-            "certificatePassword": "",
-            "publisherName": "Adam Short"
+            "signtoolOptions": {
+                "certificateFile": "cert/windows-cert.p12",
+                "certificatePassword": "",
+                "publisherName": "Adam Short"
+            }
         },
         "nsis": {
             "artifactName": "${productName} Setup ${version}.${ext}",
@@ -197,10 +199,12 @@
             ],
             "category": "Office",
             "desktop": {
-                "Name": "Absolute Scenes",
-                "Comment": "A scene-based book writing application",
-                "Keywords": "writing;book;editor;scenes;",
-                "StartupWMClass": "absolute-scenes"
+                "entry": {
+                    "Name": "Absolute Scenes",
+                    "Comment": "A scene-based book writing application",
+                    "Keywords": "writing;book;editor;scenes;",
+                    "StartupWMClass": "absolute-scenes"
+                }
             },
             "executableName": "absolute-scenes"
         },
