@@ -7,7 +7,8 @@ module.exports = {
     '<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}'
   ],
   moduleNameMapper: {
-    '\.(css|less|scss|sass)$': 'identity-obj-proxy'
+    '\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '^jspdf$': '<rootDir>/node_modules/jspdf/dist/jspdf.node.min.js'
   },
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', {
