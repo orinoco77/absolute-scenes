@@ -133,7 +133,7 @@ jobs:
       run: npm run build
 
     - name: Package app (dist)
-      run: npm run dist
+      run: npm run build && npx electron-builder --publish never
       env:
         ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
         APPLE_ID: ${{ secrets.APPLE_ID }}
