@@ -132,6 +132,33 @@ test('concurrent syncBook calls for the same session share one in-flight pushSyn
   expect(gitSync.pushSync).toHaveBeenCalledTimes(1);
 });
 
+test('restores github.repository/collaboration onto the returned bookData, since pushSync/reassembleBook always returns github: {}', async () => {
+  gitSync.detectRepoLayout.mockResolvedValue('new');
+  gitSync.pushSync.mockResolvedValue({
+    commitSha: 'new-sha',
+    // Mirrors the real @absolute-scenes/git-sync behavior: reassembleBook
+    // never restores github.* (see its own test: "reassembleBook fills
+    // github.* with empty defaults (caller is responsible for local sync
+    // bookkeeping)").
+    bookData: { title: 'T', github: {} },
+    conflicts: []
+  });
+
+  const book = makeBook();
+  const result = await syncBook({
+    book,
+    filePath: '/x/Book.book',
+    gitHubService: makeGitHubService()
+  });
+
+  expect(result.bookData.github.repository).toEqual(book.github.repository);
+  expect(result.bookData.github.collaboration).toEqual(
+    book.github.collaboration
+  );
+  expect(result.bookData.github.lastSyncCommitSha).toBe('new-sha');
+  expect(result.bookData.title).toBe('T');
+});
+
 test('skips entirely when not authenticated', async () => {
   const gitHubService = {
     isAuthenticated: () => false,

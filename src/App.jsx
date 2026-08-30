@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import BackgroundEditor from './components/BackgroundEditor.jsx';
 import BackMatterEditor from './components/BackMatterEditor.jsx';
 import BackupRecovery from './components/BackupRecovery.jsx';
@@ -21,11 +21,12 @@ import TemplateManager from './components/TemplateManager.jsx';
 import { useBookState } from './hooks/useBookState';
 import { useUIState } from './hooks/useUIState';
 import { EventHandlerService } from './services/EventHandlerService';
-import { GitHubSyncService } from './services/GitHubSyncService';
+import * as gitSyncService from './services/gitSyncService.js';
 import { SaveService } from './services/SaveService';
 import { ThemeService } from './services/ThemeService';
 import { initializeFontSystem } from './utils/fontManager';
 import { initializeFontSettings } from './utils/fontSettingsManager';
+import gitHubService from './utils/gitHubService';
 import './styles/App.css';
 import './styles/back-matter.css';
 import './styles/font-settings.css';
@@ -33,7 +34,6 @@ import './styles/theme-content.css';
 
 // Create service instances (following Dependency Inversion Principle)
 const saveService = new SaveService();
-const gitHubSyncService = new GitHubSyncService();
 const eventHandlerService = new EventHandlerService();
 const themeService = new ThemeService();
 
@@ -169,6 +169,11 @@ function App() {
     loadBook
   } = uiState;
 
+  // Scene ids whose content currently has unresolved git-sync conflict
+  // markers (populated by every sync trigger; consumed by the scene editor
+  // to surface a resolve-by-editing affordance).
+  const [conflictSceneIds, setConflictSceneIds] = useState([]);
+
   // Initialize font system
   useEffect(() => {
     initializeFontSystem();
@@ -202,6 +207,15 @@ function App() {
   const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
   const currentFilePathRef = useRef(currentFilePath);
   const handleSaveBookRef = useRef(null); // Will be set after handleSaveBook is defined
+
+  // Tracks whether the book has changed since the last remote sync attempt
+  // (independent of hasUnsavedChanges, which tracks the local disk save and
+  // is cleared every 3s by the silent autosave). Read by the periodic
+  // remote-sync timer below to decide whether it's worth registering at all.
+  const isDirtySinceLastSyncRef = useRef(false);
+  useEffect(() => {
+    isDirtySinceLastSyncRef.current = true;
+  }, [book]);
 
   // Auto-selection effects (following Open/Closed Principle)
   useEffect(() => {
@@ -250,34 +264,56 @@ function App() {
     };
   }, []);
 
-  // GitHub sync handler (following Single Responsibility Principle)
-  const handleGitHubSync = useCallback(
-    async (filePath, saveTime, bookData = null) => {
-      const dataToSync = bookData || book;
+  // Single entry point for every remote sync trigger (scene-switch, blur,
+  // close, periodic timer, manual). Guards on auth + the book actually being
+  // connected to a repository, then routes through gitSyncService.syncBook --
+  // the one code path into sync (its in-flight guard coalesces concurrent
+  // callers; pushSync's no-op guard skips pushing when nothing changed).
+  const performGitSync = useCallback(async () => {
+    if (!gitHubService.isAuthenticated() || !book?.github?.repository) {
+      return null;
+    }
 
-      const result = await gitHubSyncService.syncWithGitHub({
-        bookData: dataToSync,
-        filePath,
-        saveTime,
-        onOperationUpdate: setCurrentOperation,
-        onSyncSuccess: syncTime => {
-          updateGitHubSyncStatus({ lastSyncTime: syncTime });
-        },
-        onSyncError: error => {
-          alert(error);
-        }
-      });
+    const result = await gitSyncService.syncBook({
+      book,
+      filePath: currentFilePath,
+      gitHubService
+    });
 
-      // If sync resulted in merged content, update the local book and save to disk
-      if (result?.success && result.mergedContent) {
-        setBook(result.mergedContent);
-        if (filePath) {
-          const { saveBookToFile } = await import('./utils/fileOperations');
-          await saveBookToFile(result.mergedContent, filePath);
-        }
+    if (result) {
+      setBook(result.bookData);
+      if (result.conflicts.length > 0) {
+        setConflictSceneIds(result.conflicts.map(c => c.sceneId));
       }
+      isDirtySinceLastSyncRef.current = false;
+    }
+
+    return result;
+  }, [book, currentFilePath, setBook]);
+
+  // Fire-and-forget variant for triggers that don't need the result
+  // (scene-switch, blur, app close).
+  const triggerSync = useCallback(() => {
+    performGitSync();
+  }, [performGitSync]);
+
+  // GitHub sync handler for manual triggers (Save, Save As, keyboard save)
+  // that do want the result.
+  const handleGitHubSync = useCallback(
+    async () => performGitSync(),
+    [performGitSync]
+  );
+
+  // Fire a sync on the way out of the previously-selected scene (spec §8:
+  // scene-switch trigger).
+  const handleSceneSelect = useCallback(
+    newSceneId => {
+      if (currentSceneId && currentSceneId !== newSceneId) {
+        triggerSync();
+      }
+      setCurrentSceneId(newSceneId);
     },
-    [book, updateGitHubSyncStatus, setBook]
+    [currentSceneId, triggerSync, setCurrentSceneId]
   );
 
   // Save operation handlers (following Single Responsibility Principle)
@@ -299,11 +335,8 @@ function App() {
         setCurrentFilePath(filePath);
         setHasUnsavedChanges(false);
 
-        // Handle GitHub sync if configured
-        if (gitHubSyncService.shouldSyncToGitHub(book)) {
-          const saveTime = new Date().toISOString();
-          handleGitHubSync(filePath, saveTime, book);
-        }
+        // Manual save also triggers a remote sync (spec §8: manual trigger)
+        handleGitHubSync();
       },
       onSaveError: error => {
         console.error('Save failed:', error);
@@ -332,46 +365,13 @@ function App() {
       onSaveEnd: () => {
         // Silent - no UI update
       },
-      onSaveSuccess: async filePath => {
+      onSaveSuccess: filePath => {
         setCurrentFilePath(filePath);
         setHasUnsavedChanges(false);
 
-        // Handle GitHub sync if configured - PUSH ONLY, don't overwrite local
-        if (gitHubSyncService.shouldSyncToGitHub(book)) {
-          const saveTime = new Date().toISOString();
-          // Capture the book content that we're syncing (for lastSyncedContent)
-          const syncedBookContent = JSON.parse(JSON.stringify(book));
-          delete syncedBookContent.github?.lastSyncedContent; // Clean circular ref
-
-          // Intentionally not using the result - we don't want to overwrite local content
-          const syncResult = await gitHubSyncService.syncWithGitHub({
-            bookData: book,
-            filePath,
-            saveTime,
-            onOperationUpdate: () => {}, // Silent
-            onSyncSuccess: syncTime => {
-              // Update sync metadata WITHOUT overwriting book content
-              // This preserves any changes user made while sync was in progress
-              setBook(prev => ({
-                ...prev,
-                github: {
-                  ...prev.github,
-                  lastSyncTime: syncTime,
-                  lastSyncedContent: syncedBookContent,
-                  lastSyncCommitSha:
-                    syncResult?.mergedContent?.github?.lastSyncCommitSha
-                }
-              }));
-            },
-            onSyncError: () => {
-              // Silent - don't interrupt typing
-            }
-          });
-
-          // IMPORTANT: We don't use the result here!
-          // Using result.mergedContent would overwrite content the user is actively editing
-          // Only the manual save/sync should update local content from remote
-        }
+        // Local disk autosave only -- remote sync no longer rides this 3s
+        // tick. It now runs on its own periodic timer plus the
+        // scene-switch/blur/close/manual triggers (see performGitSync).
       },
       onSaveError: error => {
         console.error('Auto-save failed:', error);
@@ -383,7 +383,7 @@ function App() {
     });
 
     return result;
-  }, [book, currentFilePath, updateGitHubSyncStatus]);
+  }, [book, currentFilePath]);
 
   // Update refs synchronously after save handlers are defined
   hasUnsavedChangesRef.current = hasUnsavedChanges;
@@ -411,6 +411,36 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - interval runs independently, but refs always have current values
 
+  // Periodic remote-sync timer: a coarser safety net (spec §8) that pushes
+  // to GitHub every 2 minutes while there's something worth syncing, on top
+  // of the scene-switch/blur/close/manual triggers below.
+  useEffect(() => {
+    if (!hasUnsavedChangesRef.current && !isDirtySinceLastSyncRef.current) {
+      return;
+    }
+    const interval = setInterval(() => {
+      performGitSync();
+    }, 120000); // 2 minutes
+    return () => clearInterval(interval);
+  }, [book, currentFilePath, performGitSync]);
+
+  // Sync on blur -- the window losing focus is a natural pause point.
+  useEffect(() => {
+    const onBlur = () => {
+      triggerSync();
+    };
+    window.addEventListener('blur', onBlur);
+    return () => window.removeEventListener('blur', onBlur);
+  }, [triggerSync]);
+
+  // Expose a sync trigger to the Electron main process so it can await a
+  // final push before the app actually quits (see handleWindowClose in
+  // public/electron.js, which calls this the same way it already calls the
+  // exposed hasUnsavedChanges checker below).
+  useEffect(() => {
+    eventHandlerService.exposeToElectron('triggerGitSync', triggerSync);
+  }, [triggerSync]);
+
   const _handleSaveAsBook = useCallback(async () => {
     if (saveService.isSaveInProgress()) {
       return;
@@ -428,11 +458,8 @@ function App() {
         setCurrentFilePath(filePath);
         setHasUnsavedChanges(false);
 
-        // Handle GitHub sync if configured
-        if (gitHubSyncService.shouldSyncToGitHub(book)) {
-          const saveTime = new Date().toISOString();
-          handleGitHubSync(filePath, saveTime, book);
-        }
+        // Manual save also triggers a remote sync (spec §8: manual trigger)
+        handleGitHubSync();
       },
       onSaveError: error => {
         console.error('Save As failed:', error);
@@ -480,6 +507,16 @@ function App() {
       () => hasUnsavedChanges,
       () => userHasInteracted
     );
+
+    // Best-effort remote sync on the way out (browser/dev-server close or
+    // reload). This can't reliably block navigation for the async work --
+    // that's what the Electron close-trigger above (exposeToElectron
+    // 'triggerGitSync') is for -- but it gives non-Electron sessions the
+    // same "closing counts as a sync trigger" behavior from spec §8.
+    const handleBeforeUnloadSync = () => {
+      triggerSync();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnloadSync);
 
     const cleanup2 = eventHandlerService.setupKeyboardShortcuts(
       debouncedSave,
@@ -606,56 +643,24 @@ function App() {
       setHasUnsavedChanges(false);
 
       // Automatically sync with GitHub if configured
-      if (gitHubSyncService.shouldSyncToGitHub(cleanBookData)) {
+      if (
+        gitHubService.isAuthenticated() &&
+        cleanBookData?.github?.repository
+      ) {
         try {
           setCurrentOperation('Syncing with GitHub...');
-
-          const { BrowserEnhancedGitHubService } = await import(
-            './utils/browserEnhancedGitHubService'
-          );
-          const enhancedService = new BrowserEnhancedGitHubService();
-
-          const isAuth = enhancedService.gitHubService.isAuthenticated();
-          if (!isAuth) {
-            console.log(
-              '📘 Book has GitHub configured but not authenticated - skipping auto-sync'
-            );
-            setCurrentOperation(null);
-            return;
-          }
-
-          const commitMessage = `Auto-sync on load: ${new Date().toLocaleString()}`;
-          const result = await enhancedService.safeSyncWithRepository(
-            cleanBookData.github.repository,
-            cleanBookData,
-            commitMessage,
-            filePath
-          );
-
-          if (result.success) {
-            console.log('✅ Auto-sync on load completed successfully');
-            // If merge happened, update the book with merged content
-            if (result.mergedContent) {
-              setBook(result.mergedContent);
-              // Save the merged content to disk
-              if (filePath) {
-                const { saveBookToFile } = await import(
-                  './utils/fileOperations'
-                );
-                await saveBookToFile(result.mergedContent, filePath);
-              }
+          const result = await gitSyncService.syncBook({
+            book: cleanBookData,
+            filePath,
+            gitHubService
+          });
+          if (result) {
+            setBook(result.bookData);
+            if (result.conflicts.length > 0) {
+              setConflictSceneIds(result.conflicts.map(c => c.sceneId));
             }
-            updateGitHubSyncStatus({ lastSyncTime: new Date().toISOString() });
-          } else if (result.conflicts && result.conflicts.length > 0) {
-            console.warn(
-              '⚠️  Auto-sync detected conflicts - user needs to resolve'
-            );
-            alert(
-              'GitHub sync detected conflicts with remote changes. Please use the GitHub Integration dialog to review and resolve conflicts.'
-            );
-          } else if (result.error) {
-            console.warn('❌ Auto-sync on load failed:', result.error);
-            // Silent failure - don't interrupt the user's workflow
+            const { saveBookToFile } = await import('./utils/fileOperations');
+            await saveBookToFile(result.bookData, filePath);
           }
         } catch (error) {
           console.warn('❌ Auto-sync on load error:', error.message);
@@ -663,6 +668,8 @@ function App() {
         } finally {
           setCurrentOperation(null);
         }
+      } else {
+        setBook(cleanBookData);
       }
     };
 
@@ -793,6 +800,7 @@ function App() {
 
     return () => {
       cleanup1?.();
+      window.removeEventListener('beforeunload', handleBeforeUnloadSync);
       cleanup2?.();
       cleanup3?.();
     };
@@ -803,6 +811,7 @@ function App() {
     handleSaveBook,
     _handleSaveAsBook,
     handleExportBook,
+    triggerSync,
     activeTab,
     currentSceneId,
     currentChapterId,
@@ -1695,7 +1704,8 @@ function App() {
           currentSceneId={currentSceneId}
           currentChapterId={currentChapterId}
           currentPartId={currentPartId}
-          onSceneSelect={setCurrentSceneId}
+          conflictSceneIds={conflictSceneIds}
+          onSceneSelect={handleSceneSelect}
           onChapterSelect={setCurrentChapterId}
           onPartSelect={setCurrentPartId}
           collaboration={book.github?.collaboration || book.collaboration}
@@ -1872,6 +1882,7 @@ function App() {
           book={book}
           currentFilePath={currentFilePath}
           onBookUpdate={setBook}
+          onConflictsDetected={setConflictSceneIds}
         />
       )}
 

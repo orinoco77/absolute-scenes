@@ -350,6 +350,24 @@ async function handleWindowClose() {
       }
     }
 
+    // Give the renderer a chance to push any pending changes to GitHub
+    // before the app actually quits. App.jsx exposes this the same way it
+    // exposes hasUnsavedChanges above (see EventHandlerService.exposeToElectron).
+    try {
+      await mainWindow.webContents.executeJavaScript(`
+        (() => {
+          if (window._electronAPIExtensions && window._electronAPIExtensions.triggerGitSync) {
+            return window._electronAPIExtensions.triggerGitSync();
+          }
+          return Promise.resolve();
+        })()
+      `);
+    } catch (error) {
+      console.log(
+        'Could not trigger GitHub sync before close, proceeding with close'
+      );
+    }
+
     // Proceed with closing
     mainWindow.destroy();
     app.quit();

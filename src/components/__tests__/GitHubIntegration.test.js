@@ -8,10 +8,12 @@ import {
   waitFor,
   act
 } from '@testing-library/react';
+import * as gitSyncService from '../../services/gitSyncService.js';
 import GitHubService from '../../utils/gitHubService';
 import GitHubIntegration from '../GitHubIntegration';
 
 jest.mock('../../utils/gitHubService');
+jest.mock('../../services/gitSyncService.js');
 
 // Mock Electron shell
 const mockShell = {
@@ -452,18 +454,20 @@ describe('GitHubIntegration', () => {
     });
 
     it('syncs book to GitHub', async () => {
-      // Mock the new pull-first behavior
-      GitHubService.checkRepositoryForBookFile.mockResolvedValue(null); // No existing file
-      GitHubService.saveBookToRepository.mockResolvedValue();
-
       const bookWithRepo = {
         ...mockBook,
         github: { repository: mockRepository }
       };
+      const syncedBook = { ...bookWithRepo, title: 'Synced Title' };
+      gitSyncService.syncBook.mockResolvedValue({
+        bookData: syncedBook,
+        conflicts: []
+      });
       const propsWithRepo = {
         ...mockProps,
         currentRepo: mockRepository,
-        book: bookWithRepo
+        book: bookWithRepo,
+        onBookUpdate: jest.fn()
       };
 
       render(<GitHubIntegration {...propsWithRepo} />);
@@ -473,23 +477,24 @@ describe('GitHubIntegration', () => {
         fireEvent.click(syncButton);
       });
 
-      // Just verify that both functions were called, without strict order checking
-      await waitFor(
-        () => {
-          expect(GitHubService.checkRepositoryForBookFile).toHaveBeenCalledWith(
-            mockRepository
-          );
-          expect(GitHubService.saveBookToRepository).toHaveBeenCalled();
-        },
-        { timeout: 3000 }
-      );
+      // The one code path into sync: gitSyncService.syncBook, called with
+      // the book, the file path, and the GitHubService singleton -- and the
+      // merged result propagated back to the parent via onBookUpdate.
+      await waitFor(() => {
+        expect(gitSyncService.syncBook).toHaveBeenCalledWith({
+          book: bookWithRepo,
+          filePath: propsWithRepo.currentFilePath,
+          gitHubService: GitHubService
+        });
+        expect(propsWithRepo.onBookUpdate).toHaveBeenCalledWith(syncedBook);
+        expect(mockProps.onGitHubSyncStatusUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({ lastSyncTime: expect.any(String) })
+        );
+      });
     });
 
     it('handles sync failure', async () => {
-      GitHubService.checkRepositoryForBookFile.mockResolvedValue(null); // No existing file
-      GitHubService.saveBookToRepository.mockRejectedValue(
-        new Error('Sync failed')
-      );
+      gitSyncService.syncBook.mockRejectedValue(new Error('Sync failed'));
 
       const propsWithRepo = {
         ...mockProps,
@@ -513,14 +518,15 @@ describe('GitHubIntegration', () => {
       );
     });
 
-    it('generates filename from current file path', async () => {
-      GitHubService.checkRepositoryForBookFile.mockResolvedValue(null); // No existing file
-      GitHubService.saveBookToRepository.mockResolvedValue();
-
+    it('passes the current file path through to the sync layer', async () => {
       const bookWithRepo = {
         ...mockBook,
         github: { repository: mockRepository }
       };
+      gitSyncService.syncBook.mockResolvedValue({
+        bookData: bookWithRepo,
+        conflicts: []
+      });
       const propsWithRepo = {
         ...mockProps,
         currentRepo: mockRepository,
@@ -535,25 +541,29 @@ describe('GitHubIntegration', () => {
         fireEvent.click(syncButton);
       });
 
+      // Filename generation from the file path (or book title, when there's
+      // no file path yet) now lives inside the git-sync package's own
+      // pushSync -- this component's job is just to pass the right filePath
+      // through, which is what used to feed the old local filename logic.
       await waitFor(() => {
-        expect(GitHubService.saveBookToRepository).toHaveBeenCalledWith(
-          mockRepository,
-          bookWithRepo,
-          expect.stringContaining('Manual sync:'),
-          'my-awesome-book.book'
-        );
+        expect(gitSyncService.syncBook).toHaveBeenCalledWith({
+          book: bookWithRepo,
+          filePath: '/path/to/my-awesome-book.book',
+          gitHubService: GitHubService
+        });
       });
     });
 
-    it('generates filename from book title when no file path', async () => {
-      GitHubService.checkRepositoryForBookFile.mockResolvedValue(null); // No existing file
-      GitHubService.saveBookToRepository.mockResolvedValue();
-
+    it('passes a null file path through when the book has never been saved to disk', async () => {
       const bookWithTitle = {
         ...mockBook,
         title: 'My Awesome Book!',
         github: { repository: mockRepository }
       };
+      gitSyncService.syncBook.mockResolvedValue({
+        bookData: bookWithTitle,
+        conflicts: []
+      });
       const propsWithRepo = {
         ...mockProps,
         currentRepo: mockRepository,
@@ -569,12 +579,11 @@ describe('GitHubIntegration', () => {
       });
 
       await waitFor(() => {
-        expect(GitHubService.saveBookToRepository).toHaveBeenCalledWith(
-          mockRepository,
-          bookWithTitle,
-          expect.stringContaining('Manual sync:'),
-          'my-awesome-book.book'
-        );
+        expect(gitSyncService.syncBook).toHaveBeenCalledWith({
+          book: bookWithTitle,
+          filePath: null,
+          gitHubService: GitHubService
+        });
       });
     });
 
@@ -644,10 +653,7 @@ describe('GitHubIntegration', () => {
 
     it('clears status message on sync error', async () => {
       GitHubService.loadStoredAuth.mockReturnValue(true);
-      GitHubService.checkRepositoryForBookFile.mockResolvedValue(null); // No existing file
-      GitHubService.saveBookToRepository.mockRejectedValue(
-        new Error('Sync failed')
-      );
+      gitSyncService.syncBook.mockRejectedValue(new Error('Sync failed'));
 
       const propsWithRepo = {
         ...mockProps,
@@ -687,26 +693,24 @@ describe('GitHubIntegration', () => {
         metadata: { modified: '2024-01-01T10:00:00.000Z' }
       };
 
-      const remoteBook = {
+      const mergedBook = {
         ...mockBook,
         title: 'Remote Version',
         github: { repository: mockRepository },
         metadata: { modified: '2024-01-01T12:00:00.000Z' }
       };
 
-      GitHubService.checkRepositoryForBookFile.mockResolvedValue({
-        name: 'book.book'
+      gitSyncService.syncBook.mockResolvedValue({
+        bookData: mergedBook,
+        conflicts: []
       });
-      GitHubService.downloadBookFromRepository.mockResolvedValue({
-        bookData: remoteBook,
-        filename: 'book.book'
-      });
-      GitHubService.saveBookToRepository.mockResolvedValue({});
 
+      const onBookUpdate = jest.fn();
       const propsWithRepo = {
         ...mockProps,
         currentRepo: mockRepository,
-        book: localBook
+        book: localBook,
+        onBookUpdate
       };
 
       render(<GitHubIntegration {...propsWithRepo} />);
@@ -716,9 +720,10 @@ describe('GitHubIntegration', () => {
         fireEvent.click(syncButton);
       });
 
+      // The merged content the sync layer resolved (remote's newer title)
+      // is propagated back up to the parent, which owns the book state.
       await waitFor(() => {
-        expect(GitHubService.checkRepositoryForBookFile).toHaveBeenCalled();
-        expect(GitHubService.downloadBookFromRepository).toHaveBeenCalled();
+        expect(onBookUpdate).toHaveBeenCalledWith(mergedBook);
       });
     });
 
@@ -739,35 +744,31 @@ describe('GitHubIntegration', () => {
         metadata: { modified: '2024-01-01T10:00:00.000Z' }
       };
 
-      const remoteBook = {
-        ...mockBook,
+      const mergedBook = {
+        ...localBook,
         chapters: [
           {
             id: 'ch1',
             title: 'Chapter 1',
             scenes: [
               { id: 's1', title: 'Scene 1', content: 'Remote Edit' },
-              { id: 's2', title: 'Scene 2', content: 'Original' }
+              { id: 's2', title: 'Scene 2', content: 'Local Edit' }
             ]
           }
-        ],
-        github: { repository: mockRepository },
-        metadata: { modified: '2024-01-01T12:00:00.000Z' }
+        ]
       };
 
-      GitHubService.checkRepositoryForBookFile.mockResolvedValue({
-        name: 'book.book'
+      gitSyncService.syncBook.mockResolvedValue({
+        bookData: mergedBook,
+        conflicts: []
       });
-      GitHubService.downloadBookFromRepository.mockResolvedValue({
-        bookData: remoteBook,
-        filename: 'book.book'
-      });
-      GitHubService.saveBookToRepository.mockResolvedValue({});
 
+      const onBookUpdate = jest.fn();
       const propsWithRepo = {
         ...mockProps,
         currentRepo: mockRepository,
-        book: localBook
+        book: localBook,
+        onBookUpdate
       };
 
       render(<GitHubIntegration {...propsWithRepo} />);
@@ -777,10 +778,14 @@ describe('GitHubIntegration', () => {
         fireEvent.click(syncButton);
       });
 
-      // Verify that sync was attempted
+      // No conflicts -- the auto-merged content is applied directly and no
+      // conflict scene ids are reported.
       await waitFor(() => {
-        expect(GitHubService.checkRepositoryForBookFile).toHaveBeenCalled();
+        expect(onBookUpdate).toHaveBeenCalledWith(mergedBook);
       });
+      expect(mockProps.onStatusMessage).toHaveBeenCalledWith(
+        'Sync completed successfully!'
+      );
     });
 
     it('detects conflicts when both edit same content', async () => {
@@ -791,25 +796,37 @@ describe('GitHubIntegration', () => {
         metadata: { modified: '2024-01-01T12:00:00.000Z' }
       };
 
-      const remoteBook = {
+      const bookWithConflictMarkers = {
         ...mockBook,
-        title: 'Remote Title',
-        github: { repository: mockRepository },
-        metadata: { modified: '2024-01-01T10:00:00.000Z' }
+        title: 'Local Title',
+        chapters: [
+          {
+            id: 'ch1',
+            title: 'Chapter 1',
+            scenes: [
+              {
+                id: 's1',
+                title: 'Scene 1',
+                content:
+                  '<<<<<<< local\nLocal Title\n=======\nRemote Title\n>>>>>>> remote'
+              }
+            ]
+          }
+        ],
+        github: { repository: mockRepository }
       };
 
-      GitHubService.checkRepositoryForBookFile.mockResolvedValue({
-        name: 'book.book'
-      });
-      GitHubService.downloadBookFromRepository.mockResolvedValue({
-        bookData: remoteBook,
-        filename: 'book.book'
+      gitSyncService.syncBook.mockResolvedValue({
+        bookData: bookWithConflictMarkers,
+        conflicts: [{ sceneId: 's1' }]
       });
 
+      const onConflictsDetected = jest.fn();
       const propsWithRepo = {
         ...mockProps,
         currentRepo: mockRepository,
-        book: localBook
+        book: localBook,
+        onConflictsDetected
       };
 
       render(<GitHubIntegration {...propsWithRepo} />);
@@ -819,10 +836,14 @@ describe('GitHubIntegration', () => {
         fireEvent.click(syncButton);
       });
 
-      // Verify sync was attempted
+      // There is no separate resolve step (spec §7) -- conflicts are
+      // reported up so the affected scene(s) can be resolved by editing.
       await waitFor(() => {
-        expect(GitHubService.checkRepositoryForBookFile).toHaveBeenCalled();
+        expect(onConflictsDetected).toHaveBeenCalledWith(['s1']);
       });
+      expect(
+        screen.queryByText(/Applying conflict resolutions/)
+      ).not.toBeInTheDocument();
     });
   });
 });

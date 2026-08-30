@@ -1,9 +1,8 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import QRCode from 'qrcode';
 import { useState, useEffect, useRef } from 'react';
-import { BrowserEnhancedGitHubService } from '../utils/browserEnhancedGitHubService';
+import * as gitSyncService from '../services/gitSyncService.js';
 import GitHubService from '../utils/gitHubService';
-import { ConflictResolution } from './ConflictResolution';
 
 function GitHubIntegration({
   currentRepo,
@@ -13,7 +12,8 @@ function GitHubIntegration({
   book,
   currentFilePath,
   onStatusMessage,
-  onBookUpdate
+  onBookUpdate,
+  onConflictsDetected
 }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
@@ -31,11 +31,6 @@ function GitHubIntegration({
   const [availableRepos, setAvailableRepos] = useState([]);
   const [selectedRepo, setSelectedRepo] = useState('');
   const [isLoadingRepos, setIsLoadingRepos] = useState(false);
-
-  // New collaboration state
-  const [conflicts, setConflicts] = useState([]);
-  const [enhancedService] = useState(() => new BrowserEnhancedGitHubService());
-  const [pendingSyncData, setPendingSyncData] = useState(null);
 
   // QR code sharing state
   const [showQRModal, setShowQRModal] = useState(false);
@@ -58,13 +53,6 @@ function GitHubIntegration({
     // Sync currentRepository with book's GitHub repository
     setCurrentRepository(book.github?.repository || null);
   }, [book.github?.repository]);
-
-  useEffect(() => {
-    // Cleanup enhanced service on unmount
-    return () => {
-      enhancedService.cleanup();
-    };
-  }, [enhancedService]);
 
   const handleStartSetup = async () => {
     setError(null);
@@ -383,66 +371,33 @@ function GitHubIntegration({
     if (onStatusMessage) onStatusMessage('Syncing with GitHub...');
 
     try {
-      const commitMessage = `Manual sync: ${new Date().toLocaleString()}`;
-
-      if (onStatusMessage) onStatusMessage('Checking for conflicts...');
-
-      // Use new enhanced collaboration service
-      const result = await enhancedService.safeSyncWithRepository(
-        currentRepository,
+      const result = await gitSyncService.syncBook({
         book,
-        commitMessage,
-        currentFilePath
-      );
+        filePath: currentFilePath,
+        gitHubService: GitHubService
+      });
 
-      if (result.success) {
-        // Sync completed without conflicts
+      if (result) {
         onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
-        if (result.mergedContent && onBookUpdate) {
-          // Force a fresh object to ensure React detects the change
-          const updatedBook = JSON.parse(JSON.stringify(result.mergedContent));
-          onBookUpdate(updatedBook);
+        if (onBookUpdate) onBookUpdate(result.bookData);
 
-          // Also save merged content to disk
-          if (currentFilePath) {
-            const { saveBookToFile } = await import('../utils/fileOperations');
-            await saveBookToFile(updatedBook, currentFilePath);
+        if (result.conflicts.length > 0) {
+          // Conflicts are resolved by the user editing the affected scene(s)
+          // and syncing again -- there is no separate resolve step.
+          if (onConflictsDetected) {
+            onConflictsDetected(result.conflicts.map(c => c.sceneId));
           }
-
           if (onStatusMessage)
-            onStatusMessage('Sync completed with automatic merge!');
-
-          // Close dialog after brief delay to allow parent to re-render with new content
-          setTimeout(() => {
-            if (onStatusMessage) onStatusMessage('');
-            if (onClose) onClose();
-          }, 1500);
+            onStatusMessage(
+              `Sync completed - ${result.conflicts.length} scene(s) have conflicts to resolve by editing them.`
+            );
         } else {
+          if (onConflictsDetected) onConflictsDetected([]);
           if (onStatusMessage) onStatusMessage('Sync completed successfully!');
-
-          // Clear status message after a short delay
           setTimeout(() => {
             if (onStatusMessage) onStatusMessage('');
           }, 2000);
         }
-      } else if (result.requiresResolution) {
-        // Conflicts detected - show resolution UI
-        setConflicts(result.conflicts);
-        setPendingSyncData({
-          repository: currentRepository,
-          commitMessage,
-          localBookData: book,
-          filename:
-            result.filename ||
-            enhancedService.generateFilename(book, currentFilePath)
-        });
-        if (onStatusMessage)
-          onStatusMessage(
-            'Conflicts detected - please resolve them to continue sync.'
-          );
-      } else {
-        // Sync failed for other reasons
-        throw new Error(result.error || 'Sync failed');
       }
     } catch (error) {
       console.error('Sync failed:', error);
@@ -451,61 +406,6 @@ function GitHubIntegration({
     } finally {
       setIsSyncing(false);
     }
-  };
-
-  const handleConflictResolution = async resolutions => {
-    if (!pendingSyncData) return;
-
-    setIsSyncing(true);
-    if (onStatusMessage) onStatusMessage('Applying conflict resolutions...');
-
-    try {
-      const result = await enhancedService.resolveConflictsAndSync(
-        pendingSyncData.repository,
-        resolutions,
-        pendingSyncData.localBookData,
-        pendingSyncData.commitMessage,
-        pendingSyncData.filename
-      );
-
-      if (result.success) {
-        // Update book with resolved content
-        if (result.mergedContent && onBookUpdate) {
-          onBookUpdate(result.mergedContent);
-        }
-
-        onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
-        if (onStatusMessage)
-          onStatusMessage('Conflicts resolved - sync completed!');
-
-        // Clear conflict state
-        setConflicts([]);
-        setPendingSyncData(null);
-
-        // Clear status message after a short delay
-        setTimeout(() => {
-          if (onStatusMessage) onStatusMessage('');
-        }, 2000);
-      } else {
-        throw new Error(result.error || 'Failed to resolve conflicts');
-      }
-    } catch (error) {
-      console.error('Conflict resolution failed:', error);
-      setError(error.message);
-      if (onStatusMessage) onStatusMessage('');
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const handleConflictCancel = () => {
-    setConflicts([]);
-    setPendingSyncData(null);
-    if (onStatusMessage)
-      onStatusMessage('Sync cancelled - conflicts not resolved.');
-    setTimeout(() => {
-      if (onStatusMessage) onStatusMessage('');
-    }, 2000);
   };
 
   const handleDisconnect = () => {
@@ -1584,15 +1484,6 @@ function GitHubIntegration({
           </button>
         </div>
       </div>
-
-      {/* Conflict Resolution UI */}
-      {conflicts.length > 0 && (
-        <ConflictResolution
-          conflicts={conflicts}
-          onResolve={handleConflictResolution}
-          onCancel={handleConflictCancel}
-        />
-      )}
 
       {/* QR Code Sharing Modal */}
       {showQRModal && (

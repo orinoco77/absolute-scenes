@@ -74,5 +74,21 @@ async function runSync({ book, filePath, gitHubService }) {
     cache,
     author
   });
-  return { bookData: result.bookData, conflicts: result.conflicts };
+
+  // reassembleBook (inside pushSync) always returns github: {} -- the
+  // git-sync package's own tests document that "github.* local bookkeeping"
+  // (repository, collaboration, authorName, ...) is deliberately not part of
+  // the projected file set and is the sync orchestration layer's
+  // responsibility to restore. Overlay the original book's github settings
+  // back on, refreshing only the fields this sync actually changed.
+  const bookData = {
+    ...result.bookData,
+    github: {
+      ...book.github,
+      lastSyncCommitSha: result.commitSha,
+      lastSyncTime: new Date().toISOString()
+    }
+  };
+
+  return { bookData, conflicts: result.conflicts };
 }
