@@ -1,8 +1,19 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act
+} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import App from '../App.jsx';
+import * as gitSyncService from '../services/gitSyncService.js';
 import { saveBook } from '../utils/fileOperations';
+import gitHubService from '../utils/gitHubService';
 // saveBookToFile imported but not used in these tests
+
+jest.mock('../utils/gitHubService');
+jest.mock('../services/gitSyncService.js');
 
 // Mock all the child components with more detailed mocks
 jest.mock('../components/BookStructure', () => {
@@ -23,6 +34,9 @@ jest.mock('../components/BookStructure', () => {
         </div>
         <div data-testid="locations-count">{props.locations?.length || 0}</div>
         <div data-testid="parts-count">{props.parts?.length || 0}</div>
+        <div data-testid="conflict-scene-ids">
+          {(props.conflictSceneIds || []).join(',')}
+        </div>
 
         <button onClick={() => props.onTabChange('manuscript')}>
           Manuscript Tab
@@ -1184,6 +1198,100 @@ describe('App Component - Comprehensive Tests', () => {
 
         // Unmount should not cause errors
         expect(() => unmount()).not.toThrow();
+      });
+    });
+  });
+
+  describe('GitHub sync triggers', () => {
+    beforeEach(() => {
+      delete window._mockElectronAPI;
+    });
+
+    test('exposes a triggerGitSync function to Electron that returns a promise (close-trigger must be awaitable)', async () => {
+      render(<App />);
+
+      await waitFor(() => {
+        expect(typeof window._mockElectronAPI?.triggerGitSync).toBe('function');
+      });
+
+      let returned;
+      await act(async () => {
+        returned = window._mockElectronAPI.triggerGitSync();
+      });
+
+      // The old bug: triggerSync() didn't return performGitSync()'s promise,
+      // so the Electron close handler's `await executeJavaScript(...)`
+      // resolved immediately without ever waiting for the sync to finish.
+      expect(returned).toBeInstanceOf(Promise);
+      await expect(returned).resolves.not.toThrow();
+    });
+
+    test('does not alert or throw when a background sync trigger (blur) rejects', async () => {
+      gitHubService.isAuthenticated.mockReturnValue(true);
+      gitSyncService.syncBook.mockRejectedValue(new Error('Network error'));
+
+      render(<App />);
+
+      // Connect the book to a repository so performGitSync's guard passes
+      // and it actually calls gitSyncService.syncBook.
+      fireEvent.click(screen.getByTitle(/GitHub Integration/));
+      fireEvent.click(screen.getByText('Update GitHub Settings'));
+      fireEvent.click(screen.getByText('Close GitHub'));
+
+      await act(async () => {
+        window.dispatchEvent(new Event('blur'));
+        // let the rejected performGitSync promise settle
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+      await waitFor(() => {
+        expect(gitSyncService.syncBook).toHaveBeenCalled();
+      });
+
+      // A background trigger's rejection must be swallowed, not surfaced --
+      // no alert (which would otherwise fire on every ordinary offline blip)
+      // and nothing should have thrown out of the blur handler.
+      expect(global.alert).not.toHaveBeenCalled();
+    });
+
+    test('clears conflictSceneIds after a clean sync following a conflicted one', async () => {
+      gitHubService.isAuthenticated.mockReturnValue(true);
+      // Echo the book back unchanged so no fields the rest of the app
+      // depends on go missing -- only conflicts differ between calls.
+      gitSyncService.syncBook
+        .mockImplementationOnce(async ({ book }) => ({
+          bookData: book,
+          conflicts: [{ sceneId: 'scene-1' }]
+        }))
+        .mockImplementationOnce(async ({ book }) => ({
+          bookData: book,
+          conflicts: []
+        }));
+
+      render(<App />);
+
+      fireEvent.click(screen.getByTitle(/GitHub Integration/));
+      fireEvent.click(screen.getByText('Update GitHub Settings'));
+      fireEvent.click(screen.getByText('Close GitHub'));
+
+      await act(async () => {
+        window.dispatchEvent(new Event('blur'));
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('conflict-scene-ids')).toHaveTextContent(
+          'scene-1'
+        );
+      });
+
+      await act(async () => {
+        window.dispatchEvent(new Event('blur'));
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('conflict-scene-ids')).toHaveTextContent('');
       });
     });
   });
