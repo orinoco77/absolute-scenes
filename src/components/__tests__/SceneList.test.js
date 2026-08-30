@@ -982,4 +982,38 @@ describe('SceneList Component', () => {
       });
     });
   });
+
+  test('renders a conflict badge next to a scene whose id is in conflictSceneIds', () => {
+    const chapters = [
+      {
+        id: 'ch1',
+        title: 'C1',
+        scenes: [
+          {
+            id: 'sc1',
+            title: 'S1',
+            content: 'content',
+            modified: '2023-12-01T10:00:00.000Z'
+          },
+          {
+            id: 'sc2',
+            title: 'S2',
+            content: 'content',
+            modified: '2023-12-02T10:00:00.000Z'
+          }
+        ]
+      }
+    ];
+    renderComponent({ chapters, conflictSceneIds: ['sc1'] });
+
+    const sc1Row = screen.getByText('S1').closest('[data-scene-id="sc1"]');
+    expect(
+      sc1Row.querySelector('[data-testid="conflict-badge"]')
+    ).toBeInTheDocument();
+
+    const sc2Row = screen.getByText('S2').closest('[data-scene-id="sc2"]');
+    expect(
+      sc2Row.querySelector('[data-testid="conflict-badge"]')
+    ).not.toBeInTheDocument();
+  });
 });
