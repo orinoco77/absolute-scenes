@@ -12,6 +12,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveBookToFile: (bookData, filePath) =>
     ipcRenderer.invoke('save-book-to-file', bookData, filePath),
   saveRecoveredBook: data => ipcRenderer.invoke('save-recovered-book', data),
+  readSyncCache: bookFilePath =>
+    ipcRenderer.invoke('sync-cache-read', bookFilePath),
+  writeSyncCache: (bookFilePath, data) =>
+    ipcRenderer.invoke('sync-cache-write', bookFilePath, data),
 
   // Export operations
   savePdfDialog: (pdfDataUrl, suggestedFilename) =>

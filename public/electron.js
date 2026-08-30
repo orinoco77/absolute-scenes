@@ -2247,6 +2247,23 @@ function registerIpcHandlers() {
     }
   );
 
+  // Sync cache handlers for git-sync integration
+  ipcMain.handle('sync-cache-read', async (event, bookFilePath) => {
+    const cachePath = `${bookFilePath}.synccache.json`;
+    try {
+      const raw = await fs.readFile(cachePath, 'utf-8');
+      return JSON.parse(raw);
+    } catch (err) {
+      if (err.code === 'ENOENT') return {};
+      throw err;
+    }
+  });
+
+  ipcMain.handle('sync-cache-write', async (event, bookFilePath, data) => {
+    const cachePath = `${bookFilePath}.synccache.json`;
+    await fs.writeFile(cachePath, JSON.stringify(data), 'utf-8');
+  });
+
   // Simple ping handler to verify IPC is ready
   ipcMain.handle('ipc-ready', () => {
     return true;

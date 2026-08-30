@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.49<!--/VERSION--> | **Tests:** <!--TESTS-->1139/1139<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2026-03-22<!--/DATE-->
+**Version:** <!--VERSION-->1.4.50<!--/VERSION--> | **Tests:** <!--TESTS-->1145/1145<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2026-08-30<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -289,9 +289,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1139/1139<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1145/1145<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->189<!--/COMMITS--> | **Latest:** <!--COMMIT-->38ad558 - Another pipeline fix (9 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->191<!--/COMMITS--> | **Latest:** <!--COMMIT-->b344a72 - feat: add git-sync package dependency and commit-author resolution (5 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -542,8 +542,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.49<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.49<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.50<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.50<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -561,11 +561,11 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+- **v1.4.49**: More pipeline fixing
+- **v1.4.48**: Another pipeline fix
 - **v1.4.46**: Fix tests
 - **v1.4.43**: Github sync reimplementation
 - **v1.4.40**: fix(pdf): gracefully skip empty text strings in safeText to prevent coordinate validation errors
-- **v1.4.38**: Fix icons
-- **v1.4.31**: Fix text editors so that they expand properly into the available space
 <!--/VERSION_HISTORY-->
 
 ---
@@ -575,4 +575,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2026-03-22<!--/DATE--> | Build <!--COMMIT-->38ad558 - Another pipeline fix (9 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-08-30<!--/DATE--> | Build <!--COMMIT-->b344a72 - feat: add git-sync package dependency and commit-author resolution (5 minutes ago)<!--/COMMIT-->_
