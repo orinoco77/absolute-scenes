@@ -23,12 +23,6 @@ jest.mock('../services/SaveService', () => ({
   }))
 }));
 
-jest.mock('../services/GitHubSyncService', () => ({
-  GitHubSyncService: jest.fn().mockImplementation(() => ({
-    syncWithGitHub: jest.fn()
-  }))
-}));
-
 jest.mock('../services/EventHandlerService', () => ({
   EventHandlerService: jest.fn().mockImplementation(() => ({
     initialize: jest.fn(),
