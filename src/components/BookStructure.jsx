@@ -190,6 +190,9 @@ function BookStructure({
   // Collaboration props
   collaboration = null,
 
+  // Sync props
+  conflictSceneIds = [],
+
   // Tab props
   activeTab,
   onTabChange
@@ -316,6 +319,7 @@ function BookStructure({
           onRestoreFromRecycleBin={onRestoreFromRecycleBin}
           onPermanentlyDelete={onPermanentlyDelete}
           onEmptyRecycleBin={onEmptyRecycleBin}
+          conflictSceneIds={conflictSceneIds}
         />
       )
     },

@@ -33,7 +33,8 @@ function SceneList({
   onToggleRecycleBin,
   onRestoreFromRecycleBin,
   onPermanentlyDelete,
-  onEmptyRecycleBin
+  onEmptyRecycleBin,
+  conflictSceneIds = []
 }) {
   // Expandable chapters hook
   const { isExpanded: isChapterExpanded, toggleItem: toggleChapter } =
@@ -568,6 +569,7 @@ function SceneList({
                 return (
                   <div
                     key={scene.id}
+                    data-scene-id={scene.id}
                     className={`scene-item ${
                       scene.id === currentSceneId ? 'active' : ''
                     } ${
@@ -624,6 +626,16 @@ function SceneList({
                           >
                             👤 {scene.assignedAuthor}
                           </div>
+                        )}
+                        {/* Conflict badge - show if this scene has unresolved sync conflicts */}
+                        {conflictSceneIds?.includes(scene.id) && (
+                          <span
+                            data-testid="conflict-badge"
+                            title="This scene has a sync conflict to resolve"
+                            className="conflict-badge"
+                          >
+                            ⚠
+                          </span>
                         )}
                       </div>
                       <div className="scene-meta">
