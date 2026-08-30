@@ -269,38 +269,60 @@ function App() {
   // connected to a repository, then routes through gitSyncService.syncBook --
   // the one code path into sync (its in-flight guard coalesces concurrent
   // callers; pushSync's no-op guard skips pushing when nothing changed).
-  const performGitSync = useCallback(async () => {
-    if (!gitHubService.isAuthenticated() || !book?.github?.repository) {
-      return null;
-    }
-
-    const result = await gitSyncService.syncBook({
-      book,
-      filePath: currentFilePath,
-      gitHubService
-    });
-
-    if (result) {
-      setBook(result.bookData);
-      if (result.conflicts.length > 0) {
-        setConflictSceneIds(result.conflicts.map(c => c.sceneId));
+  //
+  // Background triggers (periodic timer, blur, scene-switch, close) call
+  // this with silent: true (the default) -- a rejection (offline, expired
+  // token, API error) is logged and swallowed, never surfaced as an alert,
+  // matching the existing silent-autosave design. Manual triggers (Save,
+  // Save As) pass silent: false so the user gets feedback on failure, since
+  // those are user-initiated actions.
+  const performGitSync = useCallback(
+    async ({ silent = true } = {}) => {
+      if (!gitHubService.isAuthenticated() || !book?.github?.repository) {
+        return null;
       }
-      isDirtySinceLastSyncRef.current = false;
-    }
 
-    return result;
-  }, [book, currentFilePath, setBook]);
+      try {
+        const result = await gitSyncService.syncBook({
+          book,
+          filePath: currentFilePath,
+          gitHubService
+        });
+
+        if (result) {
+          setBook(result.bookData);
+          setConflictSceneIds(
+            result.conflicts.length > 0
+              ? result.conflicts.map(c => c.sceneId)
+              : []
+          );
+          isDirtySinceLastSyncRef.current = false;
+        }
+
+        return result;
+      } catch (error) {
+        console.error('GitHub sync failed:', error);
+        if (!silent) {
+          alert('GitHub sync failed: ' + (error?.message || error));
+        }
+        return null;
+      }
+    },
+    [book, currentFilePath, setBook]
+  );
 
   // Fire-and-forget variant for triggers that don't need the result
-  // (scene-switch, blur, app close).
+  // (scene-switch, blur, app close). Returns the underlying promise so the
+  // Electron close-trigger (public/electron.js) can actually await it
+  // before quitting.
   const triggerSync = useCallback(() => {
-    performGitSync();
+    return performGitSync();
   }, [performGitSync]);
 
   // GitHub sync handler for manual triggers (Save, Save As, keyboard save)
-  // that do want the result.
+  // that do want the result and do want failures surfaced to the user.
   const handleGitHubSync = useCallback(
-    async () => performGitSync(),
+    async () => performGitSync({ silent: false }),
     [performGitSync]
   );
 
@@ -656,9 +678,11 @@ function App() {
           });
           if (result) {
             setBook(result.bookData);
-            if (result.conflicts.length > 0) {
-              setConflictSceneIds(result.conflicts.map(c => c.sceneId));
-            }
+            setConflictSceneIds(
+              result.conflicts.length > 0
+                ? result.conflicts.map(c => c.sceneId)
+                : []
+            );
             const { saveBookToFile } = await import('./utils/fileOperations');
             await saveBookToFile(result.bookData, filePath);
           }
