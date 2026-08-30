@@ -320,37 +320,17 @@ function GitHubIntegration({
         github: { ...book.github, repository: repo }
       };
 
-      // Immediately save the current book to the repo with proper filename
+      // Immediately save the current book to the repo
       setIsSyncing(true);
       try {
-        const commitMessage = `Initial commit: ${book.title} by ${book.author}`;
-
-        // Generate filename based on current file or book title
-        let filename = 'manuscript.book';
-        if (currentFilePath) {
-          // Extract filename from path, keep as .book
-          filename = currentFilePath.split(/[\\/]/).pop();
-          if (!filename.endsWith('.book')) {
-            filename = filename.replace(/\.(book|json)$/, '') + '.book';
-          }
-        } else if (book.title?.trim()) {
-          // Generate filename from book title
-          filename =
-            book.title
-              .toLowerCase()
-              .replace(/[^a-z0-9\s-]/g, '')
-              .replace(/\s+/g, '-')
-              .replace(/-+/g, '-')
-              .replace(/^-|-$/g, '') + '.book';
+        const result = await gitSyncService.syncBook({
+          book: bookWithRepo,
+          filePath: currentFilePath,
+          gitHubService: GitHubService
+        });
+        if (result) {
+          onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
         }
-
-        await GitHubService.saveBookToRepository(
-          repo,
-          bookWithRepo,
-          commitMessage,
-          filename
-        );
-        onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
       } catch (syncError) {
         console.warn('Initial sync failed:', syncError.message);
         // Don't fail the whole setup if sync fails

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import * as gitSyncService from '../services/gitSyncService.js';
 import { saveRecoveredBook } from '../utils/fileOperations';
 import GitHubService from '../utils/gitHubService';
 
@@ -24,7 +25,7 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
     if (onStatusMessage) onStatusMessage('Loading repositories...');
 
     try {
-      const repos = await GitHubService.getUserRepositoriesForRecovery();
+      const repos = await GitHubService.getUserRepositories();
       setRepositories(repos);
       if (onStatusMessage) onStatusMessage('');
     } catch (error) {
@@ -42,19 +43,27 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
     if (onStatusMessage) onStatusMessage('Downloading from GitHub...');
 
     try {
-      const bookData = await GitHubService.downloadBookFromRepository(
+      const bookData = await gitSyncService.pullBook({
         repo,
-        repo.bookFile
-      );
+        filePath: null,
+        gitHubService: GitHubService
+      });
+
+      if (!bookData) {
+        setError('Could not recover a book from this repository.');
+        return;
+      }
 
       // Use the file operations utility to save the recovered book
-      const result = await saveRecoveredBook(
-        bookData.bookData,
-        bookData.filename
-      );
+      const filename = `${
+        (bookData.title || 'Recovered Book')
+          .replace(/[^a-z0-9\s-]/gi, '')
+          .trim() || 'Recovered Book'
+      }.book`;
+      const result = await saveRecoveredBook(bookData, filename);
 
       if (result.success) {
-        onBookRecovered(result.filePath, bookData.bookData);
+        onBookRecovered(result.filePath, bookData);
         if (onStatusMessage) onStatusMessage('');
         onClose();
       } else {
@@ -234,9 +243,6 @@ function BackupRecovery({ onClose, onBookRecovered, onStatusMessage }) {
                         color: 'var(--color-text-muted)'
                       }}
                     >
-                      <div>
-                        File: <strong>{repo.bookFile.name}</strong>
-                      </div>
                       <div>Updated: {formatDate(repo.updated_at)}</div>
                       {repo.description && (
                         <div style={{ marginTop: '4px', fontStyle: 'italic' }}>
