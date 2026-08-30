@@ -1,5 +1,6 @@
 import {
   pushSync,
+  pullSync,
   detectRepoLayout,
   migrateLegacyRepo,
   bootstrapEmptyRepo,
@@ -91,4 +92,51 @@ async function runSync({ book, filePath, gitHubService }) {
   };
 
   return { bookData, conflicts: result.conflicts };
+}
+
+export async function pullBook({ repo, filePath, gitHubService }) {
+  if (!gitHubService.isAuthenticated()) return null;
+
+  const repoFullName = repo.full_name;
+  const branch = repo.default_branch || 'main';
+  const token = gitHubService.token;
+
+  // For recovery operations (filePath: null), use an in-memory-only cache
+  // since there's no local file to sync against
+  const cache = filePath
+    ? createSyncCache(filePath)
+    : {
+        get: () => Promise.resolve(null),
+        set: () => Promise.resolve()
+      };
+
+  const layout = await detectRepoLayout({ repo: repoFullName, token, branch });
+  if (layout === 'empty') return null;
+
+  if (layout === 'legacy') {
+    // Migrate the legacy single-file layout to the new decomposed format
+    const ref = await getRef({ repo: repoFullName, token, branch });
+    const commit = await getCommit({ repo: repoFullName, token, sha: ref.sha });
+    const tree = await getTree({
+      repo: repoFullName,
+      token,
+      sha: commit.tree.sha
+    });
+    const legacyEntry = tree.find(
+      e => !e.path.includes('/') && e.path.endsWith('.book')
+    );
+    await migrateLegacyRepo({
+      repo: repoFullName,
+      token,
+      branch,
+      legacyFilePath: legacyEntry.path,
+      author: {
+        name: 'AbsoluteScenes Recovery',
+        email: 'recovery@users.noreply.github.com'
+      }
+    });
+  }
+
+  const result = await pullSync({ repo: repoFullName, token, branch, cache });
+  return result.bookData;
 }

@@ -1,5 +1,9 @@
 import * as gitSync from '@absolute-scenes/git-sync';
-import { syncBook, __resetInFlightGuardForTests } from '../gitSyncService.js';
+import {
+  syncBook,
+  pullBook,
+  __resetInFlightGuardForTests
+} from '../gitSyncService.js';
 
 jest.mock('@absolute-scenes/git-sync');
 
@@ -171,4 +175,116 @@ test('skips entirely when not authenticated', async () => {
   });
   expect(result).toBeNull();
   expect(gitSync.pushSync).not.toHaveBeenCalled();
+});
+
+describe('pullBook', () => {
+  function makeRepo() {
+    return {
+      full_name: 'owner/repo',
+      default_branch: 'main'
+    };
+  }
+
+  function makePulledBook() {
+    return {
+      title: 'Recovered',
+      chapters: []
+    };
+  }
+
+  test('a new-layout repo calls pullSync directly without migration', async () => {
+    gitSync.detectRepoLayout.mockResolvedValue('new');
+    gitSync.pullSync.mockResolvedValue({
+      bookData: makePulledBook()
+    });
+
+    const result = await pullBook({
+      repo: makeRepo(),
+      filePath: '/x/Book.book',
+      gitHubService: makeGitHubService()
+    });
+
+    expect(gitSync.migrateLegacyRepo).not.toHaveBeenCalled();
+    expect(gitSync.pullSync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        repo: 'owner/repo',
+        branch: 'main'
+      })
+    );
+    expect(result).toEqual(makePulledBook());
+  });
+
+  test('a legacy-layout repo is migrated before pullSync is called', async () => {
+    gitSync.detectRepoLayout.mockResolvedValue('legacy');
+    gitSync.getRef.mockResolvedValue({ sha: 'ref-sha' });
+    gitSync.getCommit.mockResolvedValue({ tree: { sha: 'tree-sha' } });
+    gitSync.getTree.mockResolvedValue([
+      { path: 'Book.book' },
+      { path: 'nested/other.book' }
+    ]);
+    gitSync.migrateLegacyRepo.mockResolvedValue({ commitSha: 'migration-sha' });
+    gitSync.pullSync.mockResolvedValue({
+      bookData: makePulledBook()
+    });
+
+    await pullBook({
+      repo: makeRepo(),
+      filePath: '/x/Book.book',
+      gitHubService: makeGitHubService()
+    });
+
+    expect(gitSync.migrateLegacyRepo).toHaveBeenCalledWith(
+      expect.objectContaining({
+        legacyFilePath: 'Book.book'
+      })
+    );
+    expect(gitSync.pullSync).toHaveBeenCalled();
+  });
+
+  test('an empty repo returns null', async () => {
+    gitSync.detectRepoLayout.mockResolvedValue('empty');
+
+    const result = await pullBook({
+      repo: makeRepo(),
+      filePath: '/x/Book.book',
+      gitHubService: makeGitHubService()
+    });
+
+    expect(result).toBeNull();
+    expect(gitSync.pullSync).not.toHaveBeenCalled();
+  });
+
+  test('uses in-memory cache when filePath is null (recovery case)', async () => {
+    gitSync.detectRepoLayout.mockResolvedValue('new');
+    gitSync.pullSync.mockResolvedValue({
+      bookData: makePulledBook()
+    });
+
+    await pullBook({
+      repo: makeRepo(),
+      filePath: null,
+      gitHubService: makeGitHubService()
+    });
+
+    // pullSync should have been called with a cache that does nothing
+    const pullCall = gitSync.pullSync.mock.calls[0][0];
+    expect(pullCall.cache).toBeDefined();
+    // Verify in-memory cache works
+    expect(await pullCall.cache.get()).toBeNull();
+    await pullCall.cache.set('key', 'value');
+    expect(await pullCall.cache.get()).toBeNull(); // In-memory only, no persistence
+  });
+
+  test('skips entirely when not authenticated', async () => {
+    const gitHubService = {
+      isAuthenticated: () => false
+    };
+    const result = await pullBook({
+      repo: makeRepo(),
+      filePath: '/x/Book.book',
+      gitHubService
+    });
+    expect(result).toBeNull();
+    expect(gitSync.pullSync).not.toHaveBeenCalled();
+  });
 });
