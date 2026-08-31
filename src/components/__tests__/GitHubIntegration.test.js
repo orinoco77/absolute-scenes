@@ -409,6 +409,54 @@ describe('GitHubIntegration', () => {
       });
     });
 
+    it('uses bookRef.current, not the (possibly stale) book prop, when setting up a repository', async () => {
+      // Real bug class found live in App.jsx's performGitSync -- the same
+      // fix needed here: handleSetupRepository awaits a real network round
+      // trip (repo creation, then the initial push) during which the user
+      // can keep editing. Reading the `book` prop captured at render/click
+      // time instead of a live ref risks pushing stale content, the same
+      // way performGitSync's old code did. bookRef.current must win.
+      const freshBook = {
+        ...mockBook,
+        title: 'Fresh Title',
+        author: 'Fresh Author'
+      };
+      GitHubService.setupBookRepository.mockResolvedValue(mockRepository);
+      gitSyncService.syncBook.mockResolvedValue({
+        bookData: freshBook,
+        conflicts: []
+      });
+
+      render(
+        <GitHubIntegration
+          {...mockProps}
+          book={{ ...mockBook, title: 'Stale Title', author: 'Stale Author' }}
+          bookRef={{ current: freshBook }}
+        />
+      );
+
+      await act(async () => {
+        fireEvent.click(
+          screen.getByRole('button', { name: /Setup Repository/ })
+        );
+      });
+
+      await waitFor(() => {
+        expect(GitHubService.setupBookRepository).toHaveBeenCalledWith(
+          'Fresh Title',
+          'Fresh Author'
+        );
+        expect(gitSyncService.syncBook).toHaveBeenCalledWith({
+          book: expect.objectContaining({
+            title: 'Fresh Title',
+            author: 'Fresh Author'
+          }),
+          filePath: mockProps.currentFilePath,
+          gitHubService: GitHubService
+        });
+      });
+    });
+
     it('shows repository information when repository exists', () => {
       const propsWithRepo = {
         ...mockProps,
