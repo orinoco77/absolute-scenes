@@ -1294,5 +1294,56 @@ describe('App Component - Comprehensive Tests', () => {
         expect(screen.getByTestId('conflict-scene-ids')).toHaveTextContent('');
       });
     });
+
+    test('performGitSync reads the current book via bookRef, not a closure captured before a later edit', async () => {
+      // Real bug found live: performGitSync used to close over the `book`
+      // variable directly. Several independent triggers (blur, periodic
+      // timer, the Electron close hook) each re-subscribe via their own
+      // useEffect -- if any one of those held an older closure while a
+      // scene was added afterward, invoking it would push a book snapshot
+      // missing that scene. buildAttempt's remote-only-deletion logic then
+      // read "not in this stale snapshot" as "the user deleted it" and
+      // removed the file on GitHub -- confirmed real data loss, not
+      // hypothetical. This test captures the exposed trigger EARLY (before
+      // any edit), performs an edit, then invokes that same early
+      // reference and asserts syncBook receives the post-edit state.
+      gitHubService.isAuthenticated.mockReturnValue(true);
+      gitSyncService.syncBook.mockResolvedValue({
+        bookData: {
+          github: { repository: { full_name: 'o/r' } },
+          chapters: []
+        },
+        conflicts: []
+      });
+
+      render(<App />);
+
+      fireEvent.click(screen.getByTitle(/GitHub Integration/));
+      fireEvent.click(screen.getByText('Update GitHub Settings'));
+      fireEvent.click(screen.getByText('Close GitHub'));
+
+      await waitFor(() => {
+        expect(typeof window._mockElectronAPI?.triggerGitSync).toBe('function');
+      });
+      // Capture the reference now, before the edit below.
+      const earlyTriggerGitSync = window._mockElectronAPI.triggerGitSync;
+
+      fireEvent.click(screen.getByText('Add Scene'));
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
+
+      await act(async () => {
+        await earlyTriggerGitSync();
+      });
+
+      await waitFor(() => {
+        expect(gitSyncService.syncBook).toHaveBeenCalled();
+      });
+      const syncedBook = gitSyncService.syncBook.mock.calls[0][0].book;
+      expect(syncedBook.chapters.some(ch => ch.scenes.length > 0)).toBe(true);
+    });
   });
 });

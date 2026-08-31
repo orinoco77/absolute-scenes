@@ -45,7 +45,7 @@ function App() {
   const {
     book,
     setBook,
-    // bookRef, // Not used in this refactored version
+    bookRef,
     updateBookMetadata,
     updateTemplate,
     updateGitHubSettings,
@@ -278,13 +278,30 @@ function App() {
   // those are user-initiated actions.
   const performGitSync = useCallback(
     async ({ silent = true } = {}) => {
-      if (!gitHubService.isAuthenticated() || !book?.github?.repository) {
+      // Read the book via bookRef, not the closed-over `book` variable.
+      // performGitSync is invoked from several independently-registered
+      // triggers (blur listener, periodic timer, Electron close hook, each
+      // re-subscribed via their own useEffect) -- if any one of those
+      // fires from an older closure while a newer one is also in flight or
+      // about to run, a stale `book` snapshot here would push a version of
+      // the book missing a scene created (or edited) after that closure
+      // was captured. buildAttempt's remote-only-deletion logic then
+      // reads "not in this stale snapshot" as "the user deleted it" and
+      // removes the file on GitHub -- real, confirmed data loss, not a
+      // hypothetical. bookRef.current is kept synchronously up to date on
+      // every setBook call (see useBookState.js), so it is never stale
+      // regardless of which trigger's closure is executing.
+      const currentBook = bookRef.current;
+      if (
+        !gitHubService.isAuthenticated() ||
+        !currentBook?.github?.repository
+      ) {
         return null;
       }
 
       try {
         const result = await gitSyncService.syncBook({
-          book,
+          book: currentBook,
           filePath: currentFilePath,
           gitHubService
         });
@@ -308,7 +325,7 @@ function App() {
         return null;
       }
     },
-    [book, currentFilePath, setBook]
+    [bookRef, currentFilePath, setBook]
   );
 
   // Fire-and-forget variant for triggers that don't need the result
