@@ -57,6 +57,19 @@ jobs:
           Write-Host "✅ package.json updated for Windows signing"
         } else {
           Write-Host "ℹ️ No Windows certificate provided. Building unsigned."
+
+          # package.json hardcodes a default build.win.signtoolOptions
+          # pointing at cert/windows-cert.p12 -- that file is never written
+          # in this branch, so electron-builder must not be left pointing
+          # at it. Without this, it still attempts to sign against a
+          # nonexistent cert file and fails outright (confirmed live:
+          # SignTool Error: Store IsDiskFile() failed).
+          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          if ($pkg.build.win -and $pkg.build.win.PSObject.Properties['signtoolOptions']) {
+            $pkg.build.win.PSObject.Properties.Remove('signtoolOptions')
+            $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json -Encoding UTF8
+            Write-Host "✅ Removed signtoolOptions from package.json -- building unsigned"
+          }
         }
 
     # ---------- MACOS CERTIFICATE SETUP (Option 1) ----------
