@@ -374,7 +374,10 @@ describe('GitHubIntegration', () => {
 
     it('sets up repository successfully', async () => {
       GitHubService.setupBookRepository.mockResolvedValue(mockRepository);
-      GitHubService.saveBookToRepository.mockResolvedValue();
+      gitSyncService.syncBook.mockResolvedValue({
+        bookData: mockBook,
+        conflicts: []
+      });
 
       render(<GitHubIntegration {...mockProps} />);
 
@@ -389,6 +392,17 @@ describe('GitHubIntegration', () => {
           'Test Book',
           'Test Author'
         );
+        expect(gitSyncService.syncBook).toHaveBeenCalledWith({
+          book: expect.objectContaining({
+            title: 'Test Book',
+            author: 'Test Author',
+            github: expect.objectContaining({
+              repository: mockRepository
+            })
+          }),
+          filePath: mockProps.currentFilePath,
+          gitHubService: GitHubService
+        });
         expect(mockProps.onGitHubSettingsUpdate).toHaveBeenCalledWith({
           repository: mockRepository
         });
@@ -622,33 +636,42 @@ describe('GitHubIntegration', () => {
     });
 
     it('continues with repository setup even if initial sync fails', async () => {
-      GitHubService.loadStoredAuth.mockReturnValue(false);
-      GitHubService.validateAndSetupToken.mockResolvedValue(mockUserInfo);
+      GitHubService.loadStoredAuth.mockReturnValue(true);
       GitHubService.setupBookRepository.mockResolvedValue(mockRepository);
-      GitHubService.saveBookToRepository.mockRejectedValue(
-        new Error('Sync failed')
-      );
+      gitSyncService.syncBook.mockRejectedValue(new Error('Sync failed'));
 
       render(<GitHubIntegration {...mockProps} />);
 
-      fireEvent.click(
-        screen.getByRole('button', { name: /Get Started - It's Free!/ })
-      );
-
-      await waitFor(() => {
-        fireEvent.click(screen.getByText("✅ I've copied my token"));
-      });
-
-      const tokenInput = screen.getByPlaceholderText(/ghp_/);
-      fireEvent.change(tokenInput, { target: { value: 'ghp_testtoken123' } });
       await act(async () => {
-        fireEvent.click(screen.getByText('🚀 Connect to GitHub'));
+        fireEvent.click(
+          screen.getByRole('button', { name: /Setup Repository/ })
+        );
       });
 
-      // Just verify that the functions are called - the component logic handles the rest
-      expect(GitHubService.validateAndSetupToken).toHaveBeenCalledWith(
-        'ghp_testtoken123'
-      );
+      // Verify that syncBook was called even though it will fail
+      await waitFor(() => {
+        expect(gitSyncService.syncBook).toHaveBeenCalledWith({
+          book: expect.objectContaining({
+            title: 'Test Book',
+            author: 'Test Author',
+            github: expect.objectContaining({
+              repository: mockRepository
+            })
+          }),
+          filePath: mockProps.currentFilePath,
+          gitHubService: GitHubService
+        });
+      });
+
+      // Verify that repository setup still completed despite sync failure
+      // (the component catches the sync error and continues, doesn't show error to user)
+      expect(mockProps.onGitHubSettingsUpdate).toHaveBeenCalledWith({
+        repository: mockRepository
+      });
+      // Should not show error since sync failures are logged but not user-facing
+      expect(
+        screen.queryByText(/Repository setup failed/)
+      ).not.toBeInTheDocument();
     });
 
     it('clears status message on sync error', async () => {
