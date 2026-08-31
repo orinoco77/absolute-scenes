@@ -197,6 +197,43 @@ function GitHubIntegration({
         repositoryChoice === 'new'
       ) {
         await handleSetupRepository();
+      } else if (repositoryChoice === 'existing' && repositoryToStore) {
+        // Immediately sync after joining an existing repository, mirroring
+        // handleSetupRepository's own explicit sync for the 'new' case.
+        // Without this, nothing happened until a passive trigger (blur,
+        // the periodic timer, scene-switch, or app close) eventually
+        // fired -- confirmed live: joining silently did nothing until a
+        // manual sync was triggered. Uses repositoryToStore directly
+        // rather than the currentRepository state set just above -- that
+        // setCurrentRepository call hasn't re-rendered yet, so
+        // currentRepository is still stale here.
+        setIsSyncing(true);
+        if (onStatusMessage) onStatusMessage('Syncing with GitHub...');
+        try {
+          const bookWithRepo = {
+            ...(bookRef?.current ?? book),
+            github: {
+              ...(bookRef?.current ?? book).github,
+              repository: repositoryToStore
+            }
+          };
+          const result = await gitSyncService.syncBook({
+            book: bookWithRepo,
+            filePath: currentFilePath,
+            gitHubService: GitHubService
+          });
+          applySyncResult(result);
+        } catch (syncError) {
+          console.warn(
+            'Initial sync after joining existing repository failed:',
+            syncError.message
+          );
+          if (onStatusMessage) onStatusMessage('');
+          // Don't fail the whole setup if sync fails, matching
+          // handleSetupRepository's own error handling for the 'new' case.
+        } finally {
+          setIsSyncing(false);
+        }
       }
     } catch (error) {
       console.error('Collaboration setup failed:', error);
@@ -354,6 +391,34 @@ function GitHubIntegration({
     }
   };
 
+  // Shared by handleSyncToGitHub and handleFinalSetup's "join existing
+  // repository" branch -- both need the same book-update/conflict-badge/
+  // status-message handling after a real syncBook() result.
+  const applySyncResult = result => {
+    if (!result) return;
+
+    onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
+    if (onBookUpdate) onBookUpdate(result.bookData);
+
+    if (result.conflicts.length > 0) {
+      // Conflicts are resolved by the user editing the affected scene(s)
+      // and syncing again -- there is no separate resolve step.
+      if (onConflictsDetected) {
+        onConflictsDetected(result.conflicts.map(c => c.sceneId));
+      }
+      if (onStatusMessage)
+        onStatusMessage(
+          `Sync completed - ${result.conflicts.length} scene(s) have conflicts to resolve by editing them.`
+        );
+    } else {
+      if (onConflictsDetected) onConflictsDetected([]);
+      if (onStatusMessage) onStatusMessage('Sync completed successfully!');
+      setTimeout(() => {
+        if (onStatusMessage) onStatusMessage('');
+      }, 2000);
+    }
+  };
+
   const handleSyncToGitHub = async () => {
     if (!currentRepository || !isAuthenticated) return;
 
@@ -367,29 +432,7 @@ function GitHubIntegration({
         filePath: currentFilePath,
         gitHubService: GitHubService
       });
-
-      if (result) {
-        onGitHubSyncStatusUpdate({ lastSyncTime: new Date().toISOString() });
-        if (onBookUpdate) onBookUpdate(result.bookData);
-
-        if (result.conflicts.length > 0) {
-          // Conflicts are resolved by the user editing the affected scene(s)
-          // and syncing again -- there is no separate resolve step.
-          if (onConflictsDetected) {
-            onConflictsDetected(result.conflicts.map(c => c.sceneId));
-          }
-          if (onStatusMessage)
-            onStatusMessage(
-              `Sync completed - ${result.conflicts.length} scene(s) have conflicts to resolve by editing them.`
-            );
-        } else {
-          if (onConflictsDetected) onConflictsDetected([]);
-          if (onStatusMessage) onStatusMessage('Sync completed successfully!');
-          setTimeout(() => {
-            if (onStatusMessage) onStatusMessage('');
-          }, 2000);
-        }
-      }
+      applySyncResult(result);
     } catch (error) {
       console.error('Sync failed:', error);
       setError(error.message);
