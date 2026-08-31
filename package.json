@@ -1,6 +1,6 @@
 {
     "name": "absolute-scenes",
-    "version": "1.4.70",
+    "version": "1.4.71",
     "description": "A scene-based book writing application",
     "main": "public/electron.js",
     "homepage": "./",
