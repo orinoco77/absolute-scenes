@@ -310,9 +310,10 @@ function App() {
           // The sync round-trip above can take several seconds -- fold in
           // whatever the user did on this device while it was in flight
           // (e.g. added a scene) rather than letting this setBook silently
-          // discard it. See postSyncReconciliation.js for the full
-          // rationale; currentBook is the snapshot the sync started from,
-          // bookRef.current is where local state has moved to since.
+          // discard it. See @absolute-scenes/git-sync's src/reconcile.js
+          // file header for the full rationale; currentBook is the
+          // snapshot the sync started from, bookRef.current is where local
+          // state has moved to since.
           const { bookData, conflicts } = gitSyncService.reconcilePostSyncState(
             currentBook,
             bookRef.current,

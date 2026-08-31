@@ -201,6 +201,19 @@ describe('pullBook', () => {
     expect(gitSync.pullSync).not.toHaveBeenCalled();
   });
 
+  test('an unrecognized-layout repo (has commits but no book content) returns null', async () => {
+    gitSync.detectRepoLayout.mockResolvedValue('unrecognized');
+
+    const result = await pullBook({
+      repo: makeRepo(),
+      filePath: '/x/Book.book',
+      gitHubService: makeGitHubService()
+    });
+
+    expect(result).toBeNull();
+    expect(gitSync.pullSync).not.toHaveBeenCalled();
+  });
+
   test('uses in-memory cache when filePath is null (recovery case)', async () => {
     gitSync.detectRepoLayout.mockResolvedValue('new');
     gitSync.pullSync.mockResolvedValue({ bookData: makePulledBook() });

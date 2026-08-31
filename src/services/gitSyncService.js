@@ -79,7 +79,7 @@ export async function pullBook({ repo, filePath, gitHubService }) {
       };
 
   const layout = await detectRepoLayout({ repo: repoFullName, token, branch });
-  if (layout === 'empty') return null;
+  if (layout === 'empty' || layout === 'unrecognized') return null;
 
   if (layout === 'legacy') {
     // Migrate the legacy single-file layout to the new decomposed format
