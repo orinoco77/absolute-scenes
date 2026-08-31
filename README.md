@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.73<!--/VERSION--> | **Tests:** <!--TESTS-->1136/1136<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.74<!--/VERSION--> | **Tests:** <!--TESTS-->1136/1136<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-08-31<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -291,7 +291,7 @@ Access via the 🔗 GitHub Integration button:
 
 **Code Quality:** <!--TESTS-->1136/1136<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->215<!--/COMMITS--> | **Latest:** <!--COMMIT-->e0bf962 - fix: build Windows unsigned when no cert is configured (15 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->216<!--/COMMITS--> | **Latest:** <!--COMMIT-->947134f - chore: bump version to 1.4.73 (10 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -542,8 +542,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.73<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.73<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.74<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.74<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -561,11 +561,11 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+- **v1.4.73**: chore: bump version to 1.4.73
 - **v1.4.72**: chore: bump @absolute-scenes/git-sync to v0.2.1
 - **v1.4.49**: More pipeline fixing
 - **v1.4.48**: Another pipeline fix
 - **v1.4.46**: Fix tests
-- **v1.4.43**: Github sync reimplementation
 <!--/VERSION_HISTORY-->
 
 ---
@@ -575,4 +575,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2026-08-31<!--/DATE--> | Build <!--COMMIT-->e0bf962 - fix: build Windows unsigned when no cert is configured (15 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-08-31<!--/DATE--> | Build <!--COMMIT-->947134f - chore: bump version to 1.4.73 (10 minutes ago)<!--/COMMIT-->_
