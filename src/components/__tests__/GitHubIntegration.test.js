@@ -457,6 +457,61 @@ describe('GitHubIntegration', () => {
       });
     });
 
+    it('immediately syncs after joining an existing repository, not just after creating a new one', async () => {
+      // Real gap found live: handleSetupRepository (the 'new' repo path)
+      // explicitly syncs right after repo creation, but joining an
+      // existing repository never did -- nothing happened until a passive
+      // trigger (blur, the periodic timer, scene-switch, or app close)
+      // eventually fired. Confirmed live: "Join Existing Repository"
+      // connected successfully but silently did nothing until a manual
+      // sync was triggered.
+      const existingRepo = {
+        full_name: 'someone/existing-repo',
+        name: 'existing-repo',
+        private: true
+      };
+      GitHubService.getUserRepositories.mockResolvedValue([existingRepo]);
+      gitSyncService.syncBook.mockResolvedValue({
+        bookData: { ...mockBook, title: 'Pulled From Existing Repo' },
+        conflicts: []
+      });
+
+      render(<GitHubIntegration {...mockProps} />);
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('📥 Join Existing Repository'));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('someone/existing-repo')).toBeInTheDocument();
+      });
+
+      // The full_name text sits inside the clickable row (onClick handler
+      // is on the wrapping div) -- clicking it bubbles up like any nested
+      // click would. Its display name text ("🔒 existing-repo") isn't an
+      // exact-match target since the emoji shares its text node.
+      fireEvent.click(screen.getByText('someone/existing-repo'));
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('✅ Connect to Repository'));
+      });
+
+      await waitFor(() => {
+        expect(gitSyncService.syncBook).toHaveBeenCalledWith(
+          expect.objectContaining({
+            book: expect.objectContaining({
+              github: expect.objectContaining({ repository: existingRepo })
+            }),
+            filePath: mockProps.currentFilePath,
+            gitHubService: GitHubService
+          })
+        );
+        expect(mockProps.onGitHubSyncStatusUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({ lastSyncTime: expect.any(String) })
+        );
+      });
+    });
+
     it('shows repository information when repository exists', () => {
       const propsWithRepo = {
         ...mockProps,
