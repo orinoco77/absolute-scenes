@@ -359,6 +359,9 @@ async function handleWindowClose() {
           if (window._electronAPIExtensions && window._electronAPIExtensions.triggerGitSync) {
             return window._electronAPIExtensions.triggerGitSync();
           }
+          if (window._mockElectronAPI && window._mockElectronAPI.triggerGitSync) {
+            return window._mockElectronAPI.triggerGitSync();
+          }
           return Promise.resolve();
         })()
       `);
