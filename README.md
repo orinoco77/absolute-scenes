@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.71<!--/VERSION--> | **Tests:** <!--TESTS-->1136/1136<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.72<!--/VERSION--> | **Tests:** <!--TESTS-->1136/1136<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-08-31<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -291,7 +291,7 @@ Access via the 🔗 GitHub Integration button:
 
 **Code Quality:** <!--TESTS-->1136/1136<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->212<!--/COMMITS--> | **Latest:** <!--COMMIT-->644ce78 - refactor: delegate gitSyncService's layout orchestration to git-sync's promoted syncRepo (18 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->213<!--/COMMITS--> | **Latest:** <!--COMMIT-->56651a1 - fix: pullBook treats an unrecognized repo layout like empty, fix stale comment (25 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -542,8 +542,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.71<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.71<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.72<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.72<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -575,4 +575,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2026-08-31<!--/DATE--> | Build <!--COMMIT-->644ce78 - refactor: delegate gitSyncService's layout orchestration to git-sync's promoted syncRepo (18 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-08-31<!--/DATE--> | Build <!--COMMIT-->56651a1 - fix: pullBook treats an unrecognized repo layout like empty, fix stale comment (25 minutes ago)<!--/COMMIT-->_
