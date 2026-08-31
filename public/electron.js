@@ -110,6 +110,23 @@ async function createWindow() {
     height: 1020,
     backgroundColor: '#1a1a1a',
     show: false,
+    // Only Linux actually needs this at runtime: macOS gets its Dock icon
+    // from the app bundle (set at build time via build.mac.icon) and
+    // Windows gets its taskbar icon from the .exe's embedded resource (set
+    // via build.win.icon) -- neither depends on this option. Linux window
+    // managers set the taskbar/window-list icon from the X11 _NET_WM_ICON
+    // property, which Electron only populates when a BrowserWindow is
+    // created with an explicit `icon`. Without it, the running window has
+    // no icon of its own regardless of what the installed .desktop file's
+    // Icon= entry says. public/icon.png isn't bundled into the packaged
+    // app (only public/electron.js is, per build.files) but build/icon.png
+    // is (Vite/CRA copies public/* into build/* at build time, and
+    // build/**/* is bundled) -- same isDev split already used above for
+    // loadURL's index.html path.
+    icon: path.join(
+      __dirname,
+      process.env.ELECTRON_IS_DEV === 'true' ? 'icon.png' : '../build/icon.png'
+    ),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
