@@ -11,6 +11,8 @@ import {
 import { resolveCommitAuthor } from '../utils/commitAuthor.js';
 import { createSyncCache } from '../utils/syncCache.js';
 
+export { reconcilePostSyncState } from './postSyncReconciliation.js';
+
 let inFlight = null;
 
 export function __resetInFlightGuardForTests() {

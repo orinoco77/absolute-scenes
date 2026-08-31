@@ -1205,6 +1205,15 @@ describe('App Component - Comprehensive Tests', () => {
   describe('GitHub sync triggers', () => {
     beforeEach(() => {
       delete window._mockElectronAPI;
+      // gitSyncService is automocked whole-module; give
+      // reconcilePostSyncState a sensible pass-through default (adopt the
+      // sync result as-is) so every test below that doesn't care about the
+      // in-flight-edit race doesn't have to mock it individually. The race
+      // regression test further down overrides this with the real
+      // implementation.
+      gitSyncService.reconcilePostSyncState.mockImplementation(
+        (base, local, remote) => ({ bookData: remote, conflicts: [] })
+      );
     });
 
     test('exposes a triggerGitSync function to Electron that returns a promise (close-trigger must be awaitable)', async () => {
@@ -1344,6 +1353,90 @@ describe('App Component - Comprehensive Tests', () => {
       });
       const syncedBook = gitSyncService.syncBook.mock.calls[0][0].book;
       expect(syncedBook.chapters.some(ch => ch.scenes.length > 0)).toBe(true);
+    });
+
+    test('a scene added while a sync is still in flight survives, instead of being wiped by that sync completing', async () => {
+      // performGitSync used to finish with a plain setBook(result.bookData)
+      // -- an unconditional replace. A sync's round-trip is not instant, so
+      // any edit made on this device while it was still pending was
+      // silently discarded the moment it resolved, with nothing pushed to
+      // GitHub to recover it from. This uses the *real*
+      // reconcilePostSyncState (not the pass-through default above) to
+      // prove the fix end-to-end: add a scene while syncBook is still
+      // pending, resolve it with the pre-edit snapshot (exactly what a real
+      // sync would return, since it started before the edit existed), and
+      // confirm the added scene is still there afterward.
+      const { reconcilePostSyncState: realReconcile } = jest.requireActual(
+        '../services/gitSyncService.js'
+      );
+      gitSyncService.reconcilePostSyncState.mockImplementation(realReconcile);
+
+      gitHubService.isAuthenticated.mockReturnValue(true);
+      let resolveSyncBook;
+      gitSyncService.syncBook.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            resolveSyncBook = resolve;
+          })
+      );
+
+      render(<App />);
+
+      fireEvent.click(screen.getByTitle(/GitHub Integration/));
+      fireEvent.click(screen.getByText('Update GitHub Settings'));
+      fireEvent.click(screen.getByText('Close GitHub'));
+
+      await waitFor(() => {
+        expect(typeof window._mockElectronAPI?.triggerGitSync).toBe(
+          'function'
+        );
+      });
+
+      // Start the sync -- it stays pending until resolveSyncBook is called.
+      let syncPromise;
+      act(() => {
+        syncPromise = window._mockElectronAPI.triggerGitSync();
+      });
+
+      await waitFor(() => {
+        expect(gitSyncService.syncBook).toHaveBeenCalledTimes(1);
+      });
+      const preSyncBook = gitSyncService.syncBook.mock.calls[0][0].book;
+
+      // Edit while the sync is still pending.
+      fireEvent.click(screen.getByText('Add Scene'));
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
+
+      // The sync resolves with exactly what a real sync would produce here:
+      // the pre-edit snapshot it started from (it has no idea the new scene
+      // exists).
+      await act(async () => {
+        resolveSyncBook({ bookData: preSyncBook, conflicts: [] });
+        await syncPromise;
+      });
+
+      // Trigger a second sync and inspect what book state it's sent --
+      // that's bookRef.current after the first sync's reconciliation ran.
+      let secondSyncPromise;
+      gitSyncService.syncBook.mockImplementation(async ({ book }) => ({
+        bookData: book,
+        conflicts: []
+      }));
+      act(() => {
+        secondSyncPromise = window._mockElectronAPI.triggerGitSync();
+      });
+      await act(async () => {
+        await secondSyncPromise;
+      });
+
+      const secondSyncBook = gitSyncService.syncBook.mock.calls[1][0].book;
+      expect(
+        secondSyncBook.chapters.some(ch => ch.scenes.length > 0)
+      ).toBe(true);
     });
   });
 });
