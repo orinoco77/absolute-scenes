@@ -40,20 +40,24 @@ jobs:
       if: matrix.platform == 'windows'
       shell: pwsh
       run: |
-        # Decode base64 certificate and save to file
-        $certBytes = [Convert]::FromBase64String("${{ secrets.WINDOWS_CERT_FILE }}")
-        New-Item -ItemType Directory -Force -Path "cert" | Out-Null
-        [IO.File]::WriteAllBytes("cert/windows-cert.p12", $certBytes)
-        Write-Host "✅ Windows certificate saved"
+        if ("${{ secrets.WINDOWS_CERT_FILE }}" -ne "") {
+          # Decode base64 certificate and save to file
+          $certBytes = [Convert]::FromBase64String("${{ secrets.WINDOWS_CERT_FILE }}")
+          New-Item -ItemType Directory -Force -Path "cert" | Out-Null
+          [IO.File]::WriteAllBytes("cert/windows-cert.p12", $certBytes)
+          Write-Host "✅ Windows certificate saved"
 
-        # Patch package.json for Electron Builder
-        $pkg = Get-Content package.json -Raw | ConvertFrom-Json
-        if (-not $pkg.build.win) { $pkg.build | Add-Member -MemberType NoteProperty -Name win -Value @{} }
-        if (-not $pkg.build.win.signtoolOptions) { $pkg.build.win | Add-Member -MemberType NoteProperty -Name signtoolOptions -Value @{} }
-        $pkg.build.win.signtoolOptions.certificateFile = "cert/windows-cert.p12"
-        $pkg.build.win.signtoolOptions.certificatePassword = "${{ secrets.WINDOWS_CERT_PASSWORD }}"
-        $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json -Encoding UTF8
-        Write-Host "✅ package.json updated for Windows signing"
+          # Patch package.json for Electron Builder
+          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          if (-not $pkg.build.win) { $pkg.build | Add-Member -MemberType NoteProperty -Name win -Value @{} }
+          if (-not $pkg.build.win.signtoolOptions) { $pkg.build.win | Add-Member -MemberType NoteProperty -Name signtoolOptions -Value @{} }
+          $pkg.build.win.signtoolOptions.certificateFile = "cert/windows-cert.p12"
+          $pkg.build.win.signtoolOptions.certificatePassword = "${{ secrets.WINDOWS_CERT_PASSWORD }}"
+          $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json -Encoding UTF8
+          Write-Host "✅ package.json updated for Windows signing"
+        } else {
+          Write-Host "ℹ️ No Windows certificate provided. Building unsigned."
+        }
 
     # ---------- MACOS CERTIFICATE SETUP (Option 1) ----------
     - name: Setup macOS Code Signing
