@@ -105,7 +105,9 @@ export function reconcilePostSyncState(base, local, remote) {
       );
       merged.set(path, { content, encoding: 'utf-8' });
       if (conflict) {
-        conflicts.push({ sceneId: path.replace('scenes/', '').replace('.md', '') });
+        conflicts.push({
+          sceneId: path.replace('scenes/', '').replace('.md', '')
+        });
       }
     } else {
       // Illustrations and anything else binary: no merge strategy exists,

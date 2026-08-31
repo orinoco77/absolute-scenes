@@ -25,6 +25,13 @@ function makeBook() {
   };
 }
 
+// Same fixture, with the github block overridable -- used for the
+// first-sync-ever ("no prior lastSyncCommitSha") regression tests below.
+function makeGitBook(githubOverrides = {}) {
+  const book = makeBook();
+  return { ...book, github: { ...book.github, ...githubOverrides } };
+}
+
 beforeEach(() => {
   __resetInFlightGuardForTests();
   jest.clearAllMocks();
@@ -88,6 +95,83 @@ test('a legacy-layout repo is migrated before the first pushSync call', async ()
   );
   const pushCall = gitSync.pushSync.mock.calls[0][0];
   expect(pushCall.lastSyncCommitSha).toBe('migration-sha');
+});
+
+test('a device with no prior lastSyncCommitSha joining a legacy repo pulls the migrated content instead of pushing a merge', async () => {
+  // Real bug found live during migration testing: pushSync's merge treats
+  // whatever lastSyncCommitSha it's given as "the commit this local book
+  // already reflects". A device joining for the first time has a blank
+  // local book that reflects nothing -- feeding pushSync the freshly
+  // migrated commit as the base made it treat every migrated scene as
+  // "existed at that base, missing from local" (i.e. deleted), wiping the
+  // whole repo's content on the very next push. This must pull instead.
+  const freshBook = makeGitBook({ lastSyncCommitSha: undefined });
+  gitSync.detectRepoLayout.mockResolvedValue('legacy');
+  gitSync.getRef.mockResolvedValue({ sha: 'ref-sha' });
+  gitSync.getCommit.mockResolvedValue({ tree: { sha: 'tree-sha' } });
+  gitSync.getTree.mockResolvedValue([{ path: 'Book.book' }]);
+  gitSync.migrateLegacyRepo.mockResolvedValue({ commitSha: 'migration-sha' });
+  gitSync.pullSync.mockResolvedValue({
+    commitSha: 'migration-sha',
+    bookData: {
+      title: 'Migrated Book',
+      chapters: [{ id: 'ch1', scenes: [{ id: 'sc1' }] }]
+    }
+  });
+
+  const result = await syncBook({
+    book: freshBook,
+    filePath: '/x/Book.book',
+    gitHubService: makeGitHubService()
+  });
+
+  expect(gitSync.pushSync).not.toHaveBeenCalled();
+  expect(gitSync.pullSync).toHaveBeenCalled();
+  expect(result.bookData.title).toBe('Migrated Book');
+  expect(result.bookData.chapters[0].scenes).toHaveLength(1);
+  expect(result.bookData.github.lastSyncCommitSha).toBe('migration-sha');
+  expect(result.conflicts).toEqual([]);
+});
+
+test('a device with no prior lastSyncCommitSha joining an already-populated new-layout repo pulls instead of pushing', async () => {
+  const freshBook = makeGitBook({ lastSyncCommitSha: undefined });
+  gitSync.detectRepoLayout.mockResolvedValue('new');
+  gitSync.pullSync.mockResolvedValue({
+    commitSha: 'existing-tip-sha',
+    bookData: { title: 'Existing Repo Book', chapters: [] }
+  });
+
+  const result = await syncBook({
+    book: freshBook,
+    filePath: '/x/Book.book',
+    gitHubService: makeGitHubService()
+  });
+
+  expect(gitSync.pushSync).not.toHaveBeenCalled();
+  expect(gitSync.pullSync).toHaveBeenCalled();
+  expect(result.bookData.title).toBe('Existing Repo Book');
+  expect(result.bookData.github.lastSyncCommitSha).toBe('existing-tip-sha');
+});
+
+test('a device with no prior lastSyncCommitSha against a freshly bootstrapped (empty) repo still pushes -- nothing real to pull yet', async () => {
+  const freshBook = makeGitBook({ lastSyncCommitSha: undefined });
+  gitSync.detectRepoLayout.mockResolvedValue('empty');
+  gitSync.bootstrapEmptyRepo.mockResolvedValue({ commitSha: 'bootstrap-sha' });
+  gitSync.pushSync.mockResolvedValue({
+    commitSha: 'new-sha',
+    bookData: freshBook,
+    conflicts: []
+  });
+
+  await syncBook({
+    book: freshBook,
+    filePath: '/x/Book.book',
+    gitHubService: makeGitHubService()
+  });
+
+  expect(gitSync.pullSync).not.toHaveBeenCalled();
+  const pushCall = gitSync.pushSync.mock.calls[0][0];
+  expect(pushCall.lastSyncCommitSha).toBe('bootstrap-sha');
 });
 
 test('an empty repo is bootstrapped, then migration is skipped (nothing to migrate), then pushed', async () => {
