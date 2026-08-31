@@ -4,11 +4,17 @@ describe('createSyncCache', () => {
   let store;
   beforeEach(() => {
     store = {};
-    if (!window.electron) {
-      window.electron = {};
+    // Real global exposed by public/preload.js is `window.electronAPI`
+    // (contextBridge.exposeInMainWorld('electronAPI', {...})) -- not
+    // `window.electron`, which doesn't exist anywhere in this app. Mocking
+    // the wrong name here previously let this whole test suite pass while
+    // the real app crashed with "Cannot read properties of undefined
+    // (reading 'readSyncCache')" the first time it ran for real.
+    if (!window.electronAPI) {
+      window.electronAPI = {};
     }
-    window.electron.readSyncCache = jest.fn(async () => store);
-    window.electron.writeSyncCache = jest.fn(async (path, data) => {
+    window.electronAPI.readSyncCache = jest.fn(async () => store);
+    window.electronAPI.writeSyncCache = jest.fn(async (path, data) => {
       store = data;
     });
   });
@@ -39,7 +45,7 @@ describe('createSyncCache', () => {
       content: '{}',
       encoding: 'utf-8'
     });
-    expect(window.electron.writeSyncCache).toHaveBeenCalledWith(
+    expect(window.electronAPI.writeSyncCache).toHaveBeenCalledWith(
       '/path/to/My Book.book',
       expect.any(Object)
     );
