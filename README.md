@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.59<!--/VERSION--> | **Tests:** <!--TESTS-->1130/1130<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.60<!--/VERSION--> | **Tests:** <!--TESTS-->1132/1132<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-08-31<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -289,9 +289,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1130/1130<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1132/1132<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->200<!--/COMMITS--> | **Latest:** <!--COMMIT-->c33adfc - fix: bump @absolute-scenes/git-sync to v0.1.1 (getRef 409-on-empty-repo fix) (9 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->201<!--/COMMITS--> | **Latest:** <!--COMMIT-->cb80fde - fix: syncCache used the wrong preload global name, bump git-sync to v0.1.2 (8 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -542,8 +542,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.59<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.59<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.60<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.60<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -575,4 +575,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2026-08-31<!--/DATE--> | Build <!--COMMIT-->c33adfc - fix: bump @absolute-scenes/git-sync to v0.1.1 (getRef 409-on-empty-repo fix) (9 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-08-31<!--/DATE--> | Build <!--COMMIT-->cb80fde - fix: syncCache used the wrong preload global name, bump git-sync to v0.1.2 (8 minutes ago)<!--/COMMIT-->_
