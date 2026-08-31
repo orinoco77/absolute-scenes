@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.67<!--/VERSION--> | **Tests:** <!--TESTS-->1140/1140<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.68<!--/VERSION--> | **Tests:** <!--TESTS-->1143/1143<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-08-31<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -289,9 +289,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1140/1140<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1143/1143<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->208<!--/COMMITS--> | **Latest:** <!--COMMIT-->6be8208 - Bump @absolute-scenes/git-sync to v0.1.5 (22 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->209<!--/COMMITS--> | **Latest:** <!--COMMIT-->685e7c6 - Fix sync completion silently discarding edits made while it was in flight (21 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -542,8 +542,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.67<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.67<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.68<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.68<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -575,4 +575,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2026-08-31<!--/DATE--> | Build <!--COMMIT-->6be8208 - Bump @absolute-scenes/git-sync to v0.1.5 (22 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-08-31<!--/DATE--> | Build <!--COMMIT-->685e7c6 - Fix sync completion silently discarding edits made while it was in flight (21 minutes ago)<!--/COMMIT-->_

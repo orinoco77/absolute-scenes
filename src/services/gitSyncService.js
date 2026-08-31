@@ -36,6 +36,14 @@ async function runSync({ book, filePath, gitHubService }) {
   const author = resolveCommitAuthor(book, gitHubService);
   const cache = createSyncCache(filePath);
 
+  // A falsy lastSyncCommitSha means this device's local book has never
+  // actually been derived from anything in this repo's history -- it's a
+  // brand new local file, or one just connected to an existing repo for
+  // the first time (including via legacy migration below). pushSync's
+  // merge treats whatever lastSyncCommitSha it's given as "the commit this
+  // local book already reflects", which is only true for a device
+  // continuing a sync relationship it already had.
+  const isFirstSyncForThisDevice = !book.github.lastSyncCommitSha;
   let lastSyncCommitSha = book.github.lastSyncCommitSha;
   const layout = await detectRepoLayout({ repo, token, branch });
 
@@ -66,6 +74,32 @@ async function runSync({ book, filePath, gitHubService }) {
       author
     });
     lastSyncCommitSha = migration.commitSha;
+  }
+
+  // The repo already held real content before this sync (it was 'legacy',
+  // just migrated above, or already 'new') and this device has never
+  // synced with it -- adopt that content wholesale via a real pull instead
+  // of pushSync's merge. Feeding pushSync the post-migration commit as
+  // lastSyncCommitSha here would make it treat every migrated scene as
+  // "existed at that base, missing from this device's still-blank local
+  // book" -- i.e. deleted locally -- and wipe the whole repo's content on
+  // this very push. Confirmed live: exactly this happened during manual
+  // migration testing. A freshly bootstrapped ('empty') repo is excluded
+  // deliberately -- there's nothing real to pull yet, and local's own
+  // content is what should get pushed there.
+  if (isFirstSyncForThisDevice && (layout === 'legacy' || layout === 'new')) {
+    const pulled = await pullSync({ repo, token, branch, cache });
+    return {
+      bookData: {
+        ...pulled.bookData,
+        github: {
+          ...book.github,
+          lastSyncCommitSha: pulled.commitSha,
+          lastSyncTime: new Date().toISOString()
+        }
+      },
+      conflicts: []
+    };
   }
 
   const result = await pushSync({

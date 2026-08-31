@@ -1387,9 +1387,7 @@ describe('App Component - Comprehensive Tests', () => {
       fireEvent.click(screen.getByText('Close GitHub'));
 
       await waitFor(() => {
-        expect(typeof window._mockElectronAPI?.triggerGitSync).toBe(
-          'function'
-        );
+        expect(typeof window._mockElectronAPI?.triggerGitSync).toBe('function');
       });
 
       // Start the sync -- it stays pending until resolveSyncBook is called.
@@ -1434,9 +1432,9 @@ describe('App Component - Comprehensive Tests', () => {
       });
 
       const secondSyncBook = gitSyncService.syncBook.mock.calls[1][0].book;
-      expect(
-        secondSyncBook.chapters.some(ch => ch.scenes.length > 0)
-      ).toBe(true);
+      expect(secondSyncBook.chapters.some(ch => ch.scenes.length > 0)).toBe(
+        true
+      );
     });
   });
 });
