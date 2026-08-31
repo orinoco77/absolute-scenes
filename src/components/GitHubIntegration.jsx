@@ -10,6 +10,7 @@ function GitHubIntegration({
   onGitHubSyncStatusUpdate,
   onClose,
   book,
+  bookRef,
   currentFilePath,
   onStatusMessage,
   onBookUpdate,
@@ -294,8 +295,16 @@ function GitHubIntegration({
   const handleSetupRepository = async () => {
     if (!isAuthenticated) return;
 
+    // Read via bookRef, not the `book` prop: this handler awaits a real
+    // network round trip (repo creation, then the initial push) during
+    // which the user can keep typing. A prop captured at click-time would
+    // go stale exactly the same way performGitSync's old `book` closure
+    // did (see App.jsx's performGitSync fix) -- bookRef.current is always
+    // current regardless of how long this handler has been running.
+    const currentBook = bookRef?.current ?? book;
+
     // Validate that book has title and author before creating repo
-    if (!book.title?.trim() || !book.author?.trim()) {
+    if (!currentBook.title?.trim() || !currentBook.author?.trim()) {
       setError(
         'Please set a book title and author before creating a repository. This ensures your repository has a meaningful name.'
       );
@@ -307,17 +316,19 @@ function GitHubIntegration({
 
     try {
       const repo = await GitHubService.setupBookRepository(
-        book.title || 'Untitled Book',
-        book.author || 'Author'
+        currentBook.title || 'Untitled Book',
+        currentBook.author || 'Author'
       );
 
       setCurrentRepository(repo);
       onGitHubSettingsUpdate({ repository: repo });
 
-      // Create updated book with github repository info for saving
+      // Create updated book with github repository info for saving --
+      // re-read bookRef.current again here, since the repo-creation await
+      // above is itself another window for the book to have changed.
       const bookWithRepo = {
-        ...book,
-        github: { ...book.github, repository: repo }
+        ...(bookRef?.current ?? book),
+        github: { ...(bookRef?.current ?? book).github, repository: repo }
       };
 
       // Immediately save the current book to the repo
@@ -352,7 +363,7 @@ function GitHubIntegration({
 
     try {
       const result = await gitSyncService.syncBook({
-        book,
+        book: bookRef?.current ?? book,
         filePath: currentFilePath,
         gitHubService: GitHubService
       });

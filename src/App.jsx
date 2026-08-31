@@ -1921,6 +1921,7 @@ function App() {
           onGitHubSyncStatusUpdate={updateGitHubSyncStatus}
           onClose={() => setShowGitHubIntegration(false)}
           book={book}
+          bookRef={bookRef}
           currentFilePath={currentFilePath}
           onBookUpdate={setBook}
           onConflictsDetected={setConflictSceneIds}
