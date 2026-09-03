@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.76<!--/VERSION--> | **Tests:** <!--TESTS-->1136/1136<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2026-09-01<!--/DATE-->
+**Version:** <!--VERSION-->1.4.77<!--/VERSION--> | **Tests:** <!--TESTS-->1136/1136<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2026-09-03<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -291,7 +291,7 @@ Access via the 🔗 GitHub Integration button:
 
 **Code Quality:** <!--TESTS-->1136/1136<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->218<!--/COMMITS--> | **Latest:** <!--COMMIT-->38732c6 - fix: set BrowserWindow icon explicitly for Linux taskbar/window-list (12 hours ago)<!--/COMMIT-->
+<!--COMMITS-->220<!--/COMMITS--> | **Latest:** <!--COMMIT-->ec12107 - Bump vite and @vitejs/plugin-react (49 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -542,8 +542,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.76<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.76<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.77<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.77<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -561,11 +561,11 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+- **v1.4.76**: fix: ship a real multi-size Linux icon set and give the icon an opaque background
 - **v1.4.75**: fix: set BrowserWindow icon explicitly for Linux taskbar/window-list
 - **v1.4.74**: fix: clear the hardcoded signtoolOptions default when no cert is provided
 - **v1.4.73**: chore: bump version to 1.4.73
 - **v1.4.72**: chore: bump @absolute-scenes/git-sync to v0.2.1
-- **v1.4.49**: More pipeline fixing
 <!--/VERSION_HISTORY-->
 
 ---
@@ -575,4 +575,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2026-09-01<!--/DATE--> | Build <!--COMMIT-->38732c6 - fix: set BrowserWindow icon explicitly for Linux taskbar/window-list (12 hours ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-09-03<!--/DATE--> | Build <!--COMMIT-->ec12107 - Bump vite and @vitejs/plugin-react (49 minutes ago)<!--/COMMIT-->_
