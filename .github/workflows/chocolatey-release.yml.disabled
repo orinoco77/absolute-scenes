@@ -1,3 +1,8 @@
+# Mothballed: Chocolatey isn't currently published to (submissions were
+# repeatedly rejected regardless of package content), and this workflow
+# also hard-depends on a 32-bit release zip that's no longer built. The
+# .disabled extension keeps GitHub Actions from picking this file up.
+# Rename back to .yml to reinstate.
 name: Build and Publish Chocolatey Package
 
 on:
