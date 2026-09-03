@@ -1,6 +1,6 @@
 {
     "name": "absolute-scenes",
-    "version": "1.4.77",
+    "version": "1.4.78",
     "description": "A scene-based book writing application",
     "main": "public/electron.js",
     "homepage": "./",
@@ -52,8 +52,8 @@
         "auto-version-js": "^0.3.10",
         "babel-jest": "^30.0.5",
         "cross-env": "^7.0.3",
-        "electron": "^35.7.5",
-        "electron-builder": "^26.8.1",
+        "electron": "^44.1.1",
+        "electron-builder": "^26.15.3",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
         "eslint-config-react-app": "^7.0.1",
