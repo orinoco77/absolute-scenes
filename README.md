@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.88<!--/VERSION--> | **Tests:** <!--TESTS-->1176/1176<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.89<!--/VERSION--> | **Tests:** <!--TESTS-->1184/1184<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-09-26<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -289,9 +289,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1176/1176<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1184/1184<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->232<!--/COMMITS--> | **Latest:** <!--COMMIT-->f44bff6 - feat: add useDrafts hook and verify draft/revision fields survive load (4 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->233<!--/COMMITS--> | **Latest:** <!--COMMIT-->154a5e7 - feat: choose which draft to export (68 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -542,8 +542,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.88<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.88<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.89<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.89<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -575,4 +575,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2026-09-26<!--/DATE--> | Build <!--COMMIT-->f44bff6 - feat: add useDrafts hook and verify draft/revision fields survive load (4 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-09-26<!--/DATE--> | Build <!--COMMIT-->154a5e7 - feat: choose which draft to export (68 minutes ago)<!--/COMMIT-->_

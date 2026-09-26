@@ -7,6 +7,7 @@ import BackupRecovery from './components/BackupRecovery.jsx';
 import BookStructure from './components/BookStructure.jsx';
 import CharacterEditor from './components/CharacterEditor.jsx';
 import CharacterThreadVisualization from './components/CharacterThreadVisualization.jsx';
+import DraftSwitcher from './components/DraftSwitcher';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import ExportDialog from './components/ExportDialog.jsx';
 import FontSettings from './components/FontSettings.jsx';
@@ -25,6 +26,7 @@ import { EventHandlerService } from './services/EventHandlerService';
 import * as gitSyncService from './services/gitSyncService.js';
 import { SaveService } from './services/SaveService';
 import { ThemeService } from './services/ThemeService';
+import { getActiveDraft } from './utils/draftOperations';
 import { initializeFontSystem } from './utils/fontManager';
 import { initializeFontSettings } from './utils/fontSettingsManager';
 import gitHubService from './utils/gitHubService';
@@ -104,8 +106,6 @@ function App() {
     getCurrentIllustration
   } = bookState;
 
-  // Consumed by the drafts/revisions UI (later tasks)
-  // eslint-disable-next-line no-unused-vars
   const draftActions = useDrafts(setBook, bookRef);
 
   const {
@@ -1479,6 +1479,48 @@ function App() {
     [updateTemplate, markAsChanged]
   );
 
+  const handleDraftCreate = useCallback(
+    opts => {
+      draftActions.createDraft(opts);
+      markAsChanged();
+    },
+    [draftActions, markAsChanged]
+  );
+
+  const handleDraftSwitch = useCallback(
+    draftId => {
+      draftActions.switchDraft(draftId);
+      // The selections belong to the old draft's chapters/parts/scenes
+      setCurrentSceneId(null);
+      setCurrentChapterId('default');
+      setCurrentPartId(null);
+      markAsChanged();
+    },
+    [
+      draftActions,
+      setCurrentSceneId,
+      setCurrentChapterId,
+      setCurrentPartId,
+      markAsChanged
+    ]
+  );
+
+  const handleDraftRename = useCallback(
+    (draftId, name) => {
+      draftActions.renameDraft(draftId, name);
+      markAsChanged();
+    },
+    [draftActions, markAsChanged]
+  );
+
+  const handleDraftDelete = useCallback(
+    draftId => {
+      draftActions.deleteDraft(draftId);
+      markAsChanged();
+    },
+    [draftActions, markAsChanged]
+  );
+
   const handleBookMetadataUpdate = useCallback(
     metadata => {
       updateBookMetadata(metadata);
@@ -1713,6 +1755,13 @@ function App() {
             title={
               currentFilePath ? `File: ${currentFilePath}` : 'No file selected'
             }
+          />
+          <DraftSwitcher
+            book={book}
+            onCreate={handleDraftCreate}
+            onSwitch={handleDraftSwitch}
+            onRename={handleDraftRename}
+            onDelete={handleDraftDelete}
           />
         </div>
         <div className="toolbar">
@@ -1959,6 +2008,7 @@ function App() {
         currentOperation={currentOperation}
         githubSyncStatus={book.github}
         isOnline={navigator.onLine}
+        draftName={getActiveDraft(book).name}
       />
     </div>
   );

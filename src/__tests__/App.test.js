@@ -723,6 +723,53 @@ describe('App Component - Comprehensive Tests', () => {
     });
   });
 
+  describe('Draft switching', () => {
+    const createAndSwitchToDraft = name => {
+      fireEvent.click(screen.getByRole('button', { name: /new draft/i }));
+      fireEvent.change(screen.getByLabelText(/name/i), {
+        target: { value: name }
+      });
+      fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
+      const option = screen.getByRole('option', { name });
+      fireEvent.change(screen.getByLabelText('Draft'), {
+        target: { value: option.value }
+      });
+    };
+
+    test('creating a draft marks the book as changed', async () => {
+      render(<App />);
+      fireEvent.click(screen.getByRole('button', { name: /new draft/i }));
+      fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
+    });
+
+    test('switching draft clears the selected scene and chapter', async () => {
+      render(<App />);
+      fireEvent.click(screen.getByText('Select Chapter'));
+      fireEvent.click(screen.getByText('Select Scene'));
+      await waitFor(() => {
+        expect(screen.getByTestId('current-scene-id')).toHaveTextContent(
+          'scene-1'
+        );
+      });
+
+      createAndSwitchToDraft('Rewrite');
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Draft')).toHaveDisplayValue('Rewrite');
+      });
+      expect(screen.getByTestId('current-scene-id')).toHaveTextContent('none');
+      expect(screen.getByTestId('current-chapter-id')).not.toHaveTextContent(
+        'chapter-1'
+      );
+    });
+  });
+
   describe('Dialog Management', () => {
     test('opens and closes template manager', async () => {
       render(<App />);
