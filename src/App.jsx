@@ -19,6 +19,7 @@ import SpellCheckSettings from './components/SpellCheckSettings.jsx';
 import StatusBar from './components/StatusBar.jsx';
 import TemplateManager from './components/TemplateManager.jsx';
 import { useBookState } from './hooks/useBookState';
+import { useDrafts } from './hooks/useDrafts';
 import { useUIState } from './hooks/useUIState';
 import { EventHandlerService } from './services/EventHandlerService';
 import * as gitSyncService from './services/gitSyncService.js';
@@ -102,6 +103,10 @@ function App() {
     deleteIllustration,
     getCurrentIllustration
   } = bookState;
+
+  // Consumed by the drafts/revisions UI (later tasks)
+  // eslint-disable-next-line no-unused-vars
+  const draftActions = useDrafts(setBook, bookRef);
 
   const {
     activeTab,
