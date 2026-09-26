@@ -10,7 +10,7 @@ const ensureActive = scene =>
     : {
         ...scene,
         activeRevision: {
-          id: newId(),
+          id: `${scene.id}-rev1`,
           label: 'Revision 1',
           created: scene.created || now()
         }

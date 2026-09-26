@@ -114,3 +114,34 @@ describe('deleteRevision', () => {
     expect(() => deleteRevision(scene, 'nope')).toThrow(/not found/i);
   });
 });
+
+describe('legacy scene implicit revision id stability', () => {
+  it('getRevisionInfo(legacy).activeId is identical across two calls and equals scene.id-rev1', () => {
+    const legacy = makeScene();
+    const info1 = getRevisionInfo(legacy);
+    const info2 = getRevisionInfo(legacy);
+    expect(info1.activeId).toBe(info2.activeId);
+    expect(info1.activeId).toBe('s1-rev1');
+  });
+
+  it('renameRevision on legacy scene using getRevisionInfo id works', () => {
+    const legacy = makeScene();
+    const info = getRevisionInfo(legacy);
+    const renamed = renameRevision(legacy, info.activeId, 'X');
+    expect(renamed.activeRevision.label).toBe('X');
+  });
+
+  it('deleteRevision on legacy scene throws active revision error', () => {
+    const legacy = makeScene();
+    const info = getRevisionInfo(legacy);
+    expect(() => deleteRevision(legacy, info.activeId)).toThrow(
+      /active revision/i
+    );
+  });
+
+  it('switchRevision on legacy scene using its active id is a no-op', () => {
+    const legacy = makeScene();
+    const info = getRevisionInfo(legacy);
+    expect(switchRevision(legacy, info.activeId)).toBe(legacy);
+  });
+});
