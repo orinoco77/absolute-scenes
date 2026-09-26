@@ -1,12 +1,14 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import DistractionFreeMode from './DistractionFreeMode';
+import RevisionChip from './RevisionChip';
 import TextEditor from './TextEditor';
 
 function SceneEditor({
   scene,
   template: _template,
   onSceneUpdate,
-  collaboration = null // Optional collaboration settings
+  collaboration = null, // Optional collaboration settings
+  revisionActions = null // Optional { create, switch, rename, delete }
 }) {
   const textareaRef = useRef(null);
   const [isDistractionFree, setIsDistractionFree] = useState(false);
@@ -15,7 +17,7 @@ function SceneEditor({
   const lastSentContentRef = useRef(scene?.content || '');
   const lastSentTimeRef = useRef(0);
 
-  // Sync local content when scene ID changes (switching scenes)
+  // Sync local content when the scene or its active revision changes
   useEffect(() => {
     if (scene?.id) {
       setLocalContent(scene?.content || '');
@@ -23,7 +25,7 @@ function SceneEditor({
       lastSentTimeRef.current = 0;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene?.id]); // Intentionally only watching scene ID, not content
+  }, [scene?.id, scene?.activeRevision?.id]); // Intentionally not watching content
 
   // Handle external content updates (like GitHub sync)
   // Only update if it's truly external, not just echoing our own changes
@@ -125,6 +127,7 @@ function SceneEditor({
 
       // Debounce the actual book state update
       contentUpdateTimerRef.current = setTimeout(() => {
+        contentUpdateTimerRef.current = null;
         onSceneUpdate(scene.id, { content: newContent });
         lastSentContentRef.current = newContent; // Track what we sent
         lastSentTimeRef.current = Date.now(); // Track when we sent it
@@ -132,6 +135,25 @@ function SceneEditor({
     },
     [scene?.id, onSceneUpdate]
   );
+
+  // Write any debounced typing to the current revision now, so a revision
+  // action doesn't let the stale timer land in the newly active revision
+  const flushPendingContent = () => {
+    if (contentUpdateTimerRef.current) {
+      clearTimeout(contentUpdateTimerRef.current);
+      contentUpdateTimerRef.current = null;
+      onSceneUpdate(scene.id, { content: localContent });
+      lastSentContentRef.current = localContent;
+      lastSentTimeRef.current = Date.now();
+    }
+  };
+
+  const withFlush =
+    action =>
+    (...args) => {
+      flushPendingContent();
+      action(scene.id, ...args);
+    };
 
   // Cleanup timer on unmount (must be before early return)
   useEffect(() => {
@@ -260,6 +282,15 @@ function SceneEditor({
           className="scene-title-input"
           placeholder="Scene Title"
         />
+        {revisionActions && (
+          <RevisionChip
+            scene={scene}
+            onCreate={withFlush(revisionActions.create)}
+            onSwitch={withFlush(revisionActions.switch)}
+            onRename={withFlush(revisionActions.rename)}
+            onDelete={withFlush(revisionActions.delete)}
+          />
+        )}
         <div className="scene-meta">
           {/* Collaboration assignment - only show if collaboration is enabled */}
           {(() => {

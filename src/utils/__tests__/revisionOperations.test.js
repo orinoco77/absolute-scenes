@@ -19,6 +19,16 @@ describe('getRevisionInfo', () => {
     expect(info.total).toBe(1);
     expect(info.activeLabel).toBe('Revision 1');
   });
+
+  it("exposes each revision's created timestamp", () => {
+    const scene = { ...makeScene(), created: '2026-01-01T00:00:00.000Z' };
+    const next = createRevision(scene, { label: 'Alt', mode: 'copy' });
+    const info = getRevisionInfo(next);
+    expect(info.revisions.map(r => r.created)).toEqual([
+      next.activeRevision.created,
+      '2026-01-01T00:00:00.000Z'
+    ]);
+  });
 });
 
 describe('createRevision', () => {

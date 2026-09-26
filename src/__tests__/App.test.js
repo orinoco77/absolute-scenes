@@ -142,11 +142,21 @@ jest.mock('../components/BookStructure', () => {
 
 // Mock other components
 jest.mock('../components/SceneEditor', () => {
-  return function MockedSceneEditor({ scene, onSceneUpdate }) {
+  return function MockedSceneEditor({ scene, onSceneUpdate, revisionActions }) {
     return (
       <div data-testid="scene-editor">
         <div data-testid="scene-title">{scene?.title || 'No Scene'}</div>
         <div data-testid="scene-content">{scene?.content || ''}</div>
+        <div data-testid="scene-revision-label">
+          {scene?.activeRevision?.label || ''}
+        </div>
+        <button
+          onClick={() =>
+            revisionActions?.create(scene?.id, { label: 'Alt', mode: 'blank' })
+          }
+        >
+          New Revision
+        </button>
         <button
           onClick={() => onSceneUpdate?.(scene?.id, { title: 'Updated Title' })}
         >
@@ -766,6 +776,29 @@ describe('App Component - Comprehensive Tests', () => {
       expect(screen.getByTestId('current-scene-id')).toHaveTextContent('none');
       expect(screen.getByTestId('current-chapter-id')).not.toHaveTextContent(
         'chapter-1'
+      );
+    });
+  });
+
+  describe('Scene revisions', () => {
+    test('creating a revision updates the scene and marks the book changed', async () => {
+      render(<App />);
+      fireEvent.click(screen.getByText('Add Scene'));
+      await waitFor(() => {
+        expect(screen.getByTestId('scene-title')).not.toHaveTextContent(
+          'No Scene'
+        );
+      });
+
+      fireEvent.click(screen.getByText('New Revision'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('scene-revision-label')).toHaveTextContent(
+          'Alt'
+        );
+      });
+      expect(screen.getByTestId('save-status')).toHaveTextContent(
+        'Unsaved Changes'
       );
     });
   });
