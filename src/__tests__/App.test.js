@@ -118,6 +118,19 @@ jest.mock('../components/BookStructure', () => {
         <button onClick={() => props.onSceneDelete('scene-1')}>
           Delete Scene
         </button>
+        <button onClick={() => props.onSceneDelete(props.currentSceneId)}>
+          Delete Current Scene
+        </button>
+        <div data-testid="recycle-bin-count">
+          {props.recycleBin?.length || 0}
+        </div>
+        <button
+          onClick={() =>
+            props.onRestoreFromRecycleBin(props.recycleBin?.[0]?.id)
+          }
+        >
+          Restore First
+        </button>
         <button onClick={() => props.onChapterDelete('chapter-1')}>
           Delete Chapter
         </button>
@@ -756,6 +769,35 @@ describe('App Component - Comprehensive Tests', () => {
           'Unsaved Changes'
         );
       });
+    });
+
+    test('restoring a scene whose chapter is in another draft keeps it in the bin', async () => {
+      render(<App />);
+      fireEvent.click(screen.getByText('Add Scene'));
+      await waitFor(() => {
+        expect(screen.getByTestId('current-scene-id')).not.toHaveTextContent(
+          'none'
+        );
+      });
+      fireEvent.click(screen.getByText('Delete Current Scene'));
+      expect(screen.getByTestId('recycle-bin-count')).toHaveTextContent('1');
+
+      fireEvent.click(screen.getByRole('button', { name: /new draft/i }));
+      fireEvent.change(screen.getByLabelText(/name/i), {
+        target: { value: 'Blank' }
+      });
+      fireEvent.click(screen.getByLabelText(/empty structure/i));
+      fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
+      fireEvent.change(screen.getByLabelText('Draft'), {
+        target: { value: screen.getByRole('option', { name: 'Blank' }).value }
+      });
+      await waitFor(() => {
+        expect(screen.getByLabelText('Draft')).toHaveDisplayValue('Blank');
+      });
+
+      fireEvent.click(screen.getByText('Restore First'));
+
+      expect(screen.getByTestId('recycle-bin-count')).toHaveTextContent('1');
     });
 
     test('switching draft clears the selected scene and chapter', async () => {

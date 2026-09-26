@@ -941,26 +941,27 @@ function App() {
         const chapter = book.chapters.find(
           ch => ch.id === item.originalChapterId
         );
-        if (chapter) {
-          setBook(prev => ({
-            ...prev,
-            chapters: prev.chapters.map(ch => {
-              if (ch.id === item.originalChapterId) {
-                const newScenes = [...ch.scenes];
-                // Insert at original position, or at end if position is out of bounds
-                const insertPosition = Math.min(
-                  item.originalPosition ?? newScenes.length,
-                  newScenes.length
-                );
-                newScenes.splice(insertPosition, 0, item.item);
-                return { ...ch, scenes: newScenes };
-              }
-              return ch;
-            }),
-            metadata: { ...prev.metadata, modified: new Date().toISOString() }
-          }));
-          markAsChanged();
-        }
+        // Its chapter may belong to another draft: leave it in the bin
+        // rather than dropping it; it can be restored from that draft
+        if (!chapter) return;
+        setBook(prev => ({
+          ...prev,
+          chapters: prev.chapters.map(ch => {
+            if (ch.id === item.originalChapterId) {
+              const newScenes = [...ch.scenes];
+              // Insert at original position, or at end if position is out of bounds
+              const insertPosition = Math.min(
+                item.originalPosition ?? newScenes.length,
+                newScenes.length
+              );
+              newScenes.splice(insertPosition, 0, item.item);
+              return { ...ch, scenes: newScenes };
+            }
+            return ch;
+          }),
+          metadata: { ...prev.metadata, modified: new Date().toISOString() }
+        }));
+        markAsChanged();
       } else if (item.type === 'chapter') {
         // Restore chapter
         setBook(prev => ({
