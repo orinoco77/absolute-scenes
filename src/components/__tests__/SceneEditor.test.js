@@ -157,4 +157,127 @@ describe('SceneEditor Component', () => {
     expect(screen.getByTitle('Heading')).toBeInTheDocument();
     expect(screen.getByTitle('Paragraph Break')).toBeInTheDocument();
   });
+
+  describe('revisions', () => {
+    const revScene = {
+      id: 'r1',
+      title: 'Rev scene',
+      content: 'active text',
+      activeRevision: { id: 'b', label: 'B', created: '2026-01-02' },
+      revisions: [
+        { id: 'a', label: 'A', created: '2026-01-01', content: 'old' }
+      ]
+    };
+    const switched = {
+      ...revScene,
+      content: 'old',
+      activeRevision: { id: 'a', label: 'A', created: '2026-01-01' },
+      revisions: [
+        { id: 'b', label: 'B', created: '2026-01-02', content: 'active text' }
+      ]
+    };
+    const actions = () => ({
+      create: jest.fn(),
+      switch: jest.fn(),
+      rename: jest.fn(),
+      delete: jest.fn()
+    });
+
+    test('does not render the revision chip without revisionActions', () => {
+      render(<SceneEditor scene={revScene} onSceneUpdate={onSceneUpdate} />);
+      expect(
+        screen.queryByRole('button', { name: /revision \d+ of/i })
+      ).toBeNull();
+    });
+
+    test('shows the new text when the active revision changes', () => {
+      const revisionActions = actions();
+      const { rerender } = render(
+        <SceneEditor
+          scene={revScene}
+          onSceneUpdate={onSceneUpdate}
+          revisionActions={revisionActions}
+        />
+      );
+      const textarea = screen.getByPlaceholderText(
+        'Start writing your scene here...'
+      );
+      expect(textarea).toHaveValue('active text');
+
+      rerender(
+        <SceneEditor
+          scene={switched}
+          onSceneUpdate={onSceneUpdate}
+          revisionActions={revisionActions}
+        />
+      );
+      expect(textarea).toHaveValue('old');
+    });
+
+    test('does not re-send already-saved typing when switching', () => {
+      jest.useFakeTimers();
+      const revisionActions = actions();
+      render(
+        <SceneEditor
+          scene={revScene}
+          onSceneUpdate={onSceneUpdate}
+          revisionActions={revisionActions}
+        />
+      );
+      fireEvent.change(
+        screen.getByPlaceholderText('Start writing your scene here...'),
+        { target: { value: 'typed' } }
+      );
+      jest.advanceTimersByTime(300);
+      expect(onSceneUpdate).toHaveBeenCalledTimes(1);
+
+      fireEvent.click(screen.getByRole('button', { name: /revision 2 of 2/i }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'A' }));
+
+      expect(revisionActions.switch).toHaveBeenCalledWith('r1', 'a');
+      expect(onSceneUpdate).toHaveBeenCalledTimes(1);
+      onSceneUpdate.mockReset();
+      jest.useRealTimers();
+    });
+
+    test('flushes pending typing to the current revision before switching', () => {
+      jest.useFakeTimers();
+      const revisionActions = actions();
+      const order = [];
+      onSceneUpdate.mockImplementation(() => order.push('update'));
+      revisionActions.switch.mockImplementation(() => order.push('switch'));
+      const { rerender } = render(
+        <SceneEditor
+          scene={revScene}
+          onSceneUpdate={onSceneUpdate}
+          revisionActions={revisionActions}
+        />
+      );
+      fireEvent.change(
+        screen.getByPlaceholderText('Start writing your scene here...'),
+        { target: { value: 'typed fast' } }
+      );
+      fireEvent.click(screen.getByRole('button', { name: /revision 2 of 2/i }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'A' }));
+
+      expect(onSceneUpdate).toHaveBeenCalledWith('r1', {
+        content: 'typed fast'
+      });
+      expect(revisionActions.switch).toHaveBeenCalledWith('r1', 'a');
+      expect(order).toEqual(['update', 'switch']);
+
+      // The stale debounce must not later write into the new revision
+      rerender(
+        <SceneEditor
+          scene={switched}
+          onSceneUpdate={onSceneUpdate}
+          revisionActions={revisionActions}
+        />
+      );
+      jest.advanceTimersByTime(1000);
+      expect(onSceneUpdate).toHaveBeenCalledTimes(1);
+      onSceneUpdate.mockReset();
+      jest.useRealTimers();
+    });
+  });
 });

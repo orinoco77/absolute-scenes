@@ -1016,4 +1016,26 @@ describe('SceneList Component', () => {
       sc2Row.querySelector('[data-testid="conflict-badge"]')
     ).not.toBeInTheDocument();
   });
+
+  describe('revision badge', () => {
+    it('shows a revision count for scenes with revisions only', () => {
+      const chapters = [
+        {
+          id: 'chapter-1',
+          title: 'Chapter 1',
+          scenes: [
+            {
+              id: 'scene-1',
+              title: 'Scene 1',
+              content: 'text',
+              revisions: [{ id: 'r', label: 'Alt', created: 'x', content: 'y' }]
+            },
+            { id: 'scene-2', title: 'Scene 2', content: 'text' }
+          ]
+        }
+      ];
+      renderComponent({ chapters });
+      expect(screen.getAllByLabelText('2 revisions')).toHaveLength(1);
+    });
+  });
 });

@@ -1521,6 +1521,27 @@ function App() {
     [draftActions, markAsChanged]
   );
 
+  const revisionActions = useMemo(() => {
+    const withChange =
+      action =>
+      (...args) => {
+        action(...args);
+        markAsChanged();
+      };
+    return {
+      create: withChange(draftActions.createRevision),
+      switch: withChange(draftActions.switchRevision),
+      rename: withChange(draftActions.renameRevision),
+      delete: withChange(draftActions.deleteRevision)
+    };
+  }, [
+    draftActions.createRevision,
+    draftActions.switchRevision,
+    draftActions.renameRevision,
+    draftActions.deleteRevision,
+    markAsChanged
+  ]);
+
   const handleBookMetadataUpdate = useCallback(
     metadata => {
       updateBookMetadata(metadata);
@@ -1584,6 +1605,7 @@ function App() {
               template={book.template}
               onSceneUpdate={contentHandlers.scene.update}
               collaboration={book.github?.collaboration || book.collaboration}
+              revisionActions={revisionActions}
             />
           </ErrorBoundary>
         ) : (

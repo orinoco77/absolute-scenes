@@ -618,6 +618,16 @@ function SceneList({
                     <div className="scene-content">
                       <div className="scene-title-row">
                         <div className="scene-title">{scene.title}</div>
+                        {(scene.revisions?.length || 0) > 0 && (
+                          <span
+                            className="scene-revision-badge"
+                            role="img"
+                            aria-label={`${scene.revisions.length + 1} revisions`}
+                            title={`${scene.revisions.length + 1} revisions`}
+                          >
+                            ⧉ {scene.revisions.length + 1}
+                          </span>
+                        )}
                         {/* Author indicator - only show if collaboration is enabled */}
                         {collaboration?.enabled && scene.assignedAuthor && (
                           <div

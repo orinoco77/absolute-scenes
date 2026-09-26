@@ -21,6 +21,7 @@ export const getRevisionInfo = scene => {
   const inactive = (s.revisions || []).map(r => ({
     id: r.id,
     label: r.label,
+    created: r.created,
     isActive: false
   }));
   return {
@@ -31,6 +32,7 @@ export const getRevisionInfo = scene => {
       {
         id: s.activeRevision.id,
         label: s.activeRevision.label,
+        created: s.activeRevision.created,
         isActive: true
       },
       ...inactive
