@@ -3,7 +3,8 @@ function StatusBar({
   isSaving,
   currentOperation,
   githubSyncStatus,
-  isOnline = true
+  isOnline = true,
+  draftName
 }) {
   // Determine save status
   const getSaveStatus = () => {
@@ -56,6 +57,7 @@ function StatusBar({
       </div>
 
       <div className="status-right">
+        {draftName && <span className="status-draft">{draftName}</span>}
         <div className={`save-status ${saveStatus.className}`}>
           <span className="save-icon">{saveStatus.icon}</span>
           <span className="save-text">{saveStatus.text}</span>

@@ -278,4 +278,12 @@ describe('StatusBar Component', () => {
     expect(screen.queryByText('Offline')).not.toBeInTheDocument();
     expect(screen.queryByText('⏳')).not.toBeInTheDocument();
   });
+
+  test('shows the draft name only when provided', () => {
+    const { rerender } = render(<StatusBar draftName="Second draft" />);
+    expect(screen.getByText('Second draft')).toHaveClass('status-draft');
+
+    rerender(<StatusBar />);
+    expect(document.querySelector('.status-draft')).toBeNull();
+  });
 });

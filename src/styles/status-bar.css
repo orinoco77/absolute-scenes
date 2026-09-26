@@ -28,6 +28,11 @@
   align-items: center;
 }
 
+.status-draft {
+  margin-right: var(--spacing-md);
+  opacity: 0.8;
+}
+
 .operation-status {
   display: flex;
   align-items: center;
