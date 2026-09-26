@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.85<!--/VERSION--> | **Tests:** <!--TESTS-->1165/1165<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.86<!--/VERSION--> | **Tests:** <!--TESTS-->1169/1169<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-09-26<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -289,9 +289,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1165/1165<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1169/1169<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->229<!--/COMMITS--> | **Latest:** <!--COMMIT-->094fdc7 - feat: add pure draft operations (create/switch/rename/delete/export resolver) (3 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->230<!--/COMMITS--> | **Latest:** <!--COMMIT-->472e688 - feat: add pure scene revision operations (3 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -542,8 +542,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.85<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.85<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.86<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.86<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -575,4 +575,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2026-09-26<!--/DATE--> | Build <!--COMMIT-->094fdc7 - feat: add pure draft operations (create/switch/rename/delete/export resolver) (3 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-09-26<!--/DATE--> | Build <!--COMMIT-->472e688 - feat: add pure scene revision operations (3 minutes ago)<!--/COMMIT-->_
