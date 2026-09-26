@@ -1,4 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import {
+  listDrafts,
+  getExportBook,
+  getActiveDraft
+} from '../utils/draftOperations';
 import {
   exportToPDF,
   exportToManuscriptPDF,
@@ -6,7 +11,20 @@ import {
   exportToEPUB
 } from '../utils/exportManager';
 
-function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
+function ExportDialog({
+  book: fullBook,
+  onClose,
+  onExport,
+  onOperationUpdate
+}) {
+  const [selectedDraftId, setSelectedDraftId] = useState(
+    getActiveDraft(fullBook).id
+  );
+  const draftOptions = useMemo(() => listDrafts(fullBook), [fullBook]);
+  const book = useMemo(
+    () => getExportBook(fullBook, selectedDraftId),
+    [fullBook, selectedDraftId]
+  );
   const [exportFormat, setExportFormat] = useState('pdf');
   const [includeSceneBreaks, setIncludeSceneBreaks] = useState(true);
   const [includeSceneTitles, setIncludeSceneTitles] = useState(false);
@@ -70,6 +88,25 @@ function ExportDialog({ book, onClose, onExport, onOperationUpdate }) {
         </div>
 
         <div className="modal-content">
+          {draftOptions.length > 1 && (
+            <div className="form-group">
+              <label htmlFor="export-draft">Draft</label>
+              <select
+                id="export-draft"
+                value={selectedDraftId}
+                onChange={e => setSelectedDraftId(e.target.value)}
+              >
+                {draftOptions.map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                    {d.isActive ? ' (current)' : ''}
+                  </option>
+                ))}
+              </select>
+              <small>Uses the active revision of each scene.</small>
+            </div>
+          )}
+
           <div className="form-group">
             <label>Export Format</label>
             <select
