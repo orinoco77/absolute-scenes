@@ -179,6 +179,21 @@ function parseMarkdownForPDF(text) {
   // Then handle inline formatting (bold and italic)
   const inlineMatches = [];
 
+  // Bold italic text (***text***) - first, so its markers aren't split
+  // between the bold and italic patterns. Added before bold so it wins
+  // the overlap check below (same start position).
+  const boldItalicRegex = /\*\*\*(?=\S)(.+?)(?<=\S)\*\*\*/g;
+  let boldItalicMatch;
+  while ((boldItalicMatch = boldItalicRegex.exec(processedText)) !== null) {
+    inlineMatches.push({
+      type: 'bolditalic',
+      start: boldItalicMatch.index,
+      end: boldItalicMatch.index + boldItalicMatch[0].length,
+      text: boldItalicMatch[1],
+      fullMatch: boldItalicMatch[0]
+    });
+  }
+
   // Bold text (**text**)
   const boldRegex = /\*\*(.*?)\*\*/g;
   let boldMatch;
@@ -498,6 +513,8 @@ function getFontStyle(type) {
       return 'bold';
     case 'italic':
       return 'italic';
+    case 'bolditalic':
+      return 'bolditalic';
     default:
       return 'normal';
   }
