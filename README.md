@@ -3,7 +3,7 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.92<!--/VERSION--> | **Tests:** <!--TESTS-->1197/1197<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.93<!--/VERSION--> | **Tests:** <!--TESTS-->1207/1207<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-09-27<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
@@ -289,9 +289,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1197/1197<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1207/1207<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->236<!--/COMMITS--> | **Latest:** <!--COMMIT-->2225779 - fix: keep a scene in the recycle bin when its chapter is in another draft (12 hours ago)<!--/COMMIT-->
+<!--COMMITS-->237<!--/COMMITS--> | **Latest:** <!--COMMIT-->8179f09 - fix: bump @absolute-scenes/git-sync to v0.2.4 for drafts and revisions (29 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -542,8 +542,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.92<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.92<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.93<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.93<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -561,11 +561,11 @@ Want to influence the roadmap?
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+- **v1.4.83**: update package-lock.json
 - **v1.4.82**: bump git sync version
 - **v1.4.79-fix**: chore: mothball the Chocolatey release workflow
 - **v1.4.79**: fix: resolve remaining transitive dependency vulnerabilities via npm audit fix
 - **v1.4.76**: fix: ship a real multi-size Linux icon set and give the icon an opaque background
-- **v1.4.75**: fix: set BrowserWindow icon explicitly for Linux taskbar/window-list
 <!--/VERSION_HISTORY-->
 
 ---
@@ -575,4 +575,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2026-09-27<!--/DATE--> | Build <!--COMMIT-->2225779 - fix: keep a scene in the recycle bin when its chapter is in another draft (12 hours ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-09-27<!--/DATE--> | Build <!--COMMIT-->8179f09 - fix: bump @absolute-scenes/git-sync to v0.2.4 for drafts and revisions (29 minutes ago)<!--/COMMIT-->_

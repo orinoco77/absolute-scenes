@@ -747,22 +747,34 @@ describe('App Component - Comprehensive Tests', () => {
   });
 
   describe('Draft switching', () => {
-    const createAndSwitchToDraft = name => {
+    const openDraftMenu = () =>
+      fireEvent.click(screen.getByRole('button', { name: /^draft:/i }));
+
+    const createDraftViaMenu = (name, { empty = false } = {}) => {
+      openDraftMenu();
       fireEvent.click(screen.getByRole('button', { name: /new draft/i }));
-      fireEvent.change(screen.getByLabelText(/name/i), {
-        target: { value: name }
-      });
+      if (name) {
+        fireEvent.change(screen.getByLabelText(/name/i), {
+          target: { value: name }
+        });
+      }
+      if (empty) fireEvent.click(screen.getByLabelText(/empty structure/i));
       fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
-      const option = screen.getByRole('option', { name });
-      fireEvent.change(screen.getByLabelText('Draft'), {
-        target: { value: option.value }
-      });
+    };
+
+    const switchToDraft = name => {
+      openDraftMenu();
+      fireEvent.click(screen.getByRole('button', { name }));
+    };
+
+    const createAndSwitchToDraft = name => {
+      createDraftViaMenu(name);
+      switchToDraft(name);
     };
 
     test('creating a draft marks the book as changed', async () => {
       render(<App />);
-      fireEvent.click(screen.getByRole('button', { name: /new draft/i }));
-      fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
+      createDraftViaMenu();
 
       await waitFor(() => {
         expect(screen.getByTestId('save-status')).toHaveTextContent(
@@ -782,17 +794,12 @@ describe('App Component - Comprehensive Tests', () => {
       fireEvent.click(screen.getByText('Delete Current Scene'));
       expect(screen.getByTestId('recycle-bin-count')).toHaveTextContent('1');
 
-      fireEvent.click(screen.getByRole('button', { name: /new draft/i }));
-      fireEvent.change(screen.getByLabelText(/name/i), {
-        target: { value: 'Blank' }
-      });
-      fireEvent.click(screen.getByLabelText(/empty structure/i));
-      fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
-      fireEvent.change(screen.getByLabelText('Draft'), {
-        target: { value: screen.getByRole('option', { name: 'Blank' }).value }
-      });
+      createDraftViaMenu('Blank', { empty: true });
+      switchToDraft('Blank');
       await waitFor(() => {
-        expect(screen.getByLabelText('Draft')).toHaveDisplayValue('Blank');
+        expect(
+          screen.getByRole('button', { name: 'Draft: Blank' })
+        ).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByText('Restore First'));
@@ -813,7 +820,9 @@ describe('App Component - Comprehensive Tests', () => {
       createAndSwitchToDraft('Rewrite');
 
       await waitFor(() => {
-        expect(screen.getByLabelText('Draft')).toHaveDisplayValue('Rewrite');
+        expect(
+          screen.getByRole('button', { name: 'Draft: Rewrite' })
+        ).toBeInTheDocument();
       });
       expect(screen.getByTestId('current-scene-id')).toHaveTextContent('none');
       expect(screen.getByTestId('current-chapter-id')).not.toHaveTextContent(
