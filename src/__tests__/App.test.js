@@ -998,6 +998,47 @@ describe('App Component - Comprehensive Tests', () => {
     });
   });
 
+  describe('Unsaved indicator on title and author', () => {
+    // Autosave clears unsaved state every 3s once the book has a file, so
+    // the header indicator would flash while typing; it only means
+    // something for a book that has never been saved.
+    const header = () => screen.getByRole('banner');
+
+    test('shows for a book that has never been saved', () => {
+      render(<App />);
+      fireEvent.change(screen.getByPlaceholderText('Book Title'), {
+        target: { value: 'Draft Title' }
+      });
+      expect(header()).toHaveClass('has-unsaved-changes');
+    });
+
+    test('does not show for a saved book with unsaved edits', async () => {
+      saveBook.mockResolvedValue({
+        success: true,
+        filePath: '/test/book.book'
+      });
+      render(<App />);
+      fireEvent.change(screen.getByPlaceholderText('Book Title'), {
+        target: { value: 'First' }
+      });
+      fireEvent.keyDown(document, { key: 's', ctrlKey: true });
+      await waitFor(() => {
+        expect(screen.getByTestId('save-status')).not.toHaveTextContent(
+          'Unsaved Changes'
+        );
+      });
+
+      fireEvent.change(screen.getByPlaceholderText('Book Title'), {
+        target: { value: 'Second' }
+      });
+
+      expect(screen.getByTestId('save-status')).toHaveTextContent(
+        'Unsaved Changes'
+      );
+      expect(header()).not.toHaveClass('has-unsaved-changes');
+    });
+  });
+
   describe('Saving Functionality', () => {
     test('shows saving state during save operations', async () => {
       // Mock saveBook to take some time
