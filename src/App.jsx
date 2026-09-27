@@ -1762,7 +1762,9 @@ function App() {
       className={`app ${isSaving ? 'saving' : ''} ${currentOperation && currentOperation.toLowerCase().includes('export') ? 'exporting' : ''} ${currentOperation && currentOperation.toLowerCase().includes('import') ? 'importing' : ''} ${currentOperation && (currentOperation.toLowerCase().includes('sync') || currentOperation.toLowerCase().includes('github')) ? 'processing' : ''}`}
     >
       <header
-        className={`app-header ${hasUnsavedChanges ? 'has-unsaved-changes' : ''}`}
+        // Only for a book with no file yet: once it has one, the 3s autosave
+        // clears unsaved state so often that the indicator would just flash
+        className={`app-header ${hasUnsavedChanges && !currentFilePath ? 'has-unsaved-changes' : ''}`}
       >
         <div className="book-info">
           <input
