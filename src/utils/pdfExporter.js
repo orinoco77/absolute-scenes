@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import { getPdfFont } from './fontManager';
-import { processTextForExport } from './textProcessing';
+import { processTextForExport, parseInlineEmphasis } from './textProcessing';
 
 // Page size definitions in inches (width x height)
 const PAGE_SIZES = {
@@ -159,119 +159,39 @@ function parseMarkdownForPDF(text) {
   const processedText = processTextForExport(text);
 
   const segments = [];
-
-  // First, handle headings (they should be on their own lines)
-  const headingMatches = [];
-  const headingRegex = /^(#{1,3})\s+(.*?)$/gm;
-  let headingMatch;
-
-  while ((headingMatch = headingRegex.exec(processedText)) !== null) {
-    const level = headingMatch[1].length;
-    headingMatches.push({
-      type: level === 1 ? 'h1' : level === 2 ? 'h2' : 'h3',
-      start: headingMatch.index,
-      end: headingMatch.index + headingMatch[0].length,
-      text: headingMatch[2].trim(),
-      fullMatch: headingMatch[0]
-    });
-  }
-
-  // Then handle inline formatting (bold and italic)
-  const inlineMatches = [];
-
-  // Bold italic text (***text***) - first, so its markers aren't split
-  // between the bold and italic patterns. Added before bold so it wins
-  // the overlap check below (same start position).
-  const boldItalicRegex = /\*\*\*(?=\S)(.+?)(?<=\S)\*\*\*/g;
-  let boldItalicMatch;
-  while ((boldItalicMatch = boldItalicRegex.exec(processedText)) !== null) {
-    inlineMatches.push({
-      type: 'bolditalic',
-      start: boldItalicMatch.index,
-      end: boldItalicMatch.index + boldItalicMatch[0].length,
-      text: boldItalicMatch[1],
-      fullMatch: boldItalicMatch[0]
-    });
-  }
-
-  // Bold text (**text**)
-  const boldRegex = /\*\*(.*?)\*\*/g;
-  let boldMatch;
-  while ((boldMatch = boldRegex.exec(processedText)) !== null) {
-    inlineMatches.push({
-      type: 'bold',
-      start: boldMatch.index,
-      end: boldMatch.index + boldMatch[0].length,
-      text: boldMatch[1],
-      fullMatch: boldMatch[0]
-    });
-  }
-
-  // Italic text (*text*) - but not if it's part of bold
-  const italicRegex = /(?<!\*)\*([^*\n]+?)\*(?!\*)/g;
-  let italicMatch;
-  while ((italicMatch = italicRegex.exec(processedText)) !== null) {
-    // Check if this italic is inside a bold
-    const isInsideBold = inlineMatches.some(
-      // eslint-disable-next-line no-loop-func
-      bold =>
-        bold.type === 'bold' &&
-        italicMatch.index >= bold.start &&
-        italicMatch.index + italicMatch[0].length <= bold.end
-    );
-
-    if (!isInsideBold) {
-      inlineMatches.push({
-        type: 'italic',
-        start: italicMatch.index,
-        end: italicMatch.index + italicMatch[0].length,
-        text: italicMatch[1],
-        fullMatch: italicMatch[0]
-      });
+  const push = (type, value) => {
+    const prev = segments[segments.length - 1];
+    // Keep plain text (including line breaks) in one segment, as before
+    if (type === 'normal' && prev && prev.type === 'normal') {
+      prev.text += value;
+    } else {
+      segments.push({ type, text: value });
     }
-  }
+  };
 
-  // Combine all matches and sort by position
-  const allMatches = [...headingMatches, ...inlineMatches].sort(
-    (a, b) => a.start - b.start
-  );
+  processedText.split('\n').forEach((line, index) => {
+    if (index > 0) push('normal', '\n');
 
-  // Remove overlapping matches (priority: headings > bold > italic)
-  const filteredMatches = [];
-  allMatches.forEach(match => {
-    const isOverlapping = filteredMatches.some(existing => {
-      return match.start < existing.end && match.end > existing.start;
-    });
-
-    if (!isOverlapping) {
-      filteredMatches.push(match);
+    // Headings sit on their own line
+    const heading = line.match(/^(#{1,3})\s+(.*)$/);
+    if (heading) {
+      const level = heading[1].length;
+      push(level === 1 ? 'h1' : level === 2 ? 'h2' : 'h3', heading[2].trim());
+      return;
     }
+
+    parseInlineEmphasis(line).forEach(run => {
+      const type =
+        run.bold && run.italic
+          ? 'bolditalic'
+          : run.bold
+            ? 'bold'
+            : run.italic
+              ? 'italic'
+              : 'normal';
+      push(type, run.text);
+    });
   });
-
-  // Build segments from the filtered matches
-  let currentPos = 0;
-
-  filteredMatches.forEach(match => {
-    // Add normal text before this match
-    if (currentPos < match.start) {
-      const normalText = processedText.substring(currentPos, match.start);
-      if (normalText.length > 0) {
-        segments.push({ type: 'normal', text: normalText });
-      }
-    }
-
-    // Add the formatted text
-    segments.push({ type: match.type, text: match.text });
-    currentPos = match.end;
-  });
-
-  // Add remaining normal text
-  if (currentPos < processedText.length) {
-    const remainingText = processedText.substring(currentPos);
-    if (remainingText.length > 0) {
-      segments.push({ type: 'normal', text: remainingText });
-    }
-  }
 
   // If no segments were created, return the whole text as normal
   if (segments.length === 0) {

@@ -3,7 +3,7 @@
 **A scene-based book writing application with drafts, print-ready PDF and ebook export, and GitHub
 sync.**
 
-**Version:** <!--VERSION-->1.4.102<!--/VERSION--> | **Tests:** <!--TESTS-->1248/1248<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.103<!--/VERSION--> | **Tests:** <!--TESTS-->1254/1254<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-09-27<!--/DATE-->
 
 Absolute Scenes is a desktop app for authors who want a structured way to write books. Instead of one
@@ -248,9 +248,9 @@ absolute-scenes /path/to/your/book.book
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1248/1248<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1254/1254<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->246<!--/COMMITS--> | **Latest:** <!--COMMIT-->83039ac - docs: sync Home.md with the updated wiki, fix scene move wording (13 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->247<!--/COMMITS--> | **Latest:** <!--COMMIT-->45d4d06 - fix: render ***text*** as bold italic in PDF, EPUB and HTML exports (7 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -411,7 +411,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## 🗺️ **Roadmap & Version History**
 
-**Current Release: v<!--VERSION-->1.4.102<!--/VERSION-->**
+**Current Release: v<!--VERSION-->1.4.103<!--/VERSION-->**
 
 Upcoming features and priorities are tracked in
 **[GitHub Projects](https://github.com/orinoco77/absolute-scenes/projects)**. Want to influence the
@@ -431,4 +431,4 @@ roadmap? **[Open an issue](https://github.com/orinoco77/absolute-scenes/issues)*
 
 **Made with ❤️ for authors who care about beautiful books**
 
-_Last updated <!--DATE-->2026-09-27<!--/DATE--> | Build <!--COMMIT-->83039ac - docs: sync Home.md with the updated wiki, fix scene move wording (13 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-09-27<!--/DATE--> | Build <!--COMMIT-->45d4d06 - fix: render ***text*** as bold italic in PDF, EPUB and HTML exports (7 minutes ago)<!--/COMMIT-->_
