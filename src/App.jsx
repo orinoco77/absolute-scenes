@@ -1779,6 +1779,8 @@ function App() {
               currentFilePath ? `File: ${currentFilePath}` : 'No file selected'
             }
           />
+        </div>
+        <div className="toolbar">
           <DraftSwitcher
             book={book}
             onCreate={handleDraftCreate}
@@ -1786,8 +1788,6 @@ function App() {
             onRename={handleDraftRename}
             onDelete={handleDraftDelete}
           />
-        </div>
-        <div className="toolbar">
           <button
             onClick={() => setShowTemplateManager(true)}
             className="icon-button"
