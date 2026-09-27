@@ -152,8 +152,8 @@ describe('SceneEditor Component', () => {
         onSceneUpdate={onSceneUpdate}
       />
     );
-    expect(screen.getByTitle('Bold (Ctrl+B)')).toBeInTheDocument();
-    expect(screen.getByTitle('Italic (Ctrl+I)')).toBeInTheDocument();
+    expect(screen.getByTitle('Bold (Ctrl/Cmd+B)')).toBeInTheDocument();
+    expect(screen.getByTitle('Italic (Ctrl/Cmd+I)')).toBeInTheDocument();
     expect(screen.getByTitle('Heading')).toBeInTheDocument();
     expect(screen.getByTitle('Paragraph Break')).toBeInTheDocument();
   });
@@ -279,5 +279,44 @@ describe('SceneEditor Component', () => {
       onSceneUpdate.mockReset();
       jest.useRealTimers();
     });
+  });
+
+  test('Ctrl+I italicises the selection in the scene text', () => {
+    jest.useFakeTimers();
+    render(
+      <SceneEditor
+        scene={{ ...scene, content: 'a word b' }}
+        template={template}
+        onSceneUpdate={onSceneUpdate}
+      />
+    );
+    const textarea = screen.getByPlaceholderText(
+      'Start writing your scene here...'
+    );
+    textarea.setSelectionRange(2, 6);
+
+    fireEvent.keyDown(textarea, { key: 'i', ctrlKey: true });
+    jest.advanceTimersByTime(300);
+
+    expect(onSceneUpdate).toHaveBeenCalledWith(scene.id, {
+      content: 'a *word* b'
+    });
+    jest.useRealTimers();
+  });
+
+  test('Ctrl+B does not format scene notes', () => {
+    render(
+      <SceneEditor
+        scene={{ ...scene, notes: 'a word b' }}
+        template={template}
+        onSceneUpdate={onSceneUpdate}
+      />
+    );
+    const notes = screen.getByPlaceholderText('Notes about this scene...');
+    notes.setSelectionRange(2, 6);
+
+    fireEvent.keyDown(notes, { key: 'b', ctrlKey: true });
+
+    expect(onSceneUpdate).not.toHaveBeenCalled();
   });
 });

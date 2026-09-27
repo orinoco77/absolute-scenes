@@ -100,11 +100,32 @@ describe('BackgroundEditor Component', () => {
     );
   });
 
+  test('Ctrl+B bolds the selected text', async () => {
+    renderComponent();
+    const contentTextarea = screen.getByDisplayValue(
+      'This is detailed information about the main character.'
+    );
+    // Select "detailed"
+    contentTextarea.setSelectionRange(8, 16);
+
+    fireEvent.keyDown(contentTextarea, { key: 'b', ctrlKey: true });
+
+    expect(contentTextarea.value).toBe(
+      'This is **detailed** information about the main character.'
+    );
+    // Let the debounced save land here rather than in a later test
+    await waitFor(() => {
+      expect(mockFunctions.onDocumentUpdate).toHaveBeenCalledWith('doc-1', {
+        content: 'This is **detailed** information about the main character.'
+      });
+    });
+  });
+
   test('renders formatting toolbar with buttons', () => {
     renderComponent();
 
-    expect(screen.getByTitle('Bold (Ctrl+B)')).toBeInTheDocument();
-    expect(screen.getByTitle('Italic (Ctrl+I)')).toBeInTheDocument();
+    expect(screen.getByTitle('Bold (Ctrl/Cmd+B)')).toBeInTheDocument();
+    expect(screen.getByTitle('Italic (Ctrl/Cmd+I)')).toBeInTheDocument();
     expect(screen.getByTitle('Section Heading')).toBeInTheDocument();
     expect(screen.getByTitle('Bullet Point')).toBeInTheDocument();
     expect(screen.getByTitle('Horizontal Rule')).toBeInTheDocument();

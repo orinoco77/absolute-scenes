@@ -141,7 +141,7 @@ export function getKeyboardShortcuts() {
     'CmdOrCtrl+E': 'menu-export-book',
     'CmdOrCtrl+N': 'new-book',
     'CmdOrCtrl+O': 'open-book',
-    'CmdOrCtrl+I': 'import-scrivener'
+    'CmdOrCtrl+Shift+I': 'import-scrivener'
   };
 }
 
@@ -480,7 +480,7 @@ export function getFileMenuTemplate(isMac = false) {
       },
       {
         label: 'Import from Scrivener...',
-        accelerator: 'CmdOrCtrl+I',
+        accelerator: 'CmdOrCtrl+Shift+I',
         id: 'file-import'
       },
       { type: 'separator' },

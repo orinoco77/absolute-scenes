@@ -329,14 +329,14 @@ function SceneEditor({
           <button
             onClick={makeBold}
             className="format-btn"
-            title="Bold (Ctrl+B)"
+            title="Bold (Ctrl/Cmd+B)"
           >
             <strong>B</strong>
           </button>
           <button
             onClick={makeItalic}
             className="format-btn"
-            title="Italic (Ctrl+I)"
+            title="Italic (Ctrl/Cmd+I)"
           >
             <em>I</em>
           </button>
@@ -379,6 +379,7 @@ function SceneEditor({
             value={localContent}
             onChange={handleContentChange}
             onKeyDown={handleKeyDown}
+            markdownShortcuts
             placeholder="Start writing your scene here..."
             spellCheck={true}
             rows={20}
