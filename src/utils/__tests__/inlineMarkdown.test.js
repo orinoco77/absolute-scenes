@@ -32,4 +32,35 @@ describe('inlineMarkdownToHTML', () => {
   it('leaves lone asterisks alone', () => {
     expect(inlineMarkdownToHTML('2 * 3 = 6')).toBe('2 * 3 = 6');
   });
+
+  describe('nesting that ends or starts with three asterisks', () => {
+    it('italic at the end of bold: **bold and *italic***', () => {
+      expect(inlineMarkdownToHTML('**bold and *italic***')).toBe(
+        '<strong>bold and <em>italic</em></strong>'
+      );
+    });
+
+    it('italic at the start of bold: ***italic* and bold**', () => {
+      expect(inlineMarkdownToHTML('***italic* and bold**')).toBe(
+        '<strong><em>italic</em> and bold</strong>'
+      );
+    });
+
+    it('bold at the end of italic: *italic and **bold***', () => {
+      const html = inlineMarkdownToHTML('*italic and **bold***');
+      expect(html).not.toContain('*');
+      expect(html).toBe('<em>italic and </em><strong><em>bold</em></strong>');
+    });
+
+    it('bold at the start of italic: ***bold** and italic*', () => {
+      const html = inlineMarkdownToHTML('***bold** and italic*');
+      expect(html).not.toContain('*');
+      expect(html).toBe('<strong><em>bold</em></strong><em> and italic</em>');
+    });
+  });
+
+  it('leaves unmatched markers as plain asterisks', () => {
+    expect(inlineMarkdownToHTML('**not closed')).toBe('**not closed');
+    expect(inlineMarkdownToHTML('*not closed')).toBe('*not closed');
+  });
 });

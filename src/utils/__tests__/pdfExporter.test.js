@@ -432,6 +432,51 @@ describe('pdfExporter', () => {
       mockJsPDF.text.mockImplementation(() => mockJsPDF);
     });
 
+    it('renders italic nested at the end of bold without stray asterisks', async () => {
+      const book = {
+        ...mockBook,
+        chapters: [
+          {
+            id: 'chapter1',
+            title: 'Chapter 1',
+            scenes: [
+              {
+                id: 'scene1',
+                title: 'Scene 1',
+                content: '**bold and *italic***'
+              }
+            ]
+          }
+        ]
+      };
+      const order = [];
+      mockJsPDF.setFont.mockImplementation((font, style) => {
+        order.push(['font', style]);
+        return mockJsPDF;
+      });
+      mockJsPDF.text.mockImplementation(text => {
+        order.push(['text', String(text)]);
+        return mockJsPDF;
+      });
+
+      await exportToPDF(book, { template: mockTemplate });
+
+      const styleOf = word => {
+        const i = order.findIndex(e => e[0] === 'text' && e[1].includes(word));
+        return order
+          .slice(0, i)
+          .reverse()
+          .find(e => e[0] === 'font')[1];
+      };
+      const texts = order.filter(e => e[0] === 'text').map(e => e[1]);
+      expect(texts.some(t => t.includes('*'))).toBe(false);
+      expect(styleOf('bold')).toBe('bold');
+      expect(styleOf('italic')).toBe('bolditalic');
+
+      mockJsPDF.setFont.mockImplementation(() => mockJsPDF);
+      mockJsPDF.text.mockImplementation(() => mockJsPDF);
+    });
+
     it('handles italic text in content', async () => {
       const bookWithItalic = {
         ...mockBook,
