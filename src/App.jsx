@@ -1480,14 +1480,6 @@ function App() {
     [updateTemplate, markAsChanged]
   );
 
-  const handleDraftCreate = useCallback(
-    opts => {
-      draftActions.createDraft(opts);
-      markAsChanged();
-    },
-    [draftActions, markAsChanged]
-  );
-
   const handleDraftSwitch = useCallback(
     draftId => {
       // Read before switching: the target is still parked in book.drafts
@@ -1508,6 +1500,16 @@ function App() {
       setCurrentPartId,
       markAsChanged
     ]
+  );
+
+  // A new draft becomes the active one straight away
+  const handleDraftCreate = useCallback(
+    opts => {
+      const draftId = draftActions.createDraft(opts);
+      markAsChanged();
+      if (draftId) handleDraftSwitch(draftId);
+    },
+    [draftActions, markAsChanged, handleDraftSwitch]
   );
 
   const handleDraftRename = useCallback(
