@@ -33,7 +33,7 @@ function NewDraftDialog({ defaultName, onCreate, onClose }) {
               autoFocus
             />
           </div>
-          <div className="form-group">
+          <div className="form-group new-draft-mode">
             <label>
               <input
                 type="radio"

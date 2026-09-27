@@ -29,6 +29,9 @@ jest.mock('../components/BookStructure', () => {
         </div>
         <div data-testid="current-part-id">{props.currentPartId || 'none'}</div>
         <div data-testid="chapters-count">{props.chapters?.length || 0}</div>
+        <div data-testid="scenes-count">
+          {(props.chapters || []).reduce((n, ch) => n + ch.scenes.length, 0)}
+        </div>
         <div data-testid="characters-count">
           {props.characters?.length || 0}
         </div>
@@ -805,6 +808,23 @@ describe('App Component - Comprehensive Tests', () => {
       fireEvent.click(screen.getByText('Restore First'));
 
       expect(screen.getByTestId('recycle-bin-count')).toHaveTextContent('1');
+    });
+
+    test('a scene can be added straight after switching draft', async () => {
+      render(<App />);
+      createAndSwitchToDraft('Rewrite');
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', { name: 'Draft: Rewrite' })
+        ).toBeInTheDocument();
+      });
+      expect(screen.getByTestId('scenes-count')).toHaveTextContent('0');
+
+      fireEvent.click(screen.getByText('Add Scene'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('scenes-count')).toHaveTextContent('1');
+      });
     });
 
     test('switching draft clears the selected scene and chapter', async () => {
