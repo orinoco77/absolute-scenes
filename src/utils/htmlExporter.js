@@ -1,5 +1,5 @@
 import { getCssFontFamily } from './fontManager';
-import { processTextForExport } from './textProcessing';
+import { processTextForExport, inlineMarkdownToHTML } from './textProcessing';
 
 // Improved markdown parsing utilities
 function parseMarkdownToHTML(text) {
@@ -14,10 +14,8 @@ function parseMarkdownToHTML(text) {
       .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
       .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
       .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
-      // Handle bold (before italic to avoid conflicts)
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      // Handle italic (only single asterisks not part of bold)
-      .replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>')
+      // Bold italic, bold and italic
+      .replace(/[^\n]+/g, line => inlineMarkdownToHTML(line))
       // Handle remaining single line breaks as <br>
       .replace(/\n/g, '<br>')
   );
@@ -36,9 +34,8 @@ function parseVerseToHTML(text) {
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      // Still allow basic markdown formatting in verse
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      // Still allow bold and italic in verse
+      .replace(/[^\n]+/g, line => inlineMarkdownToHTML(line))
   );
   // DON'T convert newlines to <br> - let CSS white-space: pre-wrap handle them
 }

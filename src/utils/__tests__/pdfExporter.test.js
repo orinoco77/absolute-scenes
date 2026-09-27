@@ -394,6 +394,44 @@ describe('pdfExporter', () => {
       expect(mockJsPDF.save).toHaveBeenCalled();
     });
 
+    it('renders ***text*** in the bold italic font with no stray asterisks', async () => {
+      const book = {
+        ...mockBook,
+        chapters: [
+          {
+            id: 'chapter1',
+            title: 'Chapter 1',
+            scenes: [
+              { id: 'scene1', title: 'Scene 1', content: 'A ***test*** here.' }
+            ]
+          }
+        ]
+      };
+      const order = [];
+      mockJsPDF.setFont.mockImplementation((font, style) => {
+        order.push(['font', style]);
+        return mockJsPDF;
+      });
+      mockJsPDF.text.mockImplementation(text => {
+        order.push(['text', String(text)]);
+        return mockJsPDF;
+      });
+
+      await exportToPDF(book, { template: mockTemplate });
+
+      const texts = order.filter(e => e[0] === 'text').map(e => e[1]);
+      expect(texts.some(t => t.includes('*'))).toBe(false);
+      const i = order.findIndex(e => e[0] === 'text' && e[1].includes('test'));
+      const styleBefore = order
+        .slice(0, i)
+        .reverse()
+        .find(e => e[0] === 'font');
+      expect(styleBefore[1]).toBe('bolditalic');
+
+      mockJsPDF.setFont.mockImplementation(() => mockJsPDF);
+      mockJsPDF.text.mockImplementation(() => mockJsPDF);
+    });
+
     it('handles italic text in content', async () => {
       const bookWithItalic = {
         ...mockBook,
