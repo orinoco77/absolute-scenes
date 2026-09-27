@@ -775,6 +775,25 @@ describe('App Component - Comprehensive Tests', () => {
       switchToDraft(name);
     };
 
+    test('creating a draft switches to it straight away', async () => {
+      render(<App />);
+      fireEvent.click(screen.getByText('Select Chapter'));
+      fireEvent.click(screen.getByText('Select Scene'));
+      createDraftViaMenu('Rewrite');
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', { name: 'Draft: Rewrite' })
+        ).toBeInTheDocument();
+      });
+      expect(screen.getByTestId('current-scene-id')).toHaveTextContent('none');
+
+      fireEvent.click(screen.getByText('Add Scene'));
+      await waitFor(() => {
+        expect(screen.getByTestId('scenes-count')).toHaveTextContent('1');
+      });
+    });
+
     test('creating a draft marks the book as changed', async () => {
       render(<App />);
       createDraftViaMenu();
