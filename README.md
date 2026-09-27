@@ -3,7 +3,7 @@
 **A scene-based book writing application with drafts, print-ready PDF and ebook export, and GitHub
 sync.**
 
-**Version:** <!--VERSION-->1.4.100<!--/VERSION--> | **Tests:** <!--TESTS-->1240/1240<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.101<!--/VERSION--> | **Tests:** <!--TESTS-->1240/1240<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-09-27<!--/DATE-->
 
 Absolute Scenes is a desktop app for authors who want a structured way to write books. Instead of one
@@ -17,7 +17,8 @@ EPUB ebooks and HTML.
 
 - Organise your book into **parts, chapters and scenes**, with automatic scene numbering (1.1, 1.2,
   2.1…)
-- Drag and drop to reorder scenes and chapters, and to move scenes between chapters
+- Drag and drop to reorder parts, chapters and scenes. Move a scene to another chapter with its ↗️
+  button.
 - Word counts per scene, chapter and part
 - Private notes on every scene
 - Simple formatting toolbar: bold, italic, headings, paragraph and forced line breaks (Markdown-style).
@@ -249,7 +250,7 @@ absolute-scenes /path/to/your/book.book
 
 **Code Quality:** <!--TESTS-->1240/1240<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->244<!--/COMMITS--> | **Latest:** <!--COMMIT-->796604e - docs: update README to match how the app currently works (11 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->245<!--/COMMITS--> | **Latest:** <!--COMMIT-->0a9beed - feat: Ctrl/Cmd+B and Ctrl/Cmd+I toggle bold and italic in the editor (13 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -410,7 +411,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## 🗺️ **Roadmap & Version History**
 
-**Current Release: v<!--VERSION-->1.4.100<!--/VERSION-->**
+**Current Release: v<!--VERSION-->1.4.101<!--/VERSION-->**
 
 Upcoming features and priorities are tracked in
 **[GitHub Projects](https://github.com/orinoco77/absolute-scenes/projects)**. Want to influence the
@@ -430,4 +431,4 @@ roadmap? **[Open an issue](https://github.com/orinoco77/absolute-scenes/issues)*
 
 **Made with ❤️ for authors who care about beautiful books**
 
-_Last updated <!--DATE-->2026-09-27<!--/DATE--> | Build <!--COMMIT-->796604e - docs: update README to match how the app currently works (11 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-09-27<!--/DATE--> | Build <!--COMMIT-->0a9beed - feat: Ctrl/Cmd+B and Ctrl/Cmd+I toggle bold and italic in the editor (13 minutes ago)<!--/COMMIT-->_
