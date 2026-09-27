@@ -52,7 +52,17 @@ function NewDraftDialog({ defaultName, onCreate, onClose }) {
                 checked={mode === 'empty'}
                 onChange={() => setMode('empty')}
               />
-              Empty structure
+              Outline only (chapter and scene titles, no text)
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="new-draft-mode"
+                value="blank"
+                checked={mode === 'blank'}
+                onChange={() => setMode('blank')}
+              />
+              Blank slate
             </label>
           </div>
         </div>
