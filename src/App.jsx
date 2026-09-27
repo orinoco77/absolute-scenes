@@ -1490,15 +1490,19 @@ function App() {
 
   const handleDraftSwitch = useCallback(
     draftId => {
+      // Read before switching: the target is still parked in book.drafts
+      const target = bookRef.current?.drafts?.find(d => d.id === draftId);
       draftActions.switchDraft(draftId);
-      // The selections belong to the old draft's chapters/parts/scenes
+      // The selections belong to the old draft's chapters/parts/scenes;
+      // select the new draft's first chapter so adding a scene works
       setCurrentSceneId(null);
-      setCurrentChapterId('default');
+      setCurrentChapterId(target?.chapters?.[0]?.id || 'default');
       setCurrentPartId(null);
       markAsChanged();
     },
     [
       draftActions,
+      bookRef,
       setCurrentSceneId,
       setCurrentChapterId,
       setCurrentPartId,

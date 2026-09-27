@@ -410,8 +410,9 @@
 
 .revision-menu {
   position: absolute;
-  top: 100%;
-  left: 0;
+  top: calc(100% + var(--spacing-xs));
+  /* The chip sits at the right of the editor; open leftwards */
+  right: 0;
   z-index: 1000;
   display: flex;
   flex-direction: column;
