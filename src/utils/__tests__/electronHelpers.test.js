@@ -291,7 +291,10 @@ describe('electronHelpers', () => {
       expect(shortcuts['CmdOrCtrl+E']).toBe('menu-export-book');
       expect(shortcuts['CmdOrCtrl+N']).toBe('new-book');
       expect(shortcuts['CmdOrCtrl+O']).toBe('open-book');
-      expect(shortcuts['CmdOrCtrl+I']).toBe('import-scrivener');
+      expect(shortcuts['CmdOrCtrl+Shift+I']).toBe('import-scrivener');
+      // Ctrl/Cmd+B and +I are reserved for bold and italic in the editor
+      expect(shortcuts['CmdOrCtrl+I']).toBeUndefined();
+      expect(shortcuts['CmdOrCtrl+B']).toBeUndefined();
     });
 
     it('uses consistent key format', () => {

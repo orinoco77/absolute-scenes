@@ -1817,7 +1817,8 @@ function createMenu() {
         },
         {
           label: 'Import from Scrivener...',
-          accelerator: 'CmdOrCtrl+I',
+          // Ctrl/Cmd+I is italic in the editor
+          accelerator: 'CmdOrCtrl+Shift+I',
           click: () => importScrivenerProject()
         },
         { type: 'separator' },
@@ -1988,7 +1989,8 @@ function createMenu() {
         },
         {
           label: 'Backup Recovery...',
-          accelerator: 'CmdOrCtrl+B',
+          // Ctrl/Cmd+B is bold in the editor
+          accelerator: 'CmdOrCtrl+Shift+B',
           click: () => mainWindow.webContents.send('menu-backup-recovery')
         },
         { type: 'separator' },

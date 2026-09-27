@@ -1,5 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import TextEditor from '../TextEditor.jsx';
 
 describe('TextEditor', () => {
@@ -565,6 +566,104 @@ describe('TextEditor', () => {
       await user.keyboard('a');
 
       expect(mockOnKeyDown).toHaveBeenCalled();
+    });
+  });
+
+  describe('Markdown formatting shortcuts', () => {
+    // Controlled like the scene editor, so undo can be observed
+    const Controlled = ({ initial, ...props }) => {
+      const [value, setValue] = useState(initial);
+      return (
+        <TextEditor
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          {...props}
+        />
+      );
+    };
+
+    const select = (textarea, start, end) => {
+      textarea.focus();
+      textarea.setSelectionRange(start, end);
+    };
+
+    test('Ctrl+B wraps the selection in bold and prevents the default', () => {
+      render(<Controlled initial="a word b" markdownShortcuts />);
+      const textarea = screen.getByRole('textbox');
+      select(textarea, 2, 6);
+
+      const notPrevented = fireEvent.keyDown(textarea, {
+        key: 'b',
+        ctrlKey: true
+      });
+
+      expect(notPrevented).toBe(false);
+      expect(textarea).toHaveValue('a **word** b');
+    });
+
+    test('Cmd+I wraps the selection in italic', () => {
+      render(<Controlled initial="a word b" markdownShortcuts />);
+      const textarea = screen.getByRole('textbox');
+      select(textarea, 2, 6);
+
+      fireEvent.keyDown(textarea, { key: 'i', metaKey: true });
+
+      expect(textarea).toHaveValue('a *word* b');
+    });
+
+    test('keeps the formatted text selected straight away', () => {
+      render(<Controlled initial="a word b" markdownShortcuts />);
+      const textarea = screen.getByRole('textbox');
+      select(textarea, 2, 6);
+
+      fireEvent.keyDown(textarea, { key: 'b', ctrlKey: true });
+
+      // No gap where the cursor sits at the end: a quick follow-up
+      // shortcut or keystroke must act on the formatted word
+      expect([textarea.selectionStart, textarea.selectionEnd]).toEqual([4, 8]);
+    });
+
+    test('Ctrl+B then Ctrl+I in quick succession makes the word bold italic', () => {
+      render(<Controlled initial="a word b" markdownShortcuts />);
+      const textarea = screen.getByRole('textbox');
+      select(textarea, 2, 6);
+
+      fireEvent.keyDown(textarea, { key: 'b', ctrlKey: true });
+      fireEvent.keyDown(textarea, { key: 'i', ctrlKey: true });
+
+      expect(textarea).toHaveValue('a ***word*** b');
+    });
+
+    test('Ctrl+Z undoes the formatting', async () => {
+      render(<Controlled initial="a word b" markdownShortcuts />);
+      const textarea = screen.getByRole('textbox');
+      select(textarea, 2, 6);
+
+      fireEvent.keyDown(textarea, { key: 'b', ctrlKey: true });
+      expect(textarea).toHaveValue('a **word** b');
+
+      fireEvent.keyDown(textarea, { key: 'z', ctrlKey: true });
+      expect(textarea).toHaveValue('a word b');
+    });
+
+    test('does nothing unless markdownShortcuts is on', () => {
+      render(<Controlled initial="a word b" />);
+      const textarea = screen.getByRole('textbox');
+      select(textarea, 2, 6);
+
+      fireEvent.keyDown(textarea, { key: 'b', ctrlKey: true });
+
+      expect(textarea).toHaveValue('a word b');
+    });
+
+    test('leaves Ctrl+Shift+B to the menu', () => {
+      render(<Controlled initial="a word b" markdownShortcuts />);
+      const textarea = screen.getByRole('textbox');
+      select(textarea, 2, 6);
+
+      fireEvent.keyDown(textarea, { key: 'B', ctrlKey: true, shiftKey: true });
+
+      expect(textarea).toHaveValue('a word b');
     });
   });
 });

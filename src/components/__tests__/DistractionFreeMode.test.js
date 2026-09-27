@@ -474,4 +474,25 @@ describe('DistractionFreeMode', () => {
       expect(screen.getByDisplayValue('')).toBeInTheDocument();
     });
   });
+
+  describe('formatting shortcuts', () => {
+    it('Ctrl+B bolds the selection', () => {
+      render(
+        <DistractionFreeMode
+          scene={{ id: 'scene-1', title: 'T', content: 'a word b' }}
+          onSceneUpdate={mockHandlers.onSceneUpdate}
+          onClose={mockHandlers.onClose}
+          isOpen={true}
+        />
+      );
+      const textarea = screen.getByPlaceholderText('Continue writing...');
+      textarea.setSelectionRange(2, 6);
+
+      fireEvent.keyDown(textarea, { key: 'b', ctrlKey: true });
+
+      expect(mockHandlers.onSceneUpdate).toHaveBeenCalledWith('scene-1', {
+        content: 'a **word** b'
+      });
+    });
+  });
 });

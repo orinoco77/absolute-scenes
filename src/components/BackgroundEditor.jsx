@@ -131,14 +131,14 @@ function BackgroundEditor({ document, template, onDocumentUpdate }) {
             <button
               onClick={() => insertFormatting('**', '**')}
               className="format-btn"
-              title="Bold (Ctrl+B)"
+              title="Bold (Ctrl/Cmd+B)"
             >
               <strong>B</strong>
             </button>
             <button
               onClick={() => insertFormatting('*', '*')}
               className="format-btn"
-              title="Italic (Ctrl+I)"
+              title="Italic (Ctrl/Cmd+I)"
             >
               <em>I</em>
             </button>
@@ -173,6 +173,7 @@ function BackgroundEditor({ document, template, onDocumentUpdate }) {
               ref={textareaRef}
               value={content}
               onChange={handleContentChange}
+              markdownShortcuts
               className="background-content-textarea"
               placeholder="Write your background information here...
 

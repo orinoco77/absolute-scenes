@@ -6,6 +6,7 @@ import {
   useImperativeHandle,
   forwardRef
 } from 'react';
+import { toggleMarkdownWrap } from '../utils/markdownFormatting';
 
 /**
  * Enhanced TextEditor component with undo/redo, find/replace, and spell check support
@@ -23,6 +24,9 @@ const TextEditor = forwardRef(
       disabled = false,
       spellCheck = true,
       onKeyDown,
+      // Ctrl/Cmd+B and +I toggle Markdown bold/italic (for text that is
+      // rendered as Markdown, e.g. scene content)
+      markdownShortcuts = false,
       onFocus,
       onBlur,
       ...props
@@ -184,6 +188,40 @@ const TextEditor = forwardRef(
       e => {
         const isCtrlCmd = e.ctrlKey || e.metaKey;
 
+        if (
+          markdownShortcuts &&
+          isCtrlCmd &&
+          !e.shiftKey &&
+          !e.altKey &&
+          (e.key.toLowerCase() === 'b' || e.key.toLowerCase() === 'i')
+        ) {
+          e.preventDefault();
+          const textarea = e.target;
+          const result = toggleMarkdownWrap(
+            textarea.value,
+            textarea.selectionStart,
+            textarea.selectionEnd,
+            e.key.toLowerCase() === 'b' ? '**' : '*'
+          );
+          // Update the element first: when React re-renders with the same
+          // value it leaves the node alone, so the selection survives with
+          // no window where the cursor sits at the end of the text
+          textarea.value = result.value;
+          textarea.setSelectionRange(
+            result.selectionStart,
+            result.selectionEnd
+          );
+          // Through handleChange so the edit lands in undo history
+          handleChange({
+            target: {
+              value: result.value,
+              selectionStart: result.selectionEnd
+            },
+            type: 'change'
+          });
+          return;
+        }
+
         if (isCtrlCmd) {
           switch (e.key.toLowerCase()) {
             case 'z':
@@ -224,7 +262,14 @@ const TextEditor = forwardRef(
           onKeyDown(e);
         }
       },
-      [handleUndo, handleRedo, showFindReplace, onKeyDown]
+      [
+        handleUndo,
+        handleRedo,
+        handleChange,
+        markdownShortcuts,
+        showFindReplace,
+        onKeyDown
+      ]
     );
 
     // Find matches in text

@@ -98,6 +98,7 @@ function DistractionFreeMode({ scene, onSceneUpdate, onClose, isOpen }) {
           value={content}
           onChange={handleContentChange}
           onKeyDown={handleKeyDown}
+          markdownShortcuts
           placeholder={scene ? 'Continue writing...' : 'Start writing...'}
           spellCheck={true}
           className="distraction-free-textarea"

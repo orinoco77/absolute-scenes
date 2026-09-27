@@ -3,7 +3,7 @@
 **A scene-based book writing application with drafts, print-ready PDF and ebook export, and GitHub
 sync.**
 
-**Version:** <!--VERSION-->1.4.99<!--/VERSION--> | **Tests:** <!--TESTS-->1218/1218<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.100<!--/VERSION--> | **Tests:** <!--TESTS-->1240/1240<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-09-27<!--/DATE-->
 
 Absolute Scenes is a desktop app for authors who want a structured way to write books. Instead of one
@@ -20,7 +20,8 @@ EPUB ebooks and HTML.
 - Drag and drop to reorder scenes and chapters, and to move scenes between chapters
 - Word counts per scene, chapter and part
 - Private notes on every scene
-- Simple formatting toolbar: bold, italic, headings, paragraph and forced line breaks (Markdown-style)
+- Simple formatting toolbar: bold, italic, headings, paragraph and forced line breaks (Markdown-style).
+  Ctrl/Cmd+B and Ctrl/Cmd+I toggle bold and italic on the selection.
 - Find & replace, with its own undo and redo
 - **Distraction-free mode** (F11 or the 🎯 button) for full-screen writing
 - Recycle bins for the manuscript, characters, locations and background documents, so you can
@@ -223,7 +224,7 @@ absolute-scenes /path/to/your/book.book
 | ------------------------ | ----------------------------- |
 | New Book                 | Ctrl/Cmd+N                    |
 | Open Book                | Ctrl/Cmd+O                    |
-| Import from Scrivener    | Ctrl/Cmd+I                    |
+| Import from Scrivener    | Ctrl/Cmd+Shift+I              |
 | Save Book                | Ctrl/Cmd+S                    |
 | Save As                  | Ctrl/Cmd+Shift+S              |
 | Export Book              | Ctrl/Cmd+E                    |
@@ -237,7 +238,8 @@ absolute-scenes /path/to/your/book.book
 | Toggle Theme             | Ctrl/Cmd+Shift+T              |
 | Template Settings        | Ctrl/Cmd+T                    |
 | GitHub Integration       | Ctrl/Cmd+G                    |
-| Backup Recovery          | Ctrl/Cmd+B                    |
+| Backup Recovery          | Ctrl/Cmd+Shift+B              |
+| Bold / Italic (editor)   | Ctrl/Cmd+B / Ctrl/Cmd+I       |
 | Find & Replace (editor)  | Ctrl/Cmd+F                    |
 | Forced line break        | Shift+Enter                   |
 | Distraction-free mode    | F11 (in the scene editor)     |
@@ -245,9 +247,9 @@ absolute-scenes /path/to/your/book.book
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1218/1218<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1240/1240<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->243<!--/COMMITS--> | **Latest:** <!--COMMIT-->0742114 - fix: stop the title/author unsaved indicator flashing while typing (21 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->244<!--/COMMITS--> | **Latest:** <!--COMMIT-->796604e - docs: update README to match how the app currently works (11 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -408,7 +410,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## 🗺️ **Roadmap & Version History**
 
-**Current Release: v<!--VERSION-->1.4.99<!--/VERSION-->**
+**Current Release: v<!--VERSION-->1.4.100<!--/VERSION-->**
 
 Upcoming features and priorities are tracked in
 **[GitHub Projects](https://github.com/orinoco77/absolute-scenes/projects)**. Want to influence the
@@ -428,4 +430,4 @@ roadmap? **[Open an issue](https://github.com/orinoco77/absolute-scenes/issues)*
 
 **Made with ❤️ for authors who care about beautiful books**
 
-_Last updated <!--DATE-->2026-09-27<!--/DATE--> | Build <!--COMMIT-->0742114 - fix: stop the title/author unsaved indicator flashing while typing (21 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-09-27<!--/DATE--> | Build <!--COMMIT-->796604e - docs: update README to match how the app currently works (11 minutes ago)<!--/COMMIT-->_
