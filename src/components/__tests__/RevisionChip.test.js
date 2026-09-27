@@ -56,4 +56,69 @@ describe('RevisionChip', () => {
       screen.getByRole('menuitem', { name: /delete “revision 1”/i })
     ).toBeInTheDocument();
   });
+
+  describe('rename', () => {
+    const openRename = () => {
+      fireEvent.click(screen.getByRole('button', { name: /revision \d+ of/i }));
+      fireEvent.click(screen.getByRole('menuitem', { name: /rename “/i }));
+      return screen.getByRole('textbox', { name: 'Revision name' });
+    };
+
+    it('renames the active revision in place with Enter', () => {
+      const s = createRevision(scene(), { label: 'Alt', mode: 'copy' });
+      const h = handlers();
+      render(<RevisionChip scene={s} {...h} />);
+      const input = openRename();
+      expect(input).toHaveValue('Alt');
+      fireEvent.change(input, { target: { value: 'Darker' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+      expect(h.onRename).toHaveBeenCalledWith(s.activeRevision.id, 'Darker');
+      expect(
+        screen.queryByRole('textbox', { name: 'Revision name' })
+      ).toBeNull();
+    });
+
+    it('saves the rename when the input loses focus', () => {
+      const s = scene();
+      const h = handlers();
+      render(<RevisionChip scene={s} {...h} />);
+      const input = openRename();
+      fireEvent.change(input, { target: { value: 'First take' } });
+      fireEvent.blur(input);
+      expect(h.onRename).toHaveBeenCalledWith('s-rev1', 'First take');
+    });
+
+    it('cancels with Escape and keeps the menu open', () => {
+      const h = handlers();
+      render(<RevisionChip scene={scene()} {...h} />);
+      const input = openRename();
+      fireEvent.change(input, { target: { value: 'Nope' } });
+      fireEvent.keyDown(input, { key: 'Escape' });
+      expect(h.onRename).not.toHaveBeenCalled();
+      expect(
+        screen.queryByRole('textbox', { name: 'Revision name' })
+      ).toBeNull();
+      expect(screen.getByRole('menu')).toBeInTheDocument();
+    });
+
+    it('ignores a blank or unchanged name', () => {
+      const h = handlers();
+      render(<RevisionChip scene={scene()} {...h} />);
+      let input = openRename();
+      fireEvent.change(input, { target: { value: '   ' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+      fireEvent.click(screen.getByRole('menuitem', { name: /rename “/i }));
+      input = screen.getByRole('textbox', { name: 'Revision name' });
+      fireEvent.keyDown(input, { key: 'Enter' });
+      expect(h.onRename).not.toHaveBeenCalled();
+    });
+
+    it('does not use window.prompt', () => {
+      const prompt = jest.spyOn(window, 'prompt').mockReturnValue('X');
+      render(<RevisionChip scene={scene()} {...handlers()} />);
+      openRename();
+      expect(prompt).not.toHaveBeenCalled();
+      prompt.mockRestore();
+    });
+  });
 });

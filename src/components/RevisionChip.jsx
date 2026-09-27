@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { getRevisionInfo } from '../utils/revisionOperations';
 
 // Oldest first. A scene without `created` stamps its implicit first revision
@@ -83,16 +83,33 @@ function RevisionChip({ scene, onCreate, onSwitch, onRename, onDelete }) {
   const activeIndex = revisions.findIndex(r => r.isActive) + 1;
   const [menuOpen, setMenuOpen] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [editLabel, setEditLabel] = useState('');
+  // Guards against committing twice (Enter, then blur as the input unmounts)
+  const renamingRef = useRef(false);
 
   const close = () => {
     setMenuOpen(false);
     setShowNew(false);
+    setRenaming(false);
+    renamingRef.current = false;
   };
 
-  const rename = () => {
-    close();
-    const label = window.prompt('Rename revision', info.activeLabel);
-    if (label && label.trim()) onRename(info.activeId, label);
+  // In place rather than window.prompt, which Electron doesn't support
+  const startRename = () => {
+    setEditLabel(info.activeLabel);
+    setRenaming(true);
+    renamingRef.current = true;
+  };
+
+  const finishRename = save => {
+    if (!renamingRef.current) return;
+    renamingRef.current = false;
+    setRenaming(false);
+    const label = editLabel.trim();
+    if (save && label && label !== info.activeLabel) {
+      onRename(info.activeId, label);
+    }
   };
 
   const remove = revision => {
@@ -129,21 +146,38 @@ function RevisionChip({ scene, onCreate, onSwitch, onRename, onDelete }) {
             />
           ) : (
             <>
-              {revisions.map(r => (
-                <button
-                  type="button"
-                  role="menuitem"
-                  key={r.id}
-                  aria-current={r.isActive ? 'true' : undefined}
-                  className={r.isActive ? 'active' : ''}
-                  onClick={() => {
-                    close();
-                    if (!r.isActive) onSwitch(r.id);
-                  }}
-                >
-                  {r.label}
-                </button>
-              ))}
+              {revisions.map(r =>
+                r.isActive && renaming ? (
+                  <input
+                    key={r.id}
+                    type="text"
+                    className="revision-rename"
+                    aria-label="Revision name"
+                    value={editLabel}
+                    autoFocus
+                    onChange={e => setEditLabel(e.target.value)}
+                    onBlur={() => finishRename(true)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') finishRename(true);
+                      if (e.key === 'Escape') finishRename(false);
+                    }}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    key={r.id}
+                    aria-current={r.isActive ? 'true' : undefined}
+                    className={r.isActive ? 'active' : ''}
+                    onClick={() => {
+                      close();
+                      if (!r.isActive) onSwitch(r.id);
+                    }}
+                  >
+                    {r.label}
+                  </button>
+                )
+              )}
               <hr />
               <button
                 type="button"
@@ -152,7 +186,7 @@ function RevisionChip({ scene, onCreate, onSwitch, onRename, onDelete }) {
               >
                 New revision…
               </button>
-              <button type="button" role="menuitem" onClick={rename}>
+              <button type="button" role="menuitem" onClick={startRename}>
                 Rename “{info.activeLabel}”…
               </button>
               {revisions
