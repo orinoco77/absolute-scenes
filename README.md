@@ -3,8 +3,8 @@
 **A professional, scene-based book writing application with print-ready PDF output and GitHub
 integration.**
 
-**Version:** <!--VERSION-->1.4.91<!--/VERSION--> | **Tests:** <!--TESTS-->1196/1196<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2026-09-26<!--/DATE-->
+**Version:** <!--VERSION-->1.4.92<!--/VERSION--> | **Tests:** <!--TESTS-->1197/1197<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2026-09-27<!--/DATE-->
 
 Absolute Scenes is designed specifically for authors who want a structured approach to writing books
 with professional publishing features built-in. Unlike traditional word processors, it organizes
@@ -289,9 +289,9 @@ Access via the 🔗 GitHub Integration button:
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1196/1196<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1197/1197<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->235<!--/COMMITS--> | **Latest:** <!--COMMIT-->73c722d - feat: add scene revision chip and scene list badge (9 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->236<!--/COMMITS--> | **Latest:** <!--COMMIT-->2225779 - fix: keep a scene in the recycle bin when its chapter is in another draft (12 hours ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -542,8 +542,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ **Development & Roadmap**
 
-**Current Release: v<!--VERSION-->1.4.91<!--/VERSION-->** - See [Version History](#version-history)
-below for recent updates. **Current Release: v<!--VERSION-->1.4.91<!--/VERSION-->** - See
+**Current Release: v<!--VERSION-->1.4.92<!--/VERSION-->** - See [Version History](#version-history)
+below for recent updates. **Current Release: v<!--VERSION-->1.4.92<!--/VERSION-->** - See
 [Version History](#version-history) below for recent updates.
 
 For upcoming features, development priorities, and detailed project planning, visit our
@@ -575,4 +575,4 @@ Want to influence the roadmap?
 _"Great stories deserve great tools. Absolute Scenes gives you the professional foundation to write,
 organize, and publish books that look as good as they read."_
 
-_Last updated <!--DATE-->2026-09-26<!--/DATE--> | Build <!--COMMIT-->73c722d - feat: add scene revision chip and scene list badge (9 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-09-27<!--/DATE--> | Build <!--COMMIT-->2225779 - fix: keep a scene in the recycle bin when its chapter is in another draft (12 hours ago)<!--/COMMIT-->_
