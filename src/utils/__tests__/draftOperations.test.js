@@ -118,6 +118,18 @@ describe('createDraft', () => {
     expect(next.drafts[0].chapters[0].title).toBe('Chapter 1');
   });
 
+  it('blank mode: starts with one empty chapter and no parts', () => {
+    const book = makeBook();
+    const { book: next } = createDraft(book, { name: 'Clean', mode: 'blank' });
+    const draft = next.drafts[0];
+    expect(draft.chapters).toHaveLength(1);
+    expect(draft.chapters[0].title).toBe('Chapter 1');
+    expect(draft.chapters[0].scenes).toEqual([]);
+    expect(draft.chapters[0].id).not.toBe('c1');
+    expect(draft.parts).toEqual([]);
+    expect(next.chapters).toBe(book.chapters);
+  });
+
   it('defaults an empty name to "Draft N"', () => {
     const { book: next } = createDraft(makeBook(), {
       name: '   ',

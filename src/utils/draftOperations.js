@@ -83,11 +83,15 @@ export const createDraft = (book, { name, mode }) => {
   const active = getActiveDraft(book);
   const trimmed = (name || '').trim();
   const draftName = trimmed || `Draft ${listDrafts(book).length + 1}`;
-  const { chapters, parts } = cloneTree(
-    book.chapters,
-    book.parts,
-    mode === 'copy'
-  );
+  // 'copy': text and structure; 'empty': outline only (chapter and scene
+  // titles, no text); 'blank': a fresh start, like a new book
+  const { chapters, parts } =
+    mode === 'blank'
+      ? {
+          chapters: [{ id: newId(), title: 'Chapter 1', scenes: [] }],
+          parts: []
+        }
+      : cloneTree(book.chapters, book.parts, mode === 'copy');
   const draft = {
     id: newId(),
     name: draftName,

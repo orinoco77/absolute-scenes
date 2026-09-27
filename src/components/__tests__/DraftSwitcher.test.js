@@ -81,9 +81,19 @@ describe('DraftSwitcher', () => {
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: 'Rewrite' }
     });
-    fireEvent.click(screen.getByLabelText(/empty structure/i));
+    fireEvent.click(screen.getByLabelText(/outline only/i));
     fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
     expect(h.onCreate).toHaveBeenCalledWith({ name: 'Rewrite', mode: 'empty' });
+  });
+
+  it('creates a blank-slate draft', () => {
+    const h = handlers();
+    render(<DraftSwitcher book={baseBook()} {...h} />);
+    openMenu();
+    fireEvent.click(screen.getByRole('button', { name: /new draft/i }));
+    fireEvent.click(screen.getByLabelText(/blank slate/i));
+    fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
+    expect(h.onCreate).toHaveBeenCalledWith({ name: 'Draft 2', mode: 'blank' });
   });
 
   it('defaults new-draft mode to copy and default name to Draft N', () => {

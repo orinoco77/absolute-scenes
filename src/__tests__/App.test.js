@@ -761,7 +761,7 @@ describe('App Component - Comprehensive Tests', () => {
           target: { value: name }
         });
       }
-      if (empty) fireEvent.click(screen.getByLabelText(/empty structure/i));
+      if (empty) fireEvent.click(screen.getByLabelText(/outline only/i));
       fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
     };
 
