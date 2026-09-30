@@ -3,7 +3,7 @@
 **A scene-based book writing application with drafts, print-ready PDF and ebook export, and GitHub
 sync.**
 
-**Version:** <!--VERSION-->1.4.104<!--/VERSION--> | **Tests:** <!--TESTS-->1228/1228<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.105<!--/VERSION--> | **Tests:** <!--TESTS-->1228/1228<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-09-30<!--/DATE-->
 
 Absolute Scenes is a desktop app for authors who want a structured way to write books. Instead of one
@@ -250,7 +250,7 @@ absolute-scenes /path/to/your/book.book
 
 **Code Quality:** <!--TESTS-->1228/1228<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->250<!--/COMMITS--> | **Latest:** <!--COMMIT-->f50283d - test: update BookStructure mock to use real IDs from book-model (4 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->250<!--/COMMITS--> | **Latest:** <!--COMMIT-->b2b991a - test: update BookStructure mock to use real IDs from book-model (6 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -411,7 +411,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## 🗺️ **Roadmap & Version History**
 
-**Current Release: v<!--VERSION-->1.4.104<!--/VERSION-->**
+**Current Release: v<!--VERSION-->1.4.105<!--/VERSION-->**
 
 Upcoming features and priorities are tracked in
 **[GitHub Projects](https://github.com/orinoco77/absolute-scenes/projects)**. Want to influence the
@@ -431,4 +431,4 @@ roadmap? **[Open an issue](https://github.com/orinoco77/absolute-scenes/issues)*
 
 **Made with ❤️ for authors who care about beautiful books**
 
-_Last updated <!--DATE-->2026-09-30<!--/DATE--> | Build <!--COMMIT-->f50283d - test: update BookStructure mock to use real IDs from book-model (4 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-09-30<!--/DATE--> | Build <!--COMMIT-->b2b991a - test: update BookStructure mock to use real IDs from book-model (6 minutes ago)<!--/COMMIT-->_
