@@ -1,5 +1,5 @@
+import { createDraft } from '@absolute-scenes/book-model';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { createDraft } from '../../utils/draftOperations';
 import DraftSwitcher from '../DraftSwitcher';
 
 const baseBook = () => ({
@@ -8,11 +8,10 @@ const baseBook = () => ({
   metadata: { created: '2026-01-01T00:00:00.000Z' }
 });
 
-const twoDrafts = () =>
-  createDraft(baseBook(), {
-    name: 'Second',
-    mode: 'copy'
-  });
+const twoDrafts = () => {
+  const book = createDraft(baseBook(), { name: 'Second', mode: 'copy' });
+  return { book, draftId: book.drafts[book.drafts.length - 1].id };
+};
 
 const handlers = () => ({
   onCreate: jest.fn(),

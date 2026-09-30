@@ -1,5 +1,5 @@
+import { getRevisionInfo } from '@absolute-scenes/book-model';
 import { useRef, useState } from 'react';
-import { getRevisionInfo } from '../utils/revisionOperations';
 
 // Oldest first. A scene without `created` stamps its implicit first revision
 // in the same millisecond as the next one, so on a tie the implicit

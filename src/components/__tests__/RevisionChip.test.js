@@ -1,6 +1,6 @@
 // src/components/__tests__/RevisionChip.test.js
+import { createRevision } from '@absolute-scenes/book-model';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { createRevision } from '../../utils/revisionOperations';
 import RevisionChip from '../RevisionChip';
 
 const scene = () => ({ id: 's', title: 'S', content: 'text' });

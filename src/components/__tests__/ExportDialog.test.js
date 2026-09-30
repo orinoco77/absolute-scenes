@@ -1,5 +1,5 @@
+import { createDraft } from '@absolute-scenes/book-model';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { createDraft } from '../../utils/draftOperations';
 import { exportToPDF } from '../../utils/exportManager';
 import ExportDialog from '../ExportDialog';
 
@@ -38,10 +38,8 @@ describe('ExportDialog draft selection', () => {
   });
 
   it('exports the chosen inactive draft', async () => {
-    const { book, draftId } = createDraft(baseBook(), {
-      name: 'Second',
-      mode: 'empty'
-    });
+    const book = createDraft(baseBook(), { name: 'Second', mode: 'empty' });
+    const draftId = book.drafts[book.drafts.length - 1].id;
     renderDialog(book);
     fireEvent.change(screen.getByLabelText(/draft/i), {
       target: { value: draftId }
@@ -54,7 +52,7 @@ describe('ExportDialog draft selection', () => {
   });
 
   it('defaults to the active draft', async () => {
-    const { book } = createDraft(baseBook(), { name: 'Second', mode: 'empty' });
+    const book = createDraft(baseBook(), { name: 'Second', mode: 'empty' });
     renderDialog(book);
     fireEvent.click(screen.getByRole('button', { name: /^export$/i }));
     await waitFor(() => expect(exportToPDF).toHaveBeenCalledTimes(1));
@@ -62,16 +60,19 @@ describe('ExportDialog draft selection', () => {
   });
 
   it('summary counts follow the chosen draft', () => {
-    const created = createDraft(baseBook(), { name: 'Second', mode: 'empty' });
-    const { draftId } = created;
+    const createdBook = createDraft(baseBook(), {
+      name: 'Second',
+      mode: 'empty'
+    });
+    const draftId = createdBook.drafts[createdBook.drafts.length - 1].id;
     const extra = {
       id: 'cx',
       title: 'X',
       scenes: [{ id: 'sx', title: 'S', content: 'a b c d e f g h' }]
     };
     const book = {
-      ...created.book,
-      drafts: created.book.drafts.map(d =>
+      ...createdBook,
+      drafts: createdBook.drafts.map(d =>
         d.id === draftId
           ? { ...d, chapters: [extra, { ...extra, id: 'cy' }] }
           : d
