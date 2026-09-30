@@ -3,7 +3,8 @@ import {
   screen,
   fireEvent,
   waitFor,
-  act
+  act,
+  within
 } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import App from '../App.jsx';
@@ -18,6 +19,19 @@ jest.mock('../services/gitSyncService.js');
 // Mock all the child components with more detailed mocks
 jest.mock('../components/BookStructure', () => {
   return function MockedBookStructure(props) {
+    // Extract actual IDs from the book structure for use in test buttons
+    const firstChapter = props.chapters?.[0];
+    const firstScene = firstChapter?.scenes?.[0];
+    const firstCharacter = props.characters?.[0];
+    const firstLocation = props.locations?.[0];
+    const firstPart = props.parts?.[0];
+
+    const testChapterId = firstChapter?.id || 'chapter-1';
+    const testSceneId = firstScene?.id || 'scene-1';
+    const testCharacterId = firstCharacter?.id || 'char-1';
+    const testLocationId = firstLocation?.id || 'loc-1';
+    const testPartId = firstPart?.id || 'part-1';
+
     return (
       <div data-testid="book-structure">
         <div data-testid="active-tab">{props.activeTab}</div>
@@ -96,19 +110,19 @@ jest.mock('../components/BookStructure', () => {
           </div>
         )}
 
-        <button onClick={() => props.onSceneSelect('scene-1')}>
+        <button onClick={() => props.onSceneSelect(testSceneId)}>
           Select Scene
         </button>
-        <button onClick={() => props.onChapterSelect('chapter-1')}>
+        <button onClick={() => props.onChapterSelect(testChapterId)}>
           Select Chapter
         </button>
-        <button onClick={() => props.onPartSelect('part-1')}>
+        <button onClick={() => props.onPartSelect(testPartId)}>
           Select Part
         </button>
-        <button onClick={() => props.onCharacterSelect('char-1')}>
+        <button onClick={() => props.onCharacterSelect(testCharacterId)}>
           Select Character
         </button>
-        <button onClick={() => props.onLocationSelect('loc-1')}>
+        <button onClick={() => props.onLocationSelect(testLocationId)}>
           Select Location
         </button>
 
@@ -118,7 +132,7 @@ jest.mock('../components/BookStructure', () => {
         <button onClick={props.onCharacterAdd}>Add Character</button>
         <button onClick={props.onLocationAdd}>Add Location</button>
 
-        <button onClick={() => props.onSceneDelete('scene-1')}>
+        <button onClick={() => props.onSceneDelete(testSceneId)}>
           Delete Scene
         </button>
         <button onClick={() => props.onSceneDelete(props.currentSceneId)}>
@@ -134,19 +148,19 @@ jest.mock('../components/BookStructure', () => {
         >
           Restore First
         </button>
-        <button onClick={() => props.onChapterDelete('chapter-1')}>
+        <button onClick={() => props.onChapterDelete(testChapterId)}>
           Delete Chapter
         </button>
         <button
           onClick={() =>
-            props.onSceneUpdate('scene-1', { title: 'Updated Scene' })
+            props.onSceneUpdate(testSceneId, { title: 'Updated Scene' })
           }
         >
           Update Scene
         </button>
         <button
           onClick={() =>
-            props.onChapterUpdate('chapter-1', { title: 'Updated Chapter' })
+            props.onChapterUpdate(testChapterId, { title: 'Updated Chapter' })
           }
         >
           Update Chapter
@@ -700,17 +714,27 @@ describe('App Component - Comprehensive Tests', () => {
     test('updates scene content and marks as changed', async () => {
       render(<App />);
 
-      // First select a scene
+      // First add a scene so there is a real one to select and update
+      fireEvent.click(screen.getByText('Add Scene'));
+      await waitFor(() => {
+        expect(screen.getByTestId('scenes-count')).toHaveTextContent('1');
+      });
+
+      // Then select it
       fireEvent.click(screen.getByText('Select Scene'));
 
-      // Then update it through the book structure mock
-      fireEvent.click(screen.getByText('Update Scene'));
+      // Then update it through the scene editor (which now has the real scene selected)
+      const { getByText } = within(screen.getByTestId('scene-editor'));
+      fireEvent.click(getByText('Update Scene'));
 
       await waitFor(() => {
-        expect(screen.getByTestId('save-status')).toHaveTextContent(
-          'Unsaved Changes'
+        expect(screen.getByTestId('scene-title')).toHaveTextContent(
+          'Updated Title'
         );
       });
+      expect(screen.getByTestId('save-status')).toHaveTextContent(
+        'Unsaved Changes'
+      );
     });
 
     test('manages back matter sections correctly', async () => {
@@ -1161,8 +1185,16 @@ describe('App Component - Comprehensive Tests', () => {
     test('deletes scene and updates state', async () => {
       render(<App />);
 
-      fireEvent.click(screen.getByText('Delete Scene'));
+      fireEvent.click(screen.getByText('Add Scene'));
+      await waitFor(() => {
+        expect(screen.getByTestId('scenes-count')).toHaveTextContent('1');
+      });
 
+      fireEvent.click(screen.getByText('Delete Current Scene'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('scenes-count')).toHaveTextContent('0');
+      });
       expect(screen.getByTestId('save-status')).toHaveTextContent(
         'Unsaved Changes'
       );
@@ -1171,8 +1203,18 @@ describe('App Component - Comprehensive Tests', () => {
     test('deletes chapter and updates state', async () => {
       render(<App />);
 
+      // A freshly created book has only one chapter, and book-model
+      // correctly refuses to delete the last one — add a second first.
+      fireEvent.click(screen.getByText('Add Chapter'));
+      await waitFor(() => {
+        expect(screen.getByTestId('chapters-count')).toHaveTextContent('2');
+      });
+
       fireEvent.click(screen.getByText('Delete Chapter'));
 
+      await waitFor(() => {
+        expect(screen.getByTestId('chapters-count')).toHaveTextContent('1');
+      });
       expect(screen.getByTestId('save-status')).toHaveTextContent(
         'Unsaved Changes'
       );
