@@ -1921,7 +1921,7 @@ function App() {
           onDocumentSelect={setCurrentDocumentId}
           onFolderSelect={setCurrentFolderId}
           onDocumentAdd={contentHandlers.document.add}
-          onFolderAdd={addBackgroundFolder}
+          onFolderAdd={() => setCurrentFolderId(addBackgroundFolder())}
           onDocumentDelete={contentHandlers.document.delete}
           onDocumentUpdate={contentHandlers.document.update}
           onFolderDelete={deleteBackgroundFolder}
