@@ -40,9 +40,11 @@ describe('useBookState', () => {
       act(() => {
         chapterId = result.current.addChapter();
       });
-      expect(
-        result.current.book.chapters.find(c => c.id === chapterId)
-      ).toBeDefined();
+      const chapter = result.current.book.chapters.find(
+        c => c.id === chapterId
+      );
+      expect(chapter).toBeDefined();
+      expect(chapter.title).toBe('Chapter 2');
     });
 
     it('addCharacter returns a real character', () => {
@@ -97,9 +99,11 @@ describe('useBookState', () => {
       act(() => {
         folderId = result.current.addBackgroundFolder();
       });
-      expect(
-        result.current.book.backgroundFolders.find(f => f.id === folderId)
-      ).toBeDefined();
+      const folder = result.current.book.backgroundFolders.find(
+        f => f.id === folderId
+      );
+      expect(folder).toBeDefined();
+      expect(folder.title).toBe('Folder 2');
     });
   });
 
@@ -210,8 +214,8 @@ describe('useBookState', () => {
       const { result } = renderUseBookState();
       act(() => {
         result.current.addChapter();
+        expect(result.current.bookRef.current.chapters).toHaveLength(2);
       });
-      expect(result.current.bookRef.current.chapters).toHaveLength(2);
     });
   });
 });

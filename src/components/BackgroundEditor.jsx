@@ -5,6 +5,7 @@ function BackgroundEditor({ document, template, onDocumentUpdate }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const textareaRef = useRef(null);
+  const updateTimerRef = useRef(null);
 
   // Update local state when document prop changes
   useEffect(() => {
@@ -15,23 +16,35 @@ function BackgroundEditor({ document, template, onDocumentUpdate }) {
       setTitle('');
       setContent('');
     }
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+        updateTimerRef.current = null;
+      }
+    };
   }, [document]);
 
   // Auto-save function with debouncing
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdate = useCallback(
-    (() => {
-      let timeout;
-      return (field, value) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          if (document) {
-            onDocumentUpdate(document.id, { [field]: value });
-          }
-        }, 500);
-      };
-    })(),
-    [document, onDocumentUpdate] // Dependencies are correct; ESLint can't analyze IIFE closure
+    (field, value) => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+      const documentId = document?.id;
+      updateTimerRef.current = setTimeout(() => {
+        updateTimerRef.current = null;
+        if (!documentId) return;
+        try {
+          onDocumentUpdate(documentId, { [field]: value });
+        } catch (error) {
+          // A GitHub sync may have removed this document while the
+          // debounce was pending — matches the old silent-no-op behavior
+          // for that one race instead of surfacing an uncaught error.
+          if (!/^Document not found/.test(error.message)) throw error;
+        }
+      }, 500);
+    },
+    [document, onDocumentUpdate]
   );
 
   const handleTitleChange = e => {

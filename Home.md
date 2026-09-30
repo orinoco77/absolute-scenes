@@ -744,9 +744,9 @@ absolute-scenes/
 │   │   ├── BackupRecovery.jsx       # Open a book from GitHub
 │   │   ├── StatusBar.jsx
 │   │   └── ...                      # Lists and editors for characters, locations, matter, etc.
-│   ├── hooks/               # useBookState, useUIState, useDrafts, useBookOperations, useDragAndDrop, ...
+│   ├── hooks/               # useBookState, useUIState, useDrafts, useDragAndDrop, ...
 │   ├── services/            # gitSyncService, SaveService, EventHandlerService, ThemeService
-│   ├── utils/               # Exporters, font manager, draft/revision operations, file I/O, ...
+│   ├── utils/               # Exporters, font manager, file I/O, ...
 │   ├── styles/              # CSS split by area
 │   └── __tests__/           # App-level integration tests (unit tests sit next to their code)
 ├── assets/                  # Icons, installer.nsh (Windows PATH), Linux post-install scripts, macOS entitlements
@@ -809,8 +809,8 @@ Installers are written to `dist/`.
 
 - **Book state**: `useBookState` holds the book, with a `bookRef` that is always up to date.
   Sync and other background work read `bookRef` rather than a possibly stale closure.
-- **Drafts and revisions**: pure functions in `utils/draftOperations.js` and
-  `utils/revisionOperations.js`, wired into React by `hooks/useDrafts.js`
+- **Book editing**: pure functions in the `@absolute-scenes/book-model` package (shared with
+  the mobile app), wired into React by `hooks/useBookState.js` and `hooks/useDrafts.js`
 - **Saving**: `SaveService` performs saves. `App.jsx` runs the 3-second autosave timer.
 - **Sync**: `services/gitSyncService.js` calls git-sync's `syncRepo`. `App.jsx` owns the sync
   triggers and uses `reconcilePostSyncState` to fold in edits made while a sync was in progress.
