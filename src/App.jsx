@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable react-hooks/exhaustive-deps */
+import { getActiveDraft } from '@absolute-scenes/book-model';
 import { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import BackgroundEditor from './components/BackgroundEditor.jsx';
 import BackMatterEditor from './components/BackMatterEditor.jsx';
@@ -26,7 +27,6 @@ import { EventHandlerService } from './services/EventHandlerService';
 import * as gitSyncService from './services/gitSyncService.js';
 import { SaveService } from './services/SaveService';
 import { ThemeService } from './services/ThemeService';
-import { getActiveDraft } from './utils/draftOperations';
 import { initializeFontSystem } from './utils/fontManager';
 import { initializeFontSettings } from './utils/fontSettingsManager';
 import gitHubService from './utils/gitHubService';

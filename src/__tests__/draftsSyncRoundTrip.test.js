@@ -1,6 +1,5 @@
+import { createDraft, createRevision } from '@absolute-scenes/book-model';
 import { projectBook, reassembleBook } from '@absolute-scenes/git-sync';
-import { createDraft } from '../utils/draftOperations';
-import { createRevision } from '../utils/revisionOperations';
 
 test('drafts and revisions survive the git-sync projection round trip', () => {
   let book = {
@@ -16,7 +15,7 @@ test('drafts and revisions survive the git-sync projection round trip', () => {
     illustrations: [],
     metadata: { created: '2026-01-01T00:00:00.000Z' }
   };
-  book = createDraft(book, { name: 'Two', mode: 'copy' }).book;
+  book = createDraft(book, { name: 'Two', mode: 'copy' });
   book.chapters = [
     {
       ...book.chapters[0],

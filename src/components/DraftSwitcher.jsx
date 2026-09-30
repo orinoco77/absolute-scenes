@@ -1,5 +1,5 @@
+import { listDrafts } from '@absolute-scenes/book-model';
 import { useEffect, useRef, useState } from 'react';
-import { listDrafts } from '../utils/draftOperations';
 import NewDraftDialog from './NewDraftDialog';
 
 function DraftSwitcher({ book, onCreate, onSwitch, onRename, onDelete }) {

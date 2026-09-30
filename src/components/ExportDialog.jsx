@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
 import {
   listDrafts,
   getExportBook,
   getActiveDraft
-} from '../utils/draftOperations';
+} from '@absolute-scenes/book-model';
+import { useState, useMemo } from 'react';
 import {
   exportToPDF,
   exportToManuscriptPDF,
@@ -21,10 +21,16 @@ function ExportDialog({
     getActiveDraft(fullBook).id
   );
   const draftOptions = useMemo(() => listDrafts(fullBook), [fullBook]);
-  const book = useMemo(
-    () => getExportBook(fullBook, selectedDraftId),
-    [fullBook, selectedDraftId]
-  );
+  // getExportBook throws if selectedDraftId no longer exists (e.g. a GitHub
+  // sync removed that draft while this dialog was open). Fall back to the
+  // full book rather than crashing an open dialog over a stale selection.
+  const book = useMemo(() => {
+    try {
+      return getExportBook(fullBook, selectedDraftId);
+    } catch {
+      return fullBook;
+    }
+  }, [fullBook, selectedDraftId]);
   const [exportFormat, setExportFormat] = useState('pdf');
   const [includeSceneBreaks, setIncludeSceneBreaks] = useState(true);
   const [includeSceneTitles, setIncludeSceneTitles] = useState(false);
