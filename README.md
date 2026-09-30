@@ -3,8 +3,8 @@
 **A scene-based book writing application with drafts, print-ready PDF and ebook export, and GitHub
 sync.**
 
-**Version:** <!--VERSION-->1.4.103<!--/VERSION--> | **Tests:** <!--TESTS-->1254/1254<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2026-09-27<!--/DATE-->
+**Version:** <!--VERSION-->1.4.104<!--/VERSION--> | **Tests:** <!--TESTS-->1228/1228<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2026-09-30<!--/DATE-->
 
 Absolute Scenes is a desktop app for authors who want a structured way to write books. Instead of one
 long document, your book is organised into parts, chapters and scenes, with characters, locations and
@@ -248,9 +248,9 @@ absolute-scenes /path/to/your/book.book
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1254/1254<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1228/1228<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->247<!--/COMMITS--> | **Latest:** <!--COMMIT-->45d4d06 - fix: render ***text*** as bold italic in PDF, EPUB and HTML exports (7 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->250<!--/COMMITS--> | **Latest:** <!--COMMIT-->f50283d - test: update BookStructure mock to use real IDs from book-model (4 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -411,7 +411,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## 🗺️ **Roadmap & Version History**
 
-**Current Release: v<!--VERSION-->1.4.103<!--/VERSION-->**
+**Current Release: v<!--VERSION-->1.4.104<!--/VERSION-->**
 
 Upcoming features and priorities are tracked in
 **[GitHub Projects](https://github.com/orinoco77/absolute-scenes/projects)**. Want to influence the
@@ -420,15 +420,15 @@ roadmap? **[Open an issue](https://github.com/orinoco77/absolute-scenes/issues)*
 ### **Version History**
 
 <!--VERSION_HISTORY-->
+- **v1.4.103**: fix: parse nested bold/italic properly in exports
 - **v1.4.83**: update package-lock.json
 - **v1.4.82**: bump git sync version
 - **v1.4.79-fix**: chore: mothball the Chocolatey release workflow
 - **v1.4.79**: fix: resolve remaining transitive dependency vulnerabilities via npm audit fix
-- **v1.4.76**: fix: ship a real multi-size Linux icon set and give the icon an opaque background
 <!--/VERSION_HISTORY-->
 
 ---
 
 **Made with ❤️ for authors who care about beautiful books**
 
-_Last updated <!--DATE-->2026-09-27<!--/DATE--> | Build <!--COMMIT-->45d4d06 - fix: render ***text*** as bold italic in PDF, EPUB and HTML exports (7 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-09-30<!--/DATE--> | Build <!--COMMIT-->f50283d - test: update BookStructure mock to use real IDs from book-model (4 minutes ago)<!--/COMMIT-->_
