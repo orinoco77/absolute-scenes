@@ -3,7 +3,7 @@
 **A scene-based book writing application with drafts, print-ready PDF and ebook export, and GitHub
 sync.**
 
-**Version:** <!--VERSION-->1.4.106<!--/VERSION--> | **Tests:** <!--TESTS-->1228/1228<!--/TESTS--> ✅
+**Version:** <!--VERSION-->1.4.107<!--/VERSION--> | **Tests:** <!--TESTS-->1193/1193<!--/TESTS--> ✅
 | **Last Updated:** <!--DATE-->2026-09-30<!--/DATE-->
 
 Absolute Scenes is a desktop app for authors who want a structured way to write books. Instead of one
@@ -248,9 +248,9 @@ absolute-scenes /path/to/your/book.book
 
 ## 🛠️ **Development**
 
-**Code Quality:** <!--TESTS-->1228/1228<!--/TESTS--> tests passing ✅ | **Total Commits:**
+**Code Quality:** <!--TESTS-->1193/1193<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->251<!--/COMMITS--> | **Latest:** <!--COMMIT-->9f215d4 - feat: migrate useDrafts onto @absolute-scenes/book-model (6 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->252<!--/COMMITS--> | **Latest:** <!--COMMIT-->0268509 - feat: migrate remaining draftOperations/revisionOperations importers onto @absolute-scenes/book-model (4 minutes ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -411,7 +411,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## 🗺️ **Roadmap & Version History**
 
-**Current Release: v<!--VERSION-->1.4.106<!--/VERSION-->**
+**Current Release: v<!--VERSION-->1.4.107<!--/VERSION-->**
 
 Upcoming features and priorities are tracked in
 **[GitHub Projects](https://github.com/orinoco77/absolute-scenes/projects)**. Want to influence the
@@ -431,4 +431,4 @@ roadmap? **[Open an issue](https://github.com/orinoco77/absolute-scenes/issues)*
 
 **Made with ❤️ for authors who care about beautiful books**
 
-_Last updated <!--DATE-->2026-09-30<!--/DATE--> | Build <!--COMMIT-->9f215d4 - feat: migrate useDrafts onto @absolute-scenes/book-model (6 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-09-30<!--/DATE--> | Build <!--COMMIT-->0268509 - feat: migrate remaining draftOperations/revisionOperations importers onto @absolute-scenes/book-model (4 minutes ago)<!--/COMMIT-->_
