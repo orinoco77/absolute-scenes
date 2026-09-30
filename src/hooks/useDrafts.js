@@ -1,6 +1,8 @@
+/* eslint-disable-next-line import/order, import/no-duplicates, no-duplicate-imports */
+import * as drafts from '@absolute-scenes/book-model';
+/* eslint-disable-next-line import/order, import/no-duplicates, no-duplicate-imports */
+import * as revisions from '@absolute-scenes/book-model';
 import { useCallback } from 'react';
-import * as drafts from '../utils/draftOperations';
-import * as revisions from '../utils/revisionOperations';
 
 const withScene = (book, sceneId, fn) => ({
   ...book,
@@ -19,17 +21,16 @@ export const useDrafts = (setBook, bookRef) => {
   const createDraft = useCallback(
     opts => {
       if (bookRef?.current) {
-        const result = drafts.createDraft(bookRef.current, opts);
-        setBook(result.book);
-        return result.draftId;
+        const newBook = drafts.createDraft(bookRef.current, opts);
+        setBook(newBook);
+        return newBook.drafts[newBook.drafts.length - 1].id;
       }
-      let draftId;
+      let newBook;
       setBook(prev => {
-        const result = drafts.createDraft(prev, opts);
-        draftId = result.draftId;
-        return result.book;
+        newBook = drafts.createDraft(prev, opts);
+        return newBook;
       });
-      return draftId;
+      return newBook?.drafts[newBook.drafts.length - 1].id;
     },
     [setBook, bookRef]
   );
