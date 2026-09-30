@@ -1,88 +1,10 @@
+import * as bookModel from '@absolute-scenes/book-model';
 import { useState, useCallback, useRef } from 'react';
 
-// Utility function to normalize content for cross-platform consistency
-const normalizeContent = content => {
-  if (typeof content !== 'string') return content;
-  // Normalize line endings to LF and ensure consistent encoding
-  return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-};
-
-// Default book structure
-const createDefaultBook = () => ({
-  title: '',
-  author: '',
-  frontMatter: [], // Optional front matter sections
-  parts: [], // Optional parts to organize chapters
-  chapters: [
-    {
-      id: 'default',
-      title: 'Chapter 1',
-      scenes: []
-    }
-  ],
-  backMatter: [], // Optional back matter sections
-  illustrations: [], // Full-page illustrations with page assignments
-  characters: [],
-  characterDetectionBlacklist: [],
-  locations: [],
-  backgroundFolders: [
-    {
-      id: 'default-bg',
-      title: 'General Notes',
-      documents: []
-    }
-  ],
-  template: {
-    fontFamily: 'Times New Roman',
-    fontSize: 12,
-    lineHeight: 1.6,
-    paragraphStyle: 'indented',
-    pageSize: 'letter',
-    genre: 'general',
-    pageMargins: {
-      top: 1,
-      bottom: 1,
-      inside: 1.25, // Inner margin (towards spine)
-      outside: 1 // Outer margin (towards edge)
-    },
-    mirrorMargins: false, // Use different margins for odd/even pages
-    textAlign: 'justified', // 'left', 'justified'
-    chapterHeader: {
-      style: 'numbered',
-      format: 'Chapter {number}',
-      fontSize: 18,
-      fontWeight: 'bold',
-      alignment: 'center',
-      pageBreak: true,
-      spacing: 2,
-      lineBreaksBefore: 3,
-      startOnRightPage: false
-    },
-    runningHeaders: {
-      enabled: false,
-      alignment: 'outside', // 'outside' or 'center'
-      fontSize: 10,
-      skipChapterPages: true
-    }
-  },
-  github: {
-    repository: null,
-    lastSyncTime: null,
-    lastSyncedContent: null
-  },
-  metadata: {
-    created: new Date().toISOString(),
-    modified: new Date().toISOString()
-  },
-  collaboration: {
-    enabled: false, // Hidden until multiple authors are detected
-    authors: [], // List of author names for assignment
-    currentAuthor: null // Currently signed-in author
-  }
-});
-
 export const useBookState = (initialBook = null) => {
-  const [book, setBookInternal] = useState(initialBook || createDefaultBook());
+  const [book, setBookInternal] = useState(
+    initialBook || bookModel.createDefaultBook()
+  );
   const bookRef = useRef(book);
 
   // Keep bookRef in sync with book state
@@ -101,44 +23,28 @@ export const useBookState = (initialBook = null) => {
 
   const updateBookMetadata = useCallback(
     metadata => {
-      setBook(prev => ({
-        ...prev,
-        ...metadata,
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.updateBookMetadata(bookRef.current, metadata));
     },
     [setBook]
   );
 
   const updateTemplate = useCallback(
     templateUpdates => {
-      setBook(prev => ({
-        ...prev,
-        template: { ...prev.template, ...templateUpdates },
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.updateTemplate(bookRef.current, templateUpdates));
     },
     [setBook]
   );
 
   const updateGitHubSettings = useCallback(
     settings => {
-      setBook(prev => ({
-        ...prev,
-        github: { ...prev.github, ...settings },
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.updateGitHubSettings(bookRef.current, settings));
     },
     [setBook]
   );
 
   const updateGitHubSyncStatus = useCallback(
     settings => {
-      // Update GitHub settings without marking as changed (for sync metadata only)
-      setBook(prev => ({
-        ...prev,
-        github: { ...prev.github, ...settings }
-      }));
+      setBook(bookModel.updateGitHubSyncStatus(bookRef.current, settings));
     },
     [setBook]
   );
@@ -146,147 +52,52 @@ export const useBookState = (initialBook = null) => {
   // Scene operations
   const updateScene = useCallback(
     (sceneId, updates) => {
-      // Normalize content if it's being updated
-      const normalizedUpdates = { ...updates };
-      if (normalizedUpdates.content) {
-        normalizedUpdates.content = normalizeContent(normalizedUpdates.content);
-      }
-      if (normalizedUpdates.notes) {
-        normalizedUpdates.notes = normalizeContent(normalizedUpdates.notes);
-      }
-
-      setBook(prev => ({
-        ...prev,
-        chapters: prev.chapters.map(chapter => ({
-          ...chapter,
-          scenes: chapter.scenes.map(scene =>
-            scene.id === sceneId
-              ? {
-                  ...scene,
-                  ...normalizedUpdates,
-                  modified: new Date().toISOString()
-                }
-              : scene
-          )
-        })),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.updateScene(bookRef.current, sceneId, updates));
     },
     [setBook]
   );
 
   const addScene = useCallback(
     chapterId => {
-      const newScene = {
-        id: Date.now().toString(),
-        title: '',
-        content: '',
-        notes: '',
-        created: new Date().toISOString(),
-        modified: new Date().toISOString(),
-        assignedAuthor: null
-      };
-
-      setBook(prev => {
-        const chapter = prev.chapters.find(ch => ch.id === chapterId);
-        if (!chapter) return prev;
-
-        newScene.title = `Scene ${chapter.scenes.length + 1}`;
-
-        return {
-          ...prev,
-          chapters: prev.chapters.map(chapter =>
-            chapter.id === chapterId
-              ? { ...chapter, scenes: [...chapter.scenes, newScene] }
-              : chapter
-          ),
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
-
-      return newScene.id;
+      const newBook = bookModel.addScene(bookRef.current, chapterId);
+      setBook(newBook);
+      const chapter = newBook.chapters.find(ch => ch.id === chapterId);
+      return chapter.scenes[chapter.scenes.length - 1].id;
     },
     [setBook]
   );
 
   const deleteScene = useCallback(
     sceneId => {
-      setBook(prev => ({
-        ...prev,
-        chapters: prev.chapters.map(chapter => ({
-          ...chapter,
-          scenes: chapter.scenes.filter(scene => scene.id !== sceneId)
-        })),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.deleteScene(bookRef.current, sceneId));
     },
     [setBook]
   );
 
   const moveSceneBetweenChapters = useCallback(
     (sceneId, fromChapterId, toChapterId) => {
-      setBook(prev => {
-        let sceneToMove = null;
-
-        // First, find and remove the scene from its current chapter
-        const updatedChapters = prev.chapters.map(chapter => {
-          if (chapter.id === fromChapterId) {
-            const sceneIndex = chapter.scenes.findIndex(s => s.id === sceneId);
-            if (sceneIndex !== -1) {
-              sceneToMove = chapter.scenes[sceneIndex];
-              return {
-                ...chapter,
-                scenes: chapter.scenes.filter(s => s.id !== sceneId)
-              };
-            }
-          }
-          return chapter;
-        });
-
-        // Then add the scene to the target chapter
-        if (sceneToMove) {
-          const finalChapters = updatedChapters.map(chapter => {
-            if (chapter.id === toChapterId) {
-              return {
-                ...chapter,
-                scenes: [...chapter.scenes, sceneToMove]
-              };
-            }
-            return chapter;
-          });
-
-          return {
-            ...prev,
-            chapters: finalChapters,
-            metadata: { ...prev.metadata, modified: new Date().toISOString() }
-          };
-        }
-
-        return prev; // No changes if scene not found
-      });
+      setBook(
+        bookModel.moveSceneBetweenChapters(
+          bookRef.current,
+          sceneId,
+          fromChapterId,
+          toChapterId
+        )
+      );
     },
     [setBook]
   );
 
   const reorderScenesInChapter = useCallback(
     (chapterId, fromIndex, toIndex) => {
-      setBook(prev => {
-        const updatedChapters = prev.chapters.map(chapter => {
-          if (chapter.id === chapterId) {
-            const scenes = [...chapter.scenes];
-            const [movedScene] = scenes.splice(fromIndex, 1);
-            scenes.splice(toIndex, 0, movedScene);
-            return { ...chapter, scenes };
-          }
-          return chapter;
-        });
-
-        return {
-          ...prev,
-          chapters: updatedChapters,
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
+      setBook(
+        bookModel.reorderScenesInChapter(
+          bookRef.current,
+          chapterId,
+          fromIndex,
+          toIndex
+        )
+      );
     },
     [setBook]
   );
@@ -294,66 +105,27 @@ export const useBookState = (initialBook = null) => {
   // Chapter operations
   const updateChapter = useCallback(
     (chapterId, updates) => {
-      setBook(prev => ({
-        ...prev,
-        chapters: prev.chapters.map(chapter =>
-          chapter.id === chapterId ? { ...chapter, ...updates } : chapter
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.updateChapter(bookRef.current, chapterId, updates));
     },
     [setBook]
   );
 
   const addChapter = useCallback(() => {
-    const newChapter = {
-      id: Date.now().toString(),
-      title: '',
-      scenes: [],
-      assignedAuthor: null
-    };
-
-    setBook(prev => {
-      newChapter.title = `Chapter ${prev.chapters.length + 1}`;
-      return {
-        ...prev,
-        chapters: [...prev.chapters, newChapter],
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      };
-    });
-
-    return newChapter.id;
+    const newBook = bookModel.addChapter(bookRef.current);
+    setBook(newBook);
+    return newBook.chapters[newBook.chapters.length - 1].id;
   }, [setBook]);
 
   const deleteChapter = useCallback(
     chapterId => {
-      setBook(prev => {
-        if (prev.chapters.length <= 1) {
-          return prev; // Cannot delete the last chapter
-        }
-        return {
-          ...prev,
-          chapters: prev.chapters.filter(ch => ch.id !== chapterId),
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
+      setBook(bookModel.deleteChapter(bookRef.current, chapterId));
     },
     [setBook]
   );
 
   const reorderChapters = useCallback(
     (fromIndex, toIndex) => {
-      setBook(prev => {
-        const chapters = [...prev.chapters];
-        const [movedChapter] = chapters.splice(fromIndex, 1);
-        chapters.splice(toIndex, 0, movedChapter);
-
-        return {
-          ...prev,
-          chapters,
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
+      setBook(bookModel.reorderChapters(bookRef.current, fromIndex, toIndex));
     },
     [setBook]
   );
@@ -361,52 +133,20 @@ export const useBookState = (initialBook = null) => {
   // Character operations
   const updateCharacter = useCallback(
     (characterId, updates) => {
-      setBook(prev => ({
-        ...prev,
-        characters: prev.characters.map(character =>
-          character.id === characterId
-            ? { ...character, ...updates, modified: new Date().toISOString() }
-            : character
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.updateCharacter(bookRef.current, characterId, updates));
     },
     [setBook]
   );
 
   const addCharacter = useCallback(() => {
-    const newCharacter = {
-      id: Date.now().toString(),
-      name: '',
-      description: '',
-      role: '',
-      avatar: '👤',
-      notes: '',
-      created: new Date().toISOString(),
-      modified: new Date().toISOString()
-    };
-
-    setBook(prev => {
-      newCharacter.name = `Character ${prev.characters.length + 1}`;
-      return {
-        ...prev,
-        characters: [...prev.characters, newCharacter],
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      };
-    });
-
-    return newCharacter.id;
+    const newBook = bookModel.addCharacter(bookRef.current);
+    setBook(newBook);
+    return newBook.characters[newBook.characters.length - 1].id;
   }, [setBook]);
 
   const deleteCharacter = useCallback(
     characterId => {
-      setBook(prev => ({
-        ...prev,
-        characters: prev.characters.filter(
-          character => character.id !== characterId
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.deleteCharacter(bookRef.current, characterId));
     },
     [setBook]
   );
@@ -414,113 +154,48 @@ export const useBookState = (initialBook = null) => {
   // Location operations
   const updateLocation = useCallback(
     (locationId, updates) => {
-      setBook(prev => ({
-        ...prev,
-        locations: prev.locations.map(location =>
-          location.id === locationId
-            ? { ...location, ...updates, modified: new Date().toISOString() }
-            : location
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.updateLocation(bookRef.current, locationId, updates));
     },
     [setBook]
   );
 
   const addLocation = useCallback(() => {
-    const newLocation = {
-      id: Date.now().toString(),
-      name: '',
-      description: '',
-      type: 'General',
-      icon: '📍',
-      notes: '',
-      created: new Date().toISOString(),
-      modified: new Date().toISOString()
-    };
-
-    setBook(prev => {
-      newLocation.name = `Location ${prev.locations.length + 1}`;
-      return {
-        ...prev,
-        locations: [...prev.locations, newLocation],
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      };
-    });
-
-    return newLocation.id;
+    const newBook = bookModel.addLocation(bookRef.current);
+    setBook(newBook);
+    return newBook.locations[newBook.locations.length - 1].id;
   }, [setBook]);
 
   const deleteLocation = useCallback(
     locationId => {
-      setBook(prev => ({
-        ...prev,
-        locations: prev.locations.filter(
-          location => location.id !== locationId
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.deleteLocation(bookRef.current, locationId));
     },
     [setBook]
   );
 
   // Part operations
   const addPart = useCallback(() => {
-    const newPart = {
-      id: Date.now().toString(),
-      title: '',
-      chapterIds: []
-    };
-
-    setBook(prev => {
-      newPart.title = `Part ${prev.parts.length + 1}`;
-      return {
-        ...prev,
-        parts: [...prev.parts, newPart],
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      };
-    });
-
-    return newPart.id;
+    const newBook = bookModel.addPart(bookRef.current);
+    setBook(newBook);
+    return newBook.parts[newBook.parts.length - 1].id;
   }, [setBook]);
 
   const updatePart = useCallback(
     (partId, updates) => {
-      setBook(prev => ({
-        ...prev,
-        parts: prev.parts.map(part =>
-          part.id === partId ? { ...part, ...updates } : part
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.updatePart(bookRef.current, partId, updates));
     },
     [setBook]
   );
 
   const deletePart = useCallback(
     partId => {
-      setBook(prev => ({
-        ...prev,
-        parts: prev.parts.filter(p => p.id !== partId),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.deletePart(bookRef.current, partId));
     },
     [setBook]
   );
 
   const reorderParts = useCallback(
     (fromIndex, toIndex) => {
-      setBook(prev => {
-        const parts = [...prev.parts];
-        const [movedPart] = parts.splice(fromIndex, 1);
-        parts.splice(toIndex, 0, movedPart);
-
-        return {
-          ...prev,
-          parts,
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
+      setBook(bookModel.reorderParts(bookRef.current, fromIndex, toIndex));
     },
     [setBook]
   );
@@ -528,108 +203,44 @@ export const useBookState = (initialBook = null) => {
   // Chapter-to-part operations
   const moveChapterToPart = useCallback(
     (chapterId, fromPartId, toPartId) => {
-      setBook(prev => {
-        const newParts = prev.parts.map(part => {
-          if (part.id === fromPartId) {
-            // Remove chapter from current part
-            return {
-              ...part,
-              chapterIds: part.chapterIds.filter(id => id !== chapterId)
-            };
-          } else if (part.id === toPartId) {
-            // Add chapter to new part if not already there
-            if (!part.chapterIds.includes(chapterId)) {
-              return {
-                ...part,
-                chapterIds: [...part.chapterIds, chapterId]
-              };
-            }
-            // Return unchanged part if chapter already exists
-            return part;
-          }
-          return part;
-        });
-
-        return {
-          ...prev,
-          parts: newParts,
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
+      setBook(
+        bookModel.moveChapterToPart(
+          bookRef.current,
+          chapterId,
+          fromPartId,
+          toPartId
+        )
+      );
     },
     [setBook]
   );
 
   const addChapterToPart = useCallback(
     (chapterId, toPartId) => {
-      setBook(prev => {
-        const newParts = prev.parts.map(part => {
-          if (part.id === toPartId) {
-            // Add chapter to part if not already there
-            if (!part.chapterIds.includes(chapterId)) {
-              return {
-                ...part,
-                chapterIds: [...part.chapterIds, chapterId]
-              };
-            }
-            // Return unchanged part if chapter already exists
-            return part;
-          }
-          return part;
-        });
-
-        return {
-          ...prev,
-          parts: newParts,
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
+      setBook(bookModel.addChapterToPart(bookRef.current, chapterId, toPartId));
     },
     [setBook]
   );
 
   const removeChapterFromPart = useCallback(
     (chapterId, fromPartId) => {
-      setBook(prev => {
-        const newParts = prev.parts.map(part => {
-          if (part.id === fromPartId) {
-            return {
-              ...part,
-              chapterIds: part.chapterIds.filter(id => id !== chapterId)
-            };
-          }
-          return part;
-        });
-
-        return {
-          ...prev,
-          parts: newParts,
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
+      setBook(
+        bookModel.removeChapterFromPart(bookRef.current, chapterId, fromPartId)
+      );
     },
     [setBook]
   );
 
   const reorderChaptersInPart = useCallback(
     (partId, fromIndex, toIndex) => {
-      setBook(prev => {
-        const newParts = prev.parts.map(part => {
-          if (part.id === partId) {
-            const chapterIds = [...part.chapterIds];
-            const [movedChapterId] = chapterIds.splice(fromIndex, 1);
-            chapterIds.splice(toIndex, 0, movedChapterId);
-            return { ...part, chapterIds };
-          }
-          return part;
-        });
-
-        return {
-          ...prev,
-          parts: newParts,
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
+      setBook(
+        bookModel.reorderChaptersInPart(
+          bookRef.current,
+          partId,
+          fromIndex,
+          toIndex
+        )
+      );
     },
     [setBook]
   );
@@ -637,115 +248,47 @@ export const useBookState = (initialBook = null) => {
   // Document operations
   const addDocument = useCallback(
     folderId => {
-      const newDocument = {
-        id: Date.now().toString(),
-        title: '',
-        content: '',
-        created: new Date().toISOString(),
-        modified: new Date().toISOString()
-      };
-
-      setBook(prev => {
-        const folder = prev.backgroundFolders.find(f => f.id === folderId);
-        if (!folder) return prev;
-
-        newDocument.title = `Document ${folder.documents.length + 1}`;
-
-        return {
-          ...prev,
-          backgroundFolders: prev.backgroundFolders.map(folder =>
-            folder.id === folderId
-              ? { ...folder, documents: [...folder.documents, newDocument] }
-              : folder
-          ),
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
-
-      return newDocument.id;
+      const newBook = bookModel.addDocument(bookRef.current, folderId);
+      setBook(newBook);
+      const folder = newBook.backgroundFolders.find(f => f.id === folderId);
+      return folder.documents[folder.documents.length - 1].id;
     },
     [setBook]
   );
 
   const updateDocument = useCallback(
     (documentId, updates) => {
-      setBook(prev => ({
-        ...prev,
-        backgroundFolders: prev.backgroundFolders.map(folder => ({
-          ...folder,
-          documents: folder.documents.map(doc =>
-            doc.id === documentId
-              ? { ...doc, ...updates, modified: new Date().toISOString() }
-              : doc
-          )
-        })),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.updateDocument(bookRef.current, documentId, updates));
     },
     [setBook]
   );
 
   const deleteDocument = useCallback(
     documentId => {
-      setBook(prev => ({
-        ...prev,
-        backgroundFolders: prev.backgroundFolders.map(folder => ({
-          ...folder,
-          documents: folder.documents.filter(doc => doc.id !== documentId)
-        })),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.deleteDocument(bookRef.current, documentId));
     },
     [setBook]
   );
 
   // Background folder operations
   const addBackgroundFolder = useCallback(() => {
-    const newFolder = {
-      id: Date.now().toString(),
-      title: '',
-      documents: [],
-      created: new Date().toISOString(),
-      modified: new Date().toISOString()
-    };
-
-    setBook(prev => {
-      newFolder.title = `Folder ${prev.backgroundFolders.length + 1}`;
-
-      return {
-        ...prev,
-        backgroundFolders: [...prev.backgroundFolders, newFolder],
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      };
-    });
-
-    return newFolder.id; // Return the new folder ID
+    const newBook = bookModel.addBackgroundFolder(bookRef.current);
+    setBook(newBook);
+    return newBook.backgroundFolders[newBook.backgroundFolders.length - 1].id;
   }, [setBook]);
 
   const updateBackgroundFolder = useCallback(
     (folderId, updates) => {
-      setBook(prev => ({
-        ...prev,
-        backgroundFolders: prev.backgroundFolders.map(folder =>
-          folder.id === folderId
-            ? { ...folder, ...updates, modified: new Date().toISOString() }
-            : folder
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(
+        bookModel.updateBackgroundFolder(bookRef.current, folderId, updates)
+      );
     },
     [setBook]
   );
 
   const deleteBackgroundFolder = useCallback(
     folderId => {
-      setBook(prev => ({
-        ...prev,
-        backgroundFolders: prev.backgroundFolders.filter(
-          folder => folder.id !== folderId
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.deleteBackgroundFolder(bookRef.current, folderId));
     },
     [setBook]
   );
@@ -753,64 +296,45 @@ export const useBookState = (initialBook = null) => {
   // Front matter operations
   const addFrontMatter = useCallback(
     frontMatterItem => {
-      setBook(prev => ({
-        ...prev,
-        frontMatter: [...prev.frontMatter, frontMatterItem],
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.addFrontMatter(bookRef.current, frontMatterItem));
     },
     [setBook]
   );
 
   const updateFrontMatter = useCallback(
     (frontMatterId, updatedFrontMatter) => {
-      setBook(prev => ({
-        ...prev,
-        frontMatter: prev.frontMatter.map(fm =>
-          fm.id === frontMatterId ? updatedFrontMatter : fm
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(
+        bookModel.updateFrontMatter(
+          bookRef.current,
+          frontMatterId,
+          updatedFrontMatter
+        )
+      );
     },
     [setBook]
   );
 
   const deleteFrontMatter = useCallback(
     frontMatterId => {
-      setBook(prev => ({
-        ...prev,
-        frontMatter: prev.frontMatter.filter(fm => fm.id !== frontMatterId),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.deleteFrontMatter(bookRef.current, frontMatterId));
     },
     [setBook]
   );
 
   const toggleFrontMatter = useCallback(
     (frontMatterId, enabled) => {
-      setBook(prev => ({
-        ...prev,
-        frontMatter: prev.frontMatter.map(fm =>
-          fm.id === frontMatterId ? { ...fm, enabled } : fm
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(
+        bookModel.toggleFrontMatter(bookRef.current, frontMatterId, enabled)
+      );
     },
     [setBook]
   );
 
   const reorderFrontMatter = useCallback(
     (fromIndex, toIndex) => {
-      setBook(prev => {
-        const frontMatter = [...prev.frontMatter];
-        const [movedItem] = frontMatter.splice(fromIndex, 1);
-        frontMatter.splice(toIndex, 0, movedItem);
-        return {
-          ...prev,
-          frontMatter,
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
+      setBook(
+        bookModel.reorderFrontMatter(bookRef.current, fromIndex, toIndex)
+      );
     },
     [setBook]
   );
@@ -818,66 +342,43 @@ export const useBookState = (initialBook = null) => {
   // Back matter operations
   const addBackMatter = useCallback(
     backMatterItem => {
-      setBook(prev => ({
-        ...prev,
-        backMatter: [...(prev.backMatter || []), backMatterItem],
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.addBackMatter(bookRef.current, backMatterItem));
     },
     [setBook]
   );
 
   const updateBackMatter = useCallback(
     (backMatterId, updatedBackMatter) => {
-      setBook(prev => ({
-        ...prev,
-        backMatter: (prev.backMatter || []).map(bm =>
-          bm.id === backMatterId ? updatedBackMatter : bm
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(
+        bookModel.updateBackMatter(
+          bookRef.current,
+          backMatterId,
+          updatedBackMatter
+        )
+      );
     },
     [setBook]
   );
 
   const deleteBackMatter = useCallback(
     backMatterId => {
-      setBook(prev => ({
-        ...prev,
-        backMatter: (prev.backMatter || []).filter(
-          bm => bm.id !== backMatterId
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.deleteBackMatter(bookRef.current, backMatterId));
     },
     [setBook]
   );
 
   const toggleBackMatter = useCallback(
     (backMatterId, enabled) => {
-      setBook(prev => ({
-        ...prev,
-        backMatter: (prev.backMatter || []).map(bm =>
-          bm.id === backMatterId ? { ...bm, enabled } : bm
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(
+        bookModel.toggleBackMatter(bookRef.current, backMatterId, enabled)
+      );
     },
     [setBook]
   );
 
   const reorderBackMatter = useCallback(
     (fromIndex, toIndex) => {
-      setBook(prev => {
-        const backMatter = [...(prev.backMatter || [])];
-        const [movedItem] = backMatter.splice(fromIndex, 1);
-        backMatter.splice(toIndex, 0, movedItem);
-        return {
-          ...prev,
-          backMatter,
-          metadata: { ...prev.metadata, modified: new Date().toISOString() }
-        };
-      });
+      setBook(bookModel.reorderBackMatter(bookRef.current, fromIndex, toIndex));
     },
     [setBook]
   );
@@ -885,37 +386,27 @@ export const useBookState = (initialBook = null) => {
   // Illustration operations
   const addIllustration = useCallback(
     illustration => {
-      setBook(prev => ({
-        ...prev,
-        illustrations: [...(prev.illustrations || []), illustration],
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.addIllustration(bookRef.current, illustration));
     },
     [setBook]
   );
 
   const updateIllustration = useCallback(
     (illustrationId, updatedIllustration) => {
-      setBook(prev => ({
-        ...prev,
-        illustrations: (prev.illustrations || []).map(ill =>
-          ill.id === illustrationId ? updatedIllustration : ill
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(
+        bookModel.updateIllustration(
+          bookRef.current,
+          illustrationId,
+          updatedIllustration
+        )
+      );
     },
     [setBook]
   );
 
   const deleteIllustration = useCallback(
     illustrationId => {
-      setBook(prev => ({
-        ...prev,
-        illustrations: (prev.illustrations || []).filter(
-          ill => ill.id !== illustrationId
-        ),
-        metadata: { ...prev.metadata, modified: new Date().toISOString() }
-      }));
+      setBook(bookModel.deleteIllustration(bookRef.current, illustrationId));
     },
     [setBook]
   );
@@ -923,159 +414,55 @@ export const useBookState = (initialBook = null) => {
   // Recovery operations
   const recoverBook = useCallback(
     recoveredBookData => {
-      // Normalize all text content for cross-platform consistency
-      const normalizeBookContent = book => {
-        return {
-          ...book,
-          chapters:
-            book.chapters?.map(chapter => ({
-              ...chapter,
-              scenes:
-                chapter.scenes?.map(scene => ({
-                  ...scene,
-                  content: normalizeContent(scene.content),
-                  notes: normalizeContent(scene.notes)
-                })) || []
-            })) || [],
-          frontMatter:
-            book.frontMatter?.map(item => ({
-              ...item,
-              content: normalizeContent(item.content)
-            })) || [],
-          backMatter:
-            book.backMatter?.map(item => ({
-              ...item,
-              content: normalizeContent(item.content)
-            })) || [],
-          characters:
-            book.characters?.map(char => ({
-              ...char,
-              description: normalizeContent(char.description),
-              notes: normalizeContent(char.notes)
-            })) || [],
-          locations:
-            book.locations?.map(loc => ({
-              ...loc,
-              description: normalizeContent(loc.description)
-            })) || []
-        };
-      };
-
-      // Migrate old formats
-      const migratedBook = { ...recoveredBookData };
-
-      // Migrate old format to new chapter format if needed
-      if (migratedBook.scenes && !migratedBook.chapters) {
-        migratedBook.chapters = [
-          {
-            id: 'default',
-            title: 'Chapter 1',
-            scenes: migratedBook.scenes
-          }
-        ];
-        delete migratedBook.scenes;
-      }
-
-      // Add missing arrays
-      if (!migratedBook.frontMatter) migratedBook.frontMatter = [];
-      if (!migratedBook.parts) migratedBook.parts = [];
-      if (!migratedBook.characters) migratedBook.characters = [];
-      if (!migratedBook.characterDetectionBlacklist)
-        migratedBook.characterDetectionBlacklist = [];
-      if (!migratedBook.locations) migratedBook.locations = [];
-      if (!migratedBook.backgroundFolders) {
-        migratedBook.backgroundFolders = [
-          {
-            id: 'default-bg',
-            title: 'General Notes',
-            documents: []
-          }
-        ];
-      }
-      if (!migratedBook.github) {
-        migratedBook.github = {
-          repository: null,
-          lastSyncTime: null
-        };
-      }
-
-      const normalizedBook = normalizeBookContent(migratedBook);
-      setBook(normalizedBook);
+      setBook(bookModel.recoverBook(recoveredBookData));
     },
     [setBook]
   );
 
   const resetBook = useCallback(() => {
-    const newBook = createDefaultBook();
-    setBook(newBook);
+    setBook(bookModel.createDefaultBook());
   }, [setBook]);
 
   // Utility functions
   const getCurrentScene = useCallback(
-    sceneId => {
-      if (!sceneId) return null;
-      for (const chapter of book.chapters) {
-        const scene = chapter.scenes.find(scene => scene.id === sceneId);
-        if (scene) return scene;
-      }
-      return null;
-    },
+    sceneId => bookModel.getCurrentScene(book, sceneId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [book.chapters]
   );
 
   const getCurrentCharacter = useCallback(
-    characterId => {
-      if (!characterId) return null;
-      return (
-        book.characters.find(character => character.id === characterId) || null
-      );
-    },
+    characterId => bookModel.getCurrentCharacter(book, characterId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [book.characters]
   );
 
   const getCurrentDocument = useCallback(
-    documentId => {
-      if (!documentId) return null;
-      for (const folder of book.backgroundFolders) {
-        const document = folder.documents.find(doc => doc.id === documentId);
-        if (document) return document;
-      }
-      return null;
-    },
+    documentId => bookModel.getCurrentDocument(book, documentId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [book.backgroundFolders]
   );
 
   const getCurrentLocation = useCallback(
-    locationId => {
-      if (!locationId) return null;
-      return (
-        book.locations.find(location => location.id === locationId) || null
-      );
-    },
+    locationId => bookModel.getCurrentLocation(book, locationId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [book.locations]
   );
 
   const getCurrentFrontMatter = useCallback(
-    frontMatterId => {
-      if (!frontMatterId) return null;
-      return book.frontMatter.find(fm => fm.id === frontMatterId) || null;
-    },
+    frontMatterId => bookModel.getCurrentFrontMatter(book, frontMatterId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [book.frontMatter]
   );
 
   const getCurrentBackMatter = useCallback(
-    backMatterId => {
-      if (!backMatterId || !book.backMatter) return null;
-      return book.backMatter.find(bm => bm.id === backMatterId) || null;
-    },
+    backMatterId => bookModel.getCurrentBackMatter(book, backMatterId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [book.backMatter]
   );
 
   const getCurrentIllustration = useCallback(
-    illustrationId => {
-      if (!illustrationId || !book.illustrations) return null;
-      return book.illustrations.find(ill => ill.id === illustrationId) || null;
-    },
+    illustrationId => bookModel.getCurrentIllustration(book, illustrationId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [book.illustrations]
   );
 
