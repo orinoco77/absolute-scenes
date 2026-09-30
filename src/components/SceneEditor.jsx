@@ -128,7 +128,14 @@ function SceneEditor({
       // Debounce the actual book state update
       contentUpdateTimerRef.current = setTimeout(() => {
         contentUpdateTimerRef.current = null;
-        onSceneUpdate(scene.id, { content: newContent });
+        try {
+          onSceneUpdate(scene.id, { content: newContent });
+        } catch (error) {
+          // A GitHub sync may have removed this scene while the debounce
+          // was pending — matches the old silent-no-op behavior for that
+          // one race instead of surfacing an uncaught error from a timer.
+          if (!/^Scene not found/.test(error.message)) throw error;
+        }
         lastSentContentRef.current = newContent; // Track what we sent
         lastSentTimeRef.current = Date.now(); // Track when we sent it
       }, 300); // Update book state 300ms after user stops typing
@@ -142,7 +149,11 @@ function SceneEditor({
     if (contentUpdateTimerRef.current) {
       clearTimeout(contentUpdateTimerRef.current);
       contentUpdateTimerRef.current = null;
-      onSceneUpdate(scene.id, { content: localContent });
+      try {
+        onSceneUpdate(scene.id, { content: localContent });
+      } catch (error) {
+        if (!/^Scene not found/.test(error.message)) throw error;
+      }
       lastSentContentRef.current = localContent;
       lastSentTimeRef.current = Date.now();
     }

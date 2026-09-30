@@ -158,6 +158,59 @@ describe('SceneEditor Component', () => {
     expect(screen.getByTitle('Paragraph Break')).toBeInTheDocument();
   });
 
+  test('does not throw when the debounced update targets a scene that no longer exists', () => {
+    jest.useFakeTimers();
+    onSceneUpdate.mockImplementation(() => {
+      throw new Error('Scene not found: 1');
+    });
+    render(
+      <SceneEditor
+        scene={scene}
+        template={template}
+        onSceneUpdate={onSceneUpdate}
+      />
+    );
+    const contentTextarea = screen.getByPlaceholderText(
+      'Start writing your scene here...'
+    );
+
+    fireEvent.change(contentTextarea, { target: { value: 'New Content' } });
+
+    expect(() => jest.advanceTimersByTime(300)).not.toThrow();
+    expect(onSceneUpdate).toHaveBeenCalledWith(scene.id, {
+      content: 'New Content'
+    });
+
+    onSceneUpdate.mockReset();
+    jest.useRealTimers();
+  });
+
+  test('re-throws an unrelated error from the debounced update', () => {
+    jest.useFakeTimers();
+    onSceneUpdate.mockImplementation(() => {
+      throw new Error('Something else went wrong');
+    });
+    render(
+      <SceneEditor
+        scene={scene}
+        template={template}
+        onSceneUpdate={onSceneUpdate}
+      />
+    );
+    const contentTextarea = screen.getByPlaceholderText(
+      'Start writing your scene here...'
+    );
+
+    fireEvent.change(contentTextarea, { target: { value: 'New Content' } });
+
+    expect(() => jest.advanceTimersByTime(300)).toThrow(
+      'Something else went wrong'
+    );
+
+    onSceneUpdate.mockReset();
+    jest.useRealTimers();
+  });
+
   describe('revisions', () => {
     const revScene = {
       id: 'r1',
@@ -276,6 +329,36 @@ describe('SceneEditor Component', () => {
       );
       jest.advanceTimersByTime(1000);
       expect(onSceneUpdate).toHaveBeenCalledTimes(1);
+      onSceneUpdate.mockReset();
+      jest.useRealTimers();
+    });
+
+    test('does not throw and still switches revisions when a pending flush targets a scene that no longer exists', () => {
+      jest.useFakeTimers();
+      const revisionActions = actions();
+      onSceneUpdate.mockImplementation(() => {
+        throw new Error('Scene not found: r1');
+      });
+      render(
+        <SceneEditor
+          scene={revScene}
+          onSceneUpdate={onSceneUpdate}
+          revisionActions={revisionActions}
+        />
+      );
+      fireEvent.change(
+        screen.getByPlaceholderText('Start writing your scene here...'),
+        { target: { value: 'typed fast' } }
+      );
+
+      expect(() => {
+        fireEvent.click(
+          screen.getByRole('button', { name: /revision 2 of 2/i })
+        );
+        fireEvent.click(screen.getByRole('menuitem', { name: 'A' }));
+      }).not.toThrow();
+
+      expect(revisionActions.switch).toHaveBeenCalledWith('r1', 'a');
       onSceneUpdate.mockReset();
       jest.useRealTimers();
     });
