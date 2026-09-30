@@ -228,6 +228,47 @@ describe('BackgroundEditor Component', () => {
     );
   });
 
+  test('does not throw when the debounced update targets a document that no longer exists', async () => {
+    mockFunctions.onDocumentUpdate.mockImplementation(() => {
+      throw new Error('Document not found: doc-1');
+    });
+    renderComponent();
+
+    const titleInput = screen.getByDisplayValue('Character Backstory');
+    fireEvent.change(titleInput, { target: { value: 'Updated' } });
+
+    await waitFor(
+      () => {
+        expect(mockFunctions.onDocumentUpdate).toHaveBeenCalledWith('doc-1', {
+          title: 'Updated'
+        });
+      },
+      { timeout: 1000 }
+    );
+  });
+
+  test('cancels a pending debounced update when the document changes before it fires', async () => {
+    const { rerender } = renderComponent();
+
+    const titleInput = screen.getByDisplayValue('Character Backstory');
+    fireEvent.change(titleInput, { target: { value: 'Typed fast' } });
+
+    rerender(
+      <BackgroundEditor
+        document={{ ...mockDocument, id: 'doc-2', title: 'Other Doc' }}
+        template={mockTemplate}
+        {...mockFunctions}
+      />
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 600));
+
+    expect(mockFunctions.onDocumentUpdate).not.toHaveBeenCalledWith(
+      'doc-1',
+      expect.anything()
+    );
+  });
+
   test('shows helpful placeholder text', () => {
     const emptyDocument = {
       ...mockDocument,
