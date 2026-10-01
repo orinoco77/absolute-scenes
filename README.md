@@ -3,8 +3,8 @@
 **A scene-based book writing application with drafts, print-ready PDF and ebook export, and GitHub
 sync.**
 
-**Version:** <!--VERSION-->1.4.109<!--/VERSION--> | **Tests:** <!--TESTS-->1198/1198<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2026-09-30<!--/DATE-->
+**Version:** <!--VERSION-->1.4.110<!--/VERSION--> | **Tests:** <!--TESTS-->1198/1198<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2026-10-01<!--/DATE-->
 
 Absolute Scenes is a desktop app for authors who want a structured way to write books. Instead of one
 long document, your book is organised into parts, chapters and scenes, with characters, locations and
@@ -250,7 +250,7 @@ absolute-scenes /path/to/your/book.book
 
 **Code Quality:** <!--TESTS-->1198/1198<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->254<!--/COMMITS--> | **Latest:** <!--COMMIT-->3057f58 - fix: auto-select new background folders; handle GitHub-sync race in SceneEditor's debounced/flushed updates Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com> (14 minutes ago)<!--/COMMIT-->
+<!--COMMITS-->255<!--/COMMITS--> | **Latest:** <!--COMMIT-->fc229e4 - fix: address final review findings (BackgroundEditor timer race, weak add-op test assertions, stale Home.md architecture notes) (25 hours ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -411,7 +411,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## 🗺️ **Roadmap & Version History**
 
-**Current Release: v<!--VERSION-->1.4.109<!--/VERSION-->**
+**Current Release: v<!--VERSION-->1.4.110<!--/VERSION-->**
 
 Upcoming features and priorities are tracked in
 **[GitHub Projects](https://github.com/orinoco77/absolute-scenes/projects)**. Want to influence the
@@ -431,4 +431,4 @@ roadmap? **[Open an issue](https://github.com/orinoco77/absolute-scenes/issues)*
 
 **Made with ❤️ for authors who care about beautiful books**
 
-_Last updated <!--DATE-->2026-09-30<!--/DATE--> | Build <!--COMMIT-->3057f58 - fix: auto-select new background folders; handle GitHub-sync race in SceneEditor's debounced/flushed updates Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com> (14 minutes ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-10-01<!--/DATE--> | Build <!--COMMIT-->fc229e4 - fix: address final review findings (BackgroundEditor timer race, weak add-op test assertions, stale Home.md architecture notes) (25 hours ago)<!--/COMMIT-->_
