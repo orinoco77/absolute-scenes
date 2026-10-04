@@ -3,8 +3,8 @@
 **A scene-based book writing application with drafts, print-ready PDF and ebook export, and GitHub
 sync.**
 
-**Version:** <!--VERSION-->1.4.110<!--/VERSION--> | **Tests:** <!--TESTS-->1198/1198<!--/TESTS--> ✅
-| **Last Updated:** <!--DATE-->2026-10-01<!--/DATE-->
+**Version:** <!--VERSION-->1.4.111<!--/VERSION--> | **Tests:** <!--TESTS-->1198/1198<!--/TESTS--> ✅
+| **Last Updated:** <!--DATE-->2026-10-04<!--/DATE-->
 
 Absolute Scenes is a desktop app for authors who want a structured way to write books. Instead of one
 long document, your book is organised into parts, chapters and scenes, with characters, locations and
@@ -250,7 +250,7 @@ absolute-scenes /path/to/your/book.book
 
 **Code Quality:** <!--TESTS-->1198/1198<!--/TESTS--> tests passing ✅ | **Total Commits:**
 
-<!--COMMITS-->255<!--/COMMITS--> | **Latest:** <!--COMMIT-->fc229e4 - fix: address final review findings (BackgroundEditor timer race, weak add-op test assertions, stale Home.md architecture notes) (25 hours ago)<!--/COMMIT-->
+<!--COMMITS-->256<!--/COMMITS--> | **Latest:** <!--COMMIT-->2433460 - chore: pin @absolute-scenes/book-model to v0.1.0 tag instead of #main (3 days ago)<!--/COMMIT-->
 
 ### **Built With**
 
@@ -411,7 +411,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## 🗺️ **Roadmap & Version History**
 
-**Current Release: v<!--VERSION-->1.4.110<!--/VERSION-->**
+**Current Release: v<!--VERSION-->1.4.111<!--/VERSION-->**
 
 Upcoming features and priorities are tracked in
 **[GitHub Projects](https://github.com/orinoco77/absolute-scenes/projects)**. Want to influence the
@@ -431,4 +431,4 @@ roadmap? **[Open an issue](https://github.com/orinoco77/absolute-scenes/issues)*
 
 **Made with ❤️ for authors who care about beautiful books**
 
-_Last updated <!--DATE-->2026-10-01<!--/DATE--> | Build <!--COMMIT-->fc229e4 - fix: address final review findings (BackgroundEditor timer race, weak add-op test assertions, stale Home.md architecture notes) (25 hours ago)<!--/COMMIT-->_
+_Last updated <!--DATE-->2026-10-04<!--/DATE--> | Build <!--COMMIT-->2433460 - chore: pin @absolute-scenes/book-model to v0.1.0 tag instead of #main (3 days ago)<!--/COMMIT-->_
